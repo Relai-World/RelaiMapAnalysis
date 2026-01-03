@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+
+# Node / frontend
+node_modules/
+.dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Map tiles (VERY IMPORTANT)
+tiles/
+*.mbtiles
+
+# Logs
+*.log
+
+# Env
+.env

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>West Hyderabad – Real Estate Intelligence</title>
+
+  <link
+    href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div id="app-header">
+    <div id="app-title">
+      West Hyderabad
+      <span class="subtitle">Real Estate Intelligence</span>
+    </div>
+
+    <div class="header-actions">
+      <button id="theme-toggle">🌙</button>
+      <div id="layers-btn">Layers</div>
+    </div>
+  </div>
+
+  <!-- LAYERS CARD -->
+  <div id="layers-card">
+    <div class="layers-header">
+      <span>Map Layers</span>
+      <button id="close-layers">✕</button>
+    </div>
+
+    <div class="layers-section">
+      <label class="layer-item" title="Educational institutions nearby">
+        <span class="legend-dot school"></span>
+        <input type="checkbox" data-layer="schools-layer" />
+        <span>Schools</span>
+      </label>
+
+      <label class="layer-item" title="National & State highways">
+        <span class="legend-line highway"></span>
+        <input type="checkbox" data-layer="highways-layer" />
+        <span>Highways</span>
+      </label>
+
+      <label class="layer-item" title="Metro rail connectivity">
+        <span class="legend-line metro"></span>
+        <input type="checkbox" data-layer="metro-layer" />
+        <span>Metro Lines</span>
+      </label>
+
+      <label class="layer-item" title="Outer Ring Road access">
+        <span class="legend-line orr"></span>
+        <input type="checkbox" data-layer="orr-layer" />
+        <span>Outer Ring Road</span>
+      </label>
+
+      <label class="layer-item" title="Lakes & water bodies">
+        <span class="legend-box lake"></span>
+        <input type="checkbox" data-layer="lakes-layer" />
+        <span>Lakes</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- INFO CARD -->
+  <div id="intel-card"></div>
+
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

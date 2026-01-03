@@ -1,0 +1,195 @@
+/* ===============================
+   GLOBAL
+=============================== */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Inter, system-ui, sans-serif;
+  background: #020617;
+  color: #e5e7eb;
+}
+
+#map {
+  width: 100%;
+  height: 100vh;
+}
+
+/* ===============================
+   HEADER
+=============================== */
+#app-header {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 20;
+  pointer-events: none;
+}
+
+#app-title {
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.subtitle {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.header-actions {
+  pointer-events: auto;
+  display: flex;
+  gap: 10px;
+}
+
+/* ===============================
+   BUTTONS
+=============================== */
+#layers-btn, #theme-toggle {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  cursor: pointer;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+/* ===============================
+   LAYERS CARD
+=============================== */
+#layers-card {
+  position: fixed;
+  top: 80px;
+  right: 16px;
+  width: 260px;
+  background: #020617;
+  border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+  display: none;
+  z-index: 30;
+}
+
+.layers-header {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #1e293b;
+  font-weight: 600;
+}
+
+.layers-section {
+  padding: 16px;
+}
+
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.layer-item:hover {
+  background: rgba(148,163,184,0.08);
+}
+
+/* ===============================
+   LEGENDS
+=============================== */
+.legend-dot { width:10px; height:10px; border-radius:50%; }
+.legend-line { width:18px; height:3px; border-radius:2px; }
+.legend-box { width:14px; height:10px; border-radius:3px; }
+
+.school { background:#facc15; }
+.highway { background:#2563eb; }
+.metro { background:#16a34a; }
+.orr { background:#7c3aed; }
+.lake { background:#38bdf8; }
+
+/* ===============================
+   INTEL CARD (SIMPLIFIED)
+=============================== */
+#intel-card {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  width: 340px;
+  background: #0f172a;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  display: none;
+}
+
+#intel-card h3 {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+
+/* MAIN CONTAINER */
+.metrics {
+  display: grid;
+  gap: 12px;
+}
+
+/* INDIVIDUAL METRIC BOX */
+.metric-box {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.metric-box span {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.metric-box strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+/* ===============================
+   LIGHT MODE
+=============================== */
+body.light {
+  background: #f8fafc;
+  color: #020617;
+}
+
+body.light #layers-card,
+body.light #intel-card,
+body.light #app-title {
+  background: #ffffff;
+  color: #020617;
+}
+
+/* ===============================
+   RESPONSIVE
+=============================== */
+@media (max-width: 768px) {
+  #intel-card {
+    left: 10px;
+    right: 10px;
+    width: auto;
+  }
+
+  #layers-card {
+    width: calc(100% - 32px);
+  }
+}
+
