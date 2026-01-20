@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>West Hyderabad – Real Estate Intelligence</title>
+  <title>West Hyderabad Intelligence</title>
 
   <link
     href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css"
@@ -15,53 +15,64 @@
   <!-- HEADER -->
   <div id="app-header">
     <div id="app-title">
-      West Hyderabad
-      <span class="subtitle">Real Estate Intelligence</span>
+      West Hyderabad Intelligence
     </div>
 
     <div class="header-actions">
-      <button id="theme-toggle">🌙</button>
-      <div id="layers-btn">Layers</div>
+      
+      <div id="layers-btn">
+        <img class="layericon" src="assets/layers.png" alt="Schools" />
+        <p class="layer-p">
+Layers
+        </p></div>
     </div>
   </div>
 
-  <!-- LAYERS CARD -->
-  <div id="layers-card">
+  <!-- ============================
+       LAYERS CARD (UPDATED HTML)
+  ============================= -->
+  <div id="layers-card" class="layers-sheet">
     <div class="layers-header">
-      <span>Map Layers</span>
+      <span>Layers</span>
       <button id="close-layers">✕</button>
     </div>
 
-    <div class="layers-section">
-      <label class="layer-item" title="Educational institutions nearby">
-        <span class="legend-dot school"></span>
+   
+
+    <!-- Layers grid -->
+    <div class="layers-grid">
+
+      <label class="layer-tile">
         <input type="checkbox" data-layer="schools-layer" />
+        <img src="assets/school.png" alt="Schools" />
         <span>Schools</span>
       </label>
 
-      <label class="layer-item" title="National & State highways">
-        <span class="legend-line highway"></span>
+      <label class="layer-tile">
         <input type="checkbox" data-layer="highways-layer" />
+        <img src="assets/highway.png" alt="Highways" />
         <span>Highways</span>
       </label>
 
-      <label class="layer-item" title="Metro rail connectivity">
-        <span class="legend-line metro"></span>
+      <label class="layer-tile">
         <input type="checkbox" data-layer="metro-layer" />
+        <img src="assets/metro.png" alt="Metro Lines" />
         <span>Metro Lines</span>
       </label>
 
-      <label class="layer-item" title="Outer Ring Road access">
-        <span class="legend-line orr"></span>
+      <label class="layer-tile">
         <input type="checkbox" data-layer="orr-layer" />
+        <img src="assets/orr.png" alt="Outer Ring Road" />
         <span>Outer Ring Road</span>
       </label>
+      
 
-      <label class="layer-item" title="Lakes & water bodies">
-        <span class="legend-box lake"></span>
+      <label class="layer-tile">
         <input type="checkbox" data-layer="lakes-layer" />
+        <img src="assets/lakes.png" alt="Lakes" />
         <span>Lakes</span>
       </label>
+
     </div>
   </div>
 
@@ -71,6 +82,8 @@
   <!-- INFO CARD -->
   <div id="intel-card"></div>
 
+  <!-- LIBS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script src="app.js"></script>
 </body>

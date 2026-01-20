@@ -1,6 +1,3 @@
-/* ===============================
-   GLOBAL
-=============================== */
 html, body {
   margin: 0;
   padding: 0;
@@ -17,7 +14,7 @@ html, body {
 
 /* ===============================
    HEADER
-=============================== */
+================================ */
 #app-header {
   position: fixed;
   top: 16px;
@@ -27,11 +24,9 @@ html, body {
   justify-content: space-between;
   align-items: center;
   z-index: 20;
-  pointer-events: none;
 }
 
 #app-title {
-  pointer-events: auto;
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(10px);
   padding: 12px 16px;
@@ -39,157 +34,253 @@ html, body {
   font-weight: 700;
 }
 
-.subtitle {
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
-  color: #94a3b8;
-}
-
 .header-actions {
-  pointer-events: auto;
   display: flex;
   gap: 10px;
 }
 
-/* ===============================
-   BUTTONS
-=============================== */
-#layers-btn, #theme-toggle {
-  padding: 12px 14px;
+#layers-btn {
+  padding: 6px 14px;
   border-radius: 12px;
   background: #0f172a;
   border: 1px solid #1e293b;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-weight: 600;
   color: #e5e7eb;
 }
-
+#close-layers{
+  color:white;
+}
 /* ===============================
-   LAYERS CARD
-=============================== */
-#layers-card {
+   LAYERS SHEET (NEW UI)
+================================ */
+#layers-card.layers-sheet {
   position: fixed;
   top: 80px;
   right: 16px;
-  width: 260px;
-  background: #020617;
-  border-radius: 16px;
-  box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+  width: 320px;
+  background: #0f172A;
+  color: #020617;
+  border-radius: 18px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.4);
   display: none;
   z-index: 30;
 }
 
-.layers-header {
-  padding: 16px;
+.layers-sheet .layers-header {
+  padding: 16px 18px;
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid #1e293b;
-  font-weight: 600;
-}
-
-.layers-section {
-  padding: 16px;
-}
-
-.layer-item {
-  display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px;
-  border-radius: 8px;
+  font-weight: 700;
+  color:white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.layers-sheet .layers-header button {
+  background: none;
+  border: none;
+  font-size: 18px;
   cursor: pointer;
 }
 
-.layer-item:hover {
-  background: rgba(148,163,184,0.08);
+/* Region selector */
+.layers-region {
+  padding: 16px 18px;
+}
+
+.region-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.region-tabs {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.region-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #020617;
+}
+
+.region-tab.active {
+  background: #fde68a;
+}
+
+/* Layers grid */
+.layers-grid {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+/* Individual tiles */
+.layer-tile {
+  background: #ffffff;;
+  
+  border-radius: 14px;
+   filter: invert(1);
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.layer-tile img {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 6px;
+
+}
+
+.layer-tile span {
+  font-size: 12px;
+  font-weight: 600;
+  display: block;
+ 
+}
+
+
+.layer-tile input {
+  display: none;
+}
+
+.layer-tile:has(input:checked) {
+  border-color: #f59e0b;
+  background: #fff7ed;
 }
 
 /* ===============================
-   LEGENDS
-=============================== */
-.legend-dot { width:10px; height:10px; border-radius:50%; }
-.legend-line { width:18px; height:3px; border-radius:2px; }
-.legend-box { width:14px; height:10px; border-radius:3px; }
-
-.school { background:#facc15; }
-.highway { background:#2563eb; }
-.metro { background:#16a34a; }
-.orr { background:#7c3aed; }
-.lake { background:#38bdf8; }
-
-/* ===============================
-   INTEL CARD (SIMPLIFIED)
-=============================== */
+   INTEL CARD (UNCHANGED)
+================================ */
 #intel-card {
   position: fixed;
-  bottom: 24px;
-  left: 24px;
-  width: 340px;
-  background: #0f172a;
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  bottom: 20px;
+  left: 20px;
+  height: 500px;
+  width: 280px;
+  background: #020617;
+  border-radius: 16px;
+  padding: 12px;
+  border: 1px solid #1e293b;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7);
   display: none;
 }
 
 #intel-card h3 {
-  margin: 0 0 14px;
-  font-size: 18px;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
 }
 
-/* MAIN CONTAINER */
+p {
+  font-size: 20px;
+  margin: 10px 0;
+}
+
+/* ===============================
+   METRICS (UNCHANGED)
+================================ */
 .metrics {
-  display: grid;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  overflow-y: scroll;
+  height: 260px;
 }
 
-/* INDIVIDUAL METRIC BOX */
+.metrics::-webkit-scrollbar {
+  display: none;
+}
+
 .metric-box {
-  background: #020617;
-  border: 1px solid #1e293b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
   border-radius: 12px;
-  padding: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.9),
+    rgba(2, 6, 23, 0.9)
+  );
+  border: 1px solid #1e293b;
 }
 
 .metric-box span {
-  font-size: 12px;
+  font-size: 11px;
   color: #94a3b8;
 }
 
 .metric-box strong {
-  display: block;
-  margin-top: 4px;
   font-size: 15px;
+  font-weight: 700;
+  color: #e5e7eb;
+}
+
+.card-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#download-report {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  border: 1px solid #1e293b;
+  background: #020617;
+  color: #e5e7eb;
+  cursor: pointer;
+}
+
+#download-report:hover {
+  background: #0f172a;
 }
 
 /* ===============================
-   LIGHT MODE
-=============================== */
-body.light {
-  background: #f8fafc;
-  color: #020617;
+   LOCATION IMAGE
+================================ */
+.location-image {
+  width: 280px;
+  height: 150px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  border: 1px solid #1e293b;
+  background: #020617;
 }
 
-body.light #layers-card,
-body.light #intel-card,
-body.light #app-title {
-  background: #ffffff;
-  color: #020617;
+.location-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
-
-/* ===============================
-   RESPONSIVE
-=============================== */
-@media (max-width: 768px) {
-  #intel-card {
-    left: 10px;
-    right: 10px;
-    width: auto;
-  }
-
-  #layers-card {
-    width: calc(100% - 32px);
-  }
+.layericon{
+  width: 25px;
+  height: 25px ;
+  padding-right: 10px;
+  filter: invert(1);
 }
+.layer-p{
 
+  font-size: 16px;
+  font-weight: 600;
+
+}

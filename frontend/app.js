@@ -12,46 +12,62 @@ map.addControl(new maplibregl.NavigationControl());
 let activeMarker = null;
 
 /* ===============================
-   TEXT HELPERS (SIMPLIFIED)
+   TEXT HELPERS (SCALE-ALIGNED)
 =============================== */
-  function sentimentText(v) {
-    if (v > 0.25) return "Positive";
-    if (v < -0.25) return "Negative";
-    return "Neutral";
-  }
+function sentimentText(v) {
+  if (v >= 0.1) return "Positive";
+  if (v <= -0.3) return "Negative";
+  return "Neutral";
+}
 
-  function growthText(v) {
-    if (v > 0.65) return "High";
-    if (v > 0.4) return "Medium";
-    return "Low";
-  }
+function growthText(v) {
+  if (v >= 0.16) return "High";
+  if (v >= 0.13) return "Medium";
+  return "Low";
+}
 
-  function investmentText(v) {
-    if (v > 0.7) return "Excellent";
-    if (v > 0.5) return "Good";
-    return "Average";
-  }
-
+function investmentText(v) {
+  if (v >= 0.22) return "Excellent";
+  if (v >= 0.19) return "Good";
+  return "Average";
+}
 
 /* ===============================
-   UI – LAYERS + THEME (UNCHANGED)
+   UI – LAYERS ONLY
 =============================== */
 const layersBtn = document.getElementById("layers-btn");
 const layersCard = document.getElementById("layers-card");
 const closeLayers = document.getElementById("close-layers");
-const themeToggle = document.getElementById("theme-toggle");
 
 if (layersBtn && layersCard && closeLayers) {
   layersBtn.onclick = () => layersCard.style.display = "block";
   closeLayers.onclick = () => layersCard.style.display = "none";
 }
 
-if (themeToggle) {
-  themeToggle.onclick = () => {
-    document.body.classList.toggle("light");
-    themeToggle.textContent =
-      document.body.classList.contains("light") ? "🌞" : "🌙";
-  };
+/* ===============================
+   PDF REPORT GENERATOR
+=============================== */
+function generateReport(p) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text("West Hyderabad – Real Estate Report", 14, 20);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.text(`Location: ${p.location}`, 14, 36);
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 46);
+
+  doc.line(14, 52, 196, 52);
+
+  doc.text("Insights:", 14, 66);
+  doc.text(`• Market Sentiment: ${sentimentText(p.avg_sentiment)}`, 18, 78);
+  doc.text(`• Growth Outlook: ${growthText(p.growth_score)}`, 18, 90);
+  doc.text(`• Investment Score: ${investmentText(p.investment_score)}`, 18, 102);
+
+  doc.save(`${p.location}_Real_Estate_Report.pdf`);
 }
 
 /* ===============================
@@ -63,7 +79,7 @@ map.on("load", async () => {
      🏫 SCHOOLS
   ===================================================== */
   map.loadImage(
-    "https://cdn-icons-png.flaticon.com/512/167/167707.png",
+  "./assets/schools.png",
     (error, image) => {
       if (error) throw error;
 
@@ -111,7 +127,7 @@ map.on("load", async () => {
     "source-layer": "highways",
     layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
     paint: {
-      "line-color": "#2563eb",
+      "line-color":"#FF8700",
       "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 5.2],
       "line-opacity": 0.9
     }
@@ -124,7 +140,7 @@ map.on("load", async () => {
     type: "vector",
     tiles: ["http://localhost:8080/data/metro/{z}/{x}/{y}.pbf"],
     minzoom: 6,
-    maxzoom: 14
+    maxzoom: 10
   });
 
   map.addLayer({
@@ -157,7 +173,7 @@ map.on("load", async () => {
     "source-layer": "orr",
     layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
     paint: {
-      "line-color": "#070707",
+      "line-color": "#070707ff",
       "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.5, 18, 6],
       "line-opacity": 0.95
     }
@@ -170,7 +186,7 @@ map.on("load", async () => {
     type: "vector",
     tiles: ["http://localhost:8080/data/lakes/{z}/{x}/{y}.pbf"],
     minzoom: 6,
-    maxzoom: 14
+    maxzoom: 10
   });
 
   map.addLayer({
@@ -181,7 +197,7 @@ map.on("load", async () => {
     layout: { visibility: "none" },
     paint: {
       "fill-color": "#38bdf8",
-      "fill-opacity": 0.35,
+      "fill-opacity": 1.0,
       "fill-outline-color": "#0284c7"
     }
   });
@@ -210,16 +226,16 @@ map.on("load", async () => {
     source: "locations",
     paint: {
       "circle-radius": 6,
-      "circle-color": "#ff7a00",
+      "circle-color":"#2563eb", 
       "circle-stroke-color": "#ffffff",
       "circle-stroke-width": 2
     }
   });
 
   /* =====================================================
-     LAYER TOGGLE (UNCHANGED)
+     LAYER TOGGLE (ONLY CHANGE)
   ===================================================== */
-  document.querySelectorAll(".layer-item input").forEach(cb => {
+  document.querySelectorAll(".layer-tile input").forEach(cb => {
     cb.onchange = e => {
       const id = e.target.dataset.layer;
       if (map.getLayer(id)) {
@@ -233,11 +249,15 @@ map.on("load", async () => {
   });
 
   /* =====================================================
-     CLICK → INTEL CARD (SIMPLIFIED, METRIC-ONLY)
+     CLICK → INTEL CARD
   ===================================================== */
   map.on("click", "location-core", e => {
     const p = e.features[0].properties;
     const card = document.getElementById("intel-card");
+    const title = document.getElementById("app-title");
+
+    title.style.visibility = "hidden";
+    card.style.display = "block";
 
     map.easeTo({
       center: [p.longitude, p.latitude],
@@ -245,9 +265,15 @@ map.on("load", async () => {
       duration: 800
     });
 
-    card.style.display = "block";
+    const imageName = p.location.toLowerCase().replace(/\s+/g, "_");
+    const imagePath = `assets/locations/${imageName}.jpg`;
+
     card.innerHTML = `
-      <h3>${p.location}</h3>
+      <div class="location-image">
+        <img src="${imagePath}" alt="${p.location}" onerror="this.style.display='none'" />
+      </div>
+
+      <p>${p.location}</p>
 
       <div class="metrics">
         <div class="metric-box">
@@ -265,16 +291,24 @@ map.on("load", async () => {
           <strong>${investmentText(p.investment_score)}</strong>
         </div>
       </div>
+
+      <div class="card-actions">
+        <button id="download-report">Download Report</button>
+      </div>
     `;
 
+    document.getElementById("download-report").onclick =
+      () => generateReport(p);
+
     if (activeMarker) activeMarker.remove();
-    activeMarker = new maplibregl.Marker({ color: "#ff7a00" })
+    activeMarker = new maplibregl.Marker({ color: "#2563eb" })
       .setLngLat([p.longitude, p.latitude])
       .addTo(map);
   });
 
   map.on("click", e => {
     if (!map.queryRenderedFeatures(e.point, { layers: ["location-core"] }).length) {
+      document.getElementById("app-title").style.visibility = "visible";
       document.getElementById("intel-card").style.display = "none";
       if (activeMarker) activeMarker.remove();
     }

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles   # ✅ ADDED
+from fastapi.staticfiles import StaticFiles   
 import psycopg2
 import requests
 import time
