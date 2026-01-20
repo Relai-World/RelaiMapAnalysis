@@ -23,3 +23,16 @@ tiles/
 
 # Env
 .env
+# NEVER upload these
+venv/
+tiles/
+*.mbtiles
+streamlit_app/
+
+# Python junk
+__pycache__/
+*.pyc
+
+# OS junk
+.DS_Store
+.env
