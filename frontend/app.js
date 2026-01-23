@@ -129,7 +129,11 @@ map.on("load", async () => {
   });
 
   // 2. ORR
-  map.addSource("orr-source", { type: "vector", url: `pmtiles://${BASE_TILES_URL}/orr.pmtiles` });
+  map.addSource("orr-source", {
+    type: "vector", url: `pmtiles://${BASE_TILES_URL}/orr.pmtiles`,
+    minzoom: 6,
+    maxzoom: 10
+  });
   map.addLayer({
     id: "orr-layer",
     type: "line",
@@ -140,18 +144,24 @@ map.on("load", async () => {
   });
 
   // 3. Highways
-  map.addSource("highways-source", { type: "vector", url: `pmtiles://${BASE_TILES_URL}/highways.pmtiles` });
+  map.addSource("highways-source", {
+    type: "vector", url: `pmtiles://${BASE_TILES_URL}/highways.pmtiles`, minzoom: 6,
+    maxzoom: 10
+  });
   map.addLayer({
     id: "highways-layer",
     type: "line",
     source: "highways-source",
     "source-layer": "highways",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#ff8400ff", "line-width": 2.5, "line-opacity": 0 } // Ghost state
+    paint: { "line-color": "#b300ffff", "line-width": 2.5, "line-opacity": 0 } // Ghost state
   });
 
   // 4. Metro
-  map.addSource("metro-source", { type: "vector", url: `pmtiles://${BASE_TILES_URL}/metro.pmtiles` });
+  map.addSource("metro-source", {
+    type: "vector", url: `pmtiles://${BASE_TILES_URL}/metro.pmtiles`, minzoom: 6,
+    maxzoom: 10
+  });
   map.addLayer({
     id: "metro-layer",
     type: "line",
@@ -165,7 +175,10 @@ map.on("load", async () => {
   map.loadImage("./assets/schools.png", (err, img) => {
     if (!err && !map.hasImage("school-icon")) map.addImage("school-icon", img);
   });
-  map.addSource("schools-source", { type: "vector", url: `pmtiles://${BASE_TILES_URL}/schools.pmtiles` });
+  map.addSource("schools-source", {
+    type: "vector", url: `pmtiles://${BASE_TILES_URL}/schools.pmtiles`, minzoom: 6,
+    maxzoom: 14
+  });
   map.addLayer({
     id: "schools-layer",
     type: "symbol",
