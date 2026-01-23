@@ -125,7 +125,7 @@ map.on("load", async () => {
     source: "lakes-source",
     "source-layer": "lakes",
     layout: { visibility: "visible" },
-    paint: { "fill-color": "#2cbcffff", "fill-opacity": 0 } // Ghost state
+    paint: { "fill-color": "#16b3f6", "fill-opacity": 0, "fill-outline-color": "#2cdcfb" } // Ghost state
   });
 
   // 2. ORR
@@ -140,7 +140,7 @@ map.on("load", async () => {
     source: "orr-source",
     "source-layer": "orr",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#000000ff", "line-width": 6, "line-opacity": 0 } // Ghost state
+    paint: { "line-color": "#000000ff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.5, 18, 6], "line-opacity": 0 } // Ghost state
   });
 
   // 3. Highways
@@ -154,7 +154,7 @@ map.on("load", async () => {
     source: "highways-source",
     "source-layer": "highways",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#b300ffff", "line-width": 2.5, "line-opacity": 0 } // Ghost state
+    paint: { "line-color": "#b300ffff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 4.8], "line-opacity": 0 } // Ghost state
   });
 
   // 4. Metro
