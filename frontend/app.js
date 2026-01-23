@@ -115,7 +115,7 @@ function generateReport(p) {
 map.on("load", async () => {
 
   /* =====================================================
-     📍 BASE TILE URL LOGIC
+     📍 BASE TILE URL LOGIC (STILL NEEDED FOR SCHOOL ICON)
   ===================================================== */
   // If localhost, use simple relative path. If GitHub, use full absolute path to avoid lookup errors.
   const isLocalMap = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
@@ -124,7 +124,7 @@ map.on("load", async () => {
     : "https://harjeet1309.github.io/west-hyderabad-intelliweb/frontend/maptiles";
 
   /* =====================================================
-     🏫 SCHOOLS
+     🏫 SCHOOLS ICON
   ===================================================== */
   map.loadImage(
     "./assets/schools.png",
@@ -132,121 +132,11 @@ map.on("load", async () => {
       if (!error && !map.hasImage("school-icon")) {
         map.addImage("school-icon", image);
       }
-
-      map.addSource("schools-source", {
-        type: "vector",
-        url: `pmtiles://${BASE_TILES_URL}/schools.pmtiles`
-      });
-
-      map.addLayer({
-        id: "schools-layer",
-        type: "circle",
-        source: "schools-source",
-        "source-layer": "schools",
-        layout: {
-          visibility: "none"
-        },
-        paint: {
-          "circle-radius": 6,
-          "circle-color": "#FFD700", // Gold
-          "circle-stroke-width": 2,
-          "circle-stroke-color": "#ffffff"
-        }
-      });
     }
   );
 
-  /* =====================================================
-     🛣️ HIGHWAYS
-  ===================================================== */
-  map.addSource("highways-source", {
-    type: "vector",
-    url: `pmtiles://${BASE_TILES_URL}/highways.pmtiles`
-  });
+  // NOTE: Layers (Schools, Metro, Highways, ORR, Lakes) are now loaded from style.json automatically.
 
-  map.addLayer({
-    id: "highways-layer",
-    type: "line",
-    source: "highways-source",
-    "source-layer": "highways",
-    layout: {
-      visibility: "none",
-      "line-join": "round",
-      "line-cap": "round"
-    },
-    paint: {
-      "line-color": "#FFA500", // Orange
-      "line-width": 3
-    }
-  });
-
-  /* =====================================================
-     🚇 METRO
-  ===================================================== */
-  map.addSource("metro-source", {
-    type: "vector",
-    url: `pmtiles://${BASE_TILES_URL}/metro.pmtiles` // Fixed filename
-  });
-
-  map.addLayer({
-    id: "metro-layer",
-    type: "line",
-    source: "metro-source",
-    "source-layer": "metro",
-    layout: {
-      visibility: "none",
-      "line-join": "round",
-      "line-cap": "round"
-    },
-    paint: {
-      "line-color": "#FF0000", // Red
-      "line-width": 4
-    }
-  });
-
-  /* =====================================================
-     🛣️ ORR
-  ===================================================== */
-  map.addSource("orr-source", {
-    type: "vector",
-    url: `pmtiles://${BASE_TILES_URL}/orr.pmtiles`
-  });
-
-  map.addLayer({
-    id: "orr-layer",
-    type: "line",
-    source: "orr-source",
-    "source-layer": "orr",
-    layout: {
-      visibility: "none",
-      "line-join": "round",
-      "line-cap": "round"
-    },
-    paint: {
-      "line-color": "#0000FF", // Blue
-      "line-width": 5
-    }
-  });
-
-  /* =====================================================
-     🌊 LAKES
-  ===================================================== */
-  map.addSource("lakes-source", {
-    type: "vector",
-    url: `pmtiles://${BASE_TILES_URL}/lakes.pmtiles`
-  });
-
-  map.addLayer({
-    id: "lakes-layer",
-    type: "fill",
-    source: "lakes-source",
-    "source-layer": "lakes",
-    layout: { visibility: "none" },
-    paint: {
-      "fill-color": "#0077BE", // Blue
-      "fill-opacity": 0.6
-    }
-  });
 
   /* =====================================================
      📍 LOCATIONS

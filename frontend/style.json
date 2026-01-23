@@ -1,16 +1,35 @@
 {
   "version": 8,
-  "name": "OSM Free Map",
+  "name": "OSM + West Hyderabad Layers",
   "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
   "sources": {
     "osm": {
       "type": "raster",
       "tiles": [
-        "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
       ],
-      "tileSize": 256
+      "tileSize": 256,
+      "attribution": "&copy; OpenStreetMap Contributors"
+    },
+    "schools-source": {
+      "type": "vector",
+      "url": "pmtiles://maptiles/schools.pmtiles"
+    },
+    "highways-source": {
+      "type": "vector",
+      "url": "pmtiles://maptiles/highways.pmtiles"
+    },
+    "metro-source": {
+      "type": "vector",
+      "url": "pmtiles://maptiles/metro.pmtiles"
+    },
+    "orr-source": {
+      "type": "vector",
+      "url": "pmtiles://maptiles/orr.pmtiles"
+    },
+    "lakes-source": {
+      "type": "vector",
+      "url": "pmtiles://maptiles/lakes.pmtiles"
     }
   },
   "layers": [
@@ -18,6 +37,77 @@
       "id": "osm-base",
       "type": "raster",
       "source": "osm"
+    },
+    {
+      "id": "lakes-layer",
+      "type": "fill",
+      "source": "lakes-source",
+      "source-layer": "lakes",
+      "layout": { "visibility": "none" },
+      "paint": {
+        "fill-color": "#0077BE",
+        "fill-opacity": 0.6
+      }
+    },
+    {
+      "id": "orr-layer",
+      "type": "line",
+      "source": "orr-source",
+      "source-layer": "orr",
+      "layout": {
+        "visibility": "none",
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#0000FF",
+        "line-width": 5
+      }
+    },
+    {
+      "id": "highways-layer",
+      "type": "line",
+      "source": "highways-source",
+      "source-layer": "highways",
+      "layout": {
+        "visibility": "none",
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#FFA500",
+        "line-width": 3
+      }
+    },
+    {
+      "id": "metro-layer",
+      "type": "line",
+      "source": "metro-source",
+      "source-layer": "metro",
+      "layout": {
+        "visibility": "none",
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      "paint": {
+        "line-color": "#FF0000",
+        "line-width": 4
+      }
+    },
+    {
+      "id": "schools-layer",
+      "type": "circle",
+      "source": "schools-source",
+      "source-layer": "schools",
+      "layout": {
+        "visibility": "none"
+      },
+      "paint": {
+        "circle-radius": 6,
+        "circle-color": "#FFD700",
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#ffffff"
+      }
     }
   ]
 }
