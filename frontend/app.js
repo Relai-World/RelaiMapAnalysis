@@ -22,24 +22,7 @@ checkORR();
 
 const map = new maplibregl.Map({
   container: "map",
-  style: {
-    "version": 8,
-    "sources": {
-      "osm": {
-        "type": "raster",
-        "tiles": ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
-        "tileSize": 256,
-        "attribution": "&copy; OpenStreetMap Contributors"
-      }
-    },
-    "layers": [
-      {
-        "id": "osm",
-        "type": "raster",
-        "source": "osm"
-      }
-    ]
-  },
+  style: "style.json",
   center: [78.38, 17.44],
   zoom: 11,
   minZoom: 4,
