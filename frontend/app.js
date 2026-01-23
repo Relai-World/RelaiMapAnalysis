@@ -4,7 +4,7 @@ maplibregl.addProtocol("pmtiles", protocol.tile);
 // DEBUG: Check ORR Metadata
 async function checkORR() {
   try {
-    const p = new pmtiles.PMTiles("pmtiles/orr.pmtiles");
+    const p = new pmtiles.PMTiles("maptiles/orr.pmtiles");
     const metadata = await p.getMetadata();
     console.log("=== ORR METADATA ===");
     if (metadata && metadata.vector_layers) {
@@ -126,7 +126,7 @@ map.on("load", async () => {
 
       map.addSource("schools", {
         type: "vector",
-        url: "pmtiles://pmtiles/schools.pmtiles",
+        url: "pmtiles://maptiles/schools.pmtiles",
         minzoom: 6,
         maxzoom: 14
       });
@@ -152,7 +152,7 @@ map.on("load", async () => {
   ===================================================== */
   map.addSource("highways", {
     type: "vector",
-    url: "pmtiles://pmtiles/highways.pmtiles",
+    url: "pmtiles://maptiles/highways.pmtiles",
     minzoom: 6,
     maxzoom: 10
   });
@@ -175,7 +175,7 @@ map.on("load", async () => {
   ===================================================== */
   map.addSource("metro", {
     type: "vector",
-    url: "pmtiles://pmtiles/metro.pmtiles",
+    url: "pmtiles://maptiles/metro.pmtiles",
     minzoom: 6,
     maxzoom: 10
   });
@@ -198,7 +198,7 @@ map.on("load", async () => {
   ===================================================== */
   map.addSource("orr", {
     type: "vector",
-    url: "pmtiles://pmtiles/orr.pmtiles",
+    url: "pmtiles://maptiles/orr.pmtiles",
     minzoom: 6,
     maxzoom: 10
   });
@@ -221,7 +221,7 @@ map.on("load", async () => {
   ===================================================== */
   map.addSource("lakes", {
     type: "vector",
-    url: "pmtiles://pmtiles/lakes.pmtiles",
+    url: "pmtiles://maptiles/lakes.pmtiles",
     minzoom: 6,
     maxzoom: 10 // Increased to allow overzooming
   });
