@@ -10,4 +10,3 @@ openpyxl
 pandas
 numpy
 tqdm
-math
