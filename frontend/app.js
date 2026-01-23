@@ -129,30 +129,28 @@ map.on("load", async () => {
   map.loadImage(
     "./assets/schools.png",
     (error, image) => {
-      if (error) throw error;
-
-      if (!map.hasImage("school-icon")) {
+      if (!error && !map.hasImage("school-icon")) {
         map.addImage("school-icon", image);
       }
 
-      map.addSource("schools", {
+      map.addSource("schools-source", {
         type: "vector",
-        url: `pmtiles://${BASE_TILES_URL}/schools.pmtiles`,
-        minzoom: 6,
-        maxzoom: 14
+        url: `pmtiles://${BASE_TILES_URL}/schools.pmtiles`
       });
 
       map.addLayer({
         id: "schools-layer",
-        type: "symbol",
-        source: "schools",
+        type: "circle",
+        source: "schools-source",
         "source-layer": "schools",
         layout: {
-          "icon-image": "school-icon",
-          "icon-size": 0.12,
-          "icon-allow-overlap": true,
-          "icon-ignore-placement": true,
-          "visibility": "none"
+          visibility: "none"
+        },
+        paint: {
+          "circle-radius": 6,
+          "circle-color": "#FFD700", // Gold
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#ffffff"
         }
       });
     }
@@ -161,92 +159,92 @@ map.on("load", async () => {
   /* =====================================================
      🛣️ HIGHWAYS
   ===================================================== */
-  map.addSource("highways", {
+  map.addSource("highways-source", {
     type: "vector",
-    url: `pmtiles://${BASE_TILES_URL}/highways.pmtiles`,
-    minzoom: 6,
-    maxzoom: 10
+    url: `pmtiles://${BASE_TILES_URL}/highways.pmtiles`
   });
 
   map.addLayer({
     id: "highways-layer",
     type: "line",
-    source: "highways",
+    source: "highways-source",
     "source-layer": "highways",
-    layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
+    layout: {
+      visibility: "none",
+      "line-join": "round",
+      "line-cap": "round"
+    },
     paint: {
-      "line-color": "#ad07f4",
-      "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 5.2],
-      "line-opacity": 0.9
+      "line-color": "#FFA500", // Orange
+      "line-width": 3
     }
   });
 
   /* =====================================================
      🚇 METRO
   ===================================================== */
-  map.addSource("metro", {
+  map.addSource("metro-source", {
     type: "vector",
-    url: `pmtiles://${BASE_TILES_URL}/metro.pmtiles`,
-    minzoom: 6,
-    maxzoom: 10
+    url: `pmtiles://${BASE_TILES_URL}/metro.pmtiles` // Fixed filename
   });
 
   map.addLayer({
     id: "metro-layer",
     type: "line",
-    source: "metro",
+    source: "metro-source",
     "source-layer": "metro",
-    layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
+    layout: {
+      visibility: "none",
+      "line-join": "round",
+      "line-cap": "round"
+    },
     paint: {
-      "line-color": "#ef0000",
-      "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 4.8],
-      "line-opacity": 0.95
+      "line-color": "#FF0000", // Red
+      "line-width": 4
     }
   });
 
   /* =====================================================
      🛣️ ORR
   ===================================================== */
-  map.addSource("orr", {
+  map.addSource("orr-source", {
     type: "vector",
-    url: `pmtiles://${BASE_TILES_URL}/orr.pmtiles`,
-    minzoom: 6,
-    maxzoom: 10
+    url: `pmtiles://${BASE_TILES_URL}/orr.pmtiles`
   });
 
   map.addLayer({
     id: "orr-layer",
     type: "line",
-    source: "orr",
+    source: "orr-source",
     "source-layer": "orr",
-    layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
+    layout: {
+      visibility: "none",
+      "line-join": "round",
+      "line-cap": "round"
+    },
     paint: {
-      "line-color": "#070707ff",
-      "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.5, 18, 6],
-      "line-opacity": 0.95
+      "line-color": "#0000FF", // Blue
+      "line-width": 5
     }
   });
 
   /* =====================================================
      🌊 LAKES
   ===================================================== */
-  map.addSource("lakes", {
+  map.addSource("lakes-source", {
     type: "vector",
-    url: `pmtiles://${BASE_TILES_URL}/lakes.pmtiles`,
-    minzoom: 6,
-    maxzoom: 10 // Increased to allow overzooming
+    url: `pmtiles://${BASE_TILES_URL}/lakes.pmtiles`
   });
 
   map.addLayer({
     id: "lakes-layer",
     type: "fill",
-    source: "lakes",
+    source: "lakes-source",
     "source-layer": "lakes",
     layout: { visibility: "none" },
     paint: {
-      "fill-color": "#16b3f6",
-      "fill-opacity": 1.0,
-      "fill-outline-color": "#2cdcfb"
+      "fill-color": "#0077BE", // Blue
+      "fill-opacity": 0.6
     }
   });
 
