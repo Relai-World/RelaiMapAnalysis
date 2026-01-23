@@ -114,7 +114,7 @@ map.on("load", async () => {
   });
 
   /* =====================================================
-     🏗️ ADD SOURCES & LAYERS (SNAPPY MODE)
+     🏗️ ADD SOURCES & LAYERS (GHOST LOADING MODE)
   ===================================================== */
 
   // 1. Lakes
@@ -124,8 +124,8 @@ map.on("load", async () => {
     type: "fill",
     source: "lakes-source",
     "source-layer": "lakes",
-    layout: { visibility: "none" },
-    paint: { "fill-color": "#0ea5e9", "fill-opacity": 0.5 }
+    layout: { visibility: "visible" },
+    paint: { "fill-color": "#0ea5e9", "fill-opacity": 0 } // Ghost state
   });
 
   // 2. ORR
@@ -135,8 +135,8 @@ map.on("load", async () => {
     type: "line",
     source: "orr-source",
     "source-layer": "orr",
-    layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#3b82f6", "line-width": 6, "line-opacity": 0.9 }
+    layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
+    paint: { "line-color": "#3b82f6", "line-width": 6, "line-opacity": 0 } // Ghost state
   });
 
   // 3. Highways
@@ -146,8 +146,8 @@ map.on("load", async () => {
     type: "line",
     source: "highways-source",
     "source-layer": "highways",
-    layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#faa916", "line-width": 2.5, "line-opacity": 0.8 }
+    layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
+    paint: { "line-color": "#faa916", "line-width": 2.5, "line-opacity": 0 } // Ghost state
   });
 
   // 4. Metro
@@ -157,8 +157,8 @@ map.on("load", async () => {
     type: "line",
     source: "metro-source",
     "source-layer": "metro",
-    layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#ef4444", "line-width": 5, "line-blur": 1 }
+    layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
+    paint: { "line-color": "#ef4444", "line-width": 5, "line-blur": 1, "line-opacity": 0 } // Ghost state
   });
 
   // 5. Schools
@@ -171,13 +171,13 @@ map.on("load", async () => {
     type: "circle",
     source: "schools-source",
     "source-layer": "schools",
-    layout: { visibility: "none" },
+    layout: { visibility: "visible" },
     paint: {
       "circle-radius": 5,
       "circle-color": "#a855f7",
       "circle-stroke-width": 1.5,
       "circle-stroke-color": "#ffffff",
-      "circle-opacity": 0.9
+      "circle-opacity": 0 // Ghost state
     }
   });
 
@@ -185,15 +185,7 @@ map.on("load", async () => {
   /* =====================================================
      📍 LOCATIONS
   ===================================================== */
-  /* =====================================================
-     📍 LOCATIONS
-  ===================================================== */
-  // CONFIG: Auto-switch based on hostname
-  // If running locally (localhost), use local backend using .env or defaults
-  // If running on GitHub Pages, use your PROD backend URL
   const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-
-  // REPLACE 'https://your-render-app.onrender.com' WITH YOUR ACTUAL RENDER URL!
   const BACKEND_URL = isLocal ? "http://127.0.0.1:8000" : "https://west-hyderabad-intelligence.onrender.com";
 
   try {
@@ -226,22 +218,33 @@ map.on("load", async () => {
       }
     });
   } catch (err) {
-    console.error("Failed to load locations (Backend might be asleep or CORS error):", err);
-    // Optional: Add a UI toast here to warn the user
+    console.error("Failed to load locations:", err);
   }
 
   /* =====================================================
-     LAYER TOGGLE (ONLY CHANGE)
+     LAYER TOGGLE (GHOST FADE LOGIC)
   ===================================================== */
+  const opacities = {
+    "lakes-layer": 0.5,
+    "orr-layer": 0.9,
+    "highways-layer": 0.8,
+    "metro-layer": 1.0,
+    "schools-layer": 0.9
+  };
+
   document.querySelectorAll(".layer-tile input").forEach(cb => {
     cb.onchange = e => {
       const id = e.target.dataset.layer;
+      const targetOpacity = e.target.checked ? (opacities[id] || 1) : 0;
+
       if (map.getLayer(id)) {
-        map.setLayoutProperty(
-          id,
-          "visibility",
-          e.target.checked ? "visible" : "none"
-        );
+        // We use the correct paint property based on layer type
+        const type = map.getLayer(id).type;
+        let paintProp = "circle-opacity";
+        if (type === "line") paintProp = "line-opacity";
+        if (type === "fill") paintProp = "fill-opacity";
+
+        map.setPaintProperty(id, paintProp, targetOpacity);
       }
     };
   });
