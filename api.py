@@ -48,40 +48,44 @@ def get_db():
 # ===============================
 @app.get("/api/v1/insights")
 def insights():
-    conn = get_db()
-    cur = conn.cursor()
+    try:
+        conn = get_db()
+        cur = conn.cursor()
 
-    cur.execute("""
-        SELECT
-            l.id,
-            l.name,
-            ST_X(l.geom) AS longitude,
-            ST_Y(l.geom) AS latitude,
-            li.avg_sentiment_score,
-            li.growth_score,
-            li.investment_score
-        FROM locations l
-        JOIN location_insights li
-          ON li.location_id = l.id
-        ORDER BY l.name;
-    """)
+        cur.execute("""
+            SELECT
+                l.id,
+                l.name,
+                ST_X(l.geom) AS longitude,
+                ST_Y(l.geom) AS latitude,
+                li.avg_sentiment_score,
+                li.growth_score,
+                li.investment_score
+            FROM locations l
+            JOIN location_insights li
+              ON li.location_id = l.id
+            ORDER BY l.name;
+        """)
 
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
 
-    return [
-        {
-            "location_id": r[0],
-            "location": r[1],
-            "longitude": float(r[2]),
-            "latitude": float(r[3]),
-            "avg_sentiment": float(r[4]),
-            "growth_score": float(r[5]),
-            "investment_score": float(r[6])
-        }
-        for r in rows
-    ]
+        return [
+            {
+                "location_id": r[0],
+                "location": r[1],
+                "longitude": float(r[2]),
+                "latitude": float(r[3]),
+                "avg_sentiment": float(r[4]),
+                "growth_score": float(r[5]),
+                "investment_score": float(r[6])
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        print(f"🔥 DATABASE ERROR: {e}")
+        return {"error": str(e), "message": "Failed to connect to database or fetch insights"}
 
 # ===============================
 # SAFE OVERPASS COUNT (UNCHANGED)

@@ -200,7 +200,7 @@ map.on("load", async () => {
      📍 LOCATIONS
   ===================================================== */
   const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  const BACKEND_URL = isLocal ? "http://127.0.0.1:8000" : "https://west-hyderabad-intelligence.onrender.com";
+  const BACKEND_URL = isLocal ? "http://127.0.0.1:8000" : "https://west-hyderabad-intelliweb.onrender.com";
 
   try {
     const res = await fetch(`${BACKEND_URL}/api/v1/insights`);

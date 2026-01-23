@@ -2,10 +2,12 @@ fastapi
 uvicorn
 gunicorn
 psycopg2-binary
+requests
+python-dotenv
+bs4
+lxml
+openpyxl
 pandas
 numpy
-requests
-beautifulsoup4
-lxml
-python-dotenv
-openpyxl
+tqdm
+math
