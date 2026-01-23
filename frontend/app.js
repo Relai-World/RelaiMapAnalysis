@@ -177,7 +177,8 @@ map.on("load", async () => {
       "circle-color": "#a855f7",
       "circle-stroke-width": 1.5,
       "circle-stroke-color": "#ffffff",
-      "circle-opacity": 0 // Ghost state
+      "circle-opacity": 0,       // Ghost state
+      "circle-stroke-opacity": 0 // Fixed: Hide the white border too
     }
   });
 
@@ -238,13 +239,13 @@ map.on("load", async () => {
       const targetOpacity = e.target.checked ? (opacities[id] || 1) : 0;
 
       if (map.getLayer(id)) {
-        // We use the correct paint property based on layer type
         const type = map.getLayer(id).type;
-        let paintProp = "circle-opacity";
-        if (type === "line") paintProp = "line-opacity";
-        if (type === "fill") paintProp = "fill-opacity";
-
-        map.setPaintProperty(id, paintProp, targetOpacity);
+        if (type === "line") map.setPaintProperty(id, "line-opacity", targetOpacity);
+        if (type === "fill") map.setPaintProperty(id, "fill-opacity", targetOpacity);
+        if (type === "circle") {
+          map.setPaintProperty(id, "circle-opacity", targetOpacity);
+          map.setPaintProperty(id, "circle-stroke-opacity", targetOpacity);
+        }
       }
     };
   });
