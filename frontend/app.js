@@ -251,6 +251,9 @@ map.on("load", async () => {
   /* =====================================================
      📍 LOCATIONS
   ===================================================== */
+  /* =====================================================
+     📍 LOCATIONS
+  ===================================================== */
   // CONFIG: Auto-switch based on hostname
   // If running locally (localhost), use local backend using .env or defaults
   // If running on GitHub Pages, use your PROD backend URL
@@ -259,32 +262,39 @@ map.on("load", async () => {
   // REPLACE 'https://your-render-app.onrender.com' WITH YOUR ACTUAL RENDER URL!
   const BACKEND_URL = isLocal ? "http://127.0.0.1:8000" : "https://west-hyderabad-intelligence.onrender.com";
 
-  const res = await fetch(`${BACKEND_URL}/api/v1/insights`);
-  const data = await res.json();
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/v1/insights`);
+    if (!res.ok) throw new Error(`Backend Error: ${res.status}`);
 
-  map.addSource("locations", {
-    type: "geojson",
-    data: {
-      type: "FeatureCollection",
-      features: data.map(d => ({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [d.longitude, d.latitude] },
-        properties: d
-      }))
-    }
-  });
+    const data = await res.json();
 
-  map.addLayer({
-    id: "location-core",
-    type: "circle",
-    source: "locations",
-    paint: {
-      "circle-radius": 12,
-      "circle-color": "#2735d1",
-      "circle-stroke-color": "#ffffff",
-      "circle-stroke-width": 2
-    }
-  });
+    map.addSource("locations", {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: data.map(d => ({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [d.longitude, d.latitude] },
+          properties: d
+        }))
+      }
+    });
+
+    map.addLayer({
+      id: "location-core",
+      type: "circle",
+      source: "locations",
+      paint: {
+        "circle-radius": 12,
+        "circle-color": "#2735d1",
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 2
+      }
+    });
+  } catch (err) {
+    console.error("Failed to load locations (Backend might be asleep or CORS error):", err);
+    // Optional: Add a UI toast here to warn the user
+  }
 
   /* =====================================================
      LAYER TOGGLE (ONLY CHANGE)
