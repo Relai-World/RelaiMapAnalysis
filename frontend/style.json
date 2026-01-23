@@ -44,7 +44,7 @@
       "source": "lakes-source",
       "source-layer": "lakes",
       "layout": {
-        "visibility": "visible"
+        "visibility": "none"
       },
       "paint": {
         "fill-color": "#0ea5e9",
@@ -57,7 +57,7 @@
       "source": "orr-source",
       "source-layer": "orr",
       "layout": {
-        "visibility": "visible",
+        "visibility": "none",
         "line-join": "round",
         "line-cap": "round"
       },
@@ -73,7 +73,7 @@
       "source": "highways-source",
       "source-layer": "highways",
       "layout": {
-        "visibility": "visible",
+        "visibility": "none",
         "line-join": "round",
         "line-cap": "round"
       },
@@ -89,7 +89,7 @@
       "source": "metro-source",
       "source-layer": "metro",
       "layout": {
-        "visibility": "visible",
+        "visibility": "none",
         "line-join": "round",
         "line-cap": "round"
       },
@@ -105,7 +105,7 @@
       "source": "schools-source",
       "source-layer": "schools",
       "layout": {
-        "visibility": "visible"
+        "visibility": "none"
       },
       "paint": {
         "circle-radius": 5,
