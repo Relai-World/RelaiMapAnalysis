@@ -125,7 +125,7 @@ map.on("load", async () => {
     source: "lakes-source",
     "source-layer": "lakes",
     layout: { visibility: "visible" },
-    paint: { "fill-color": "#0ea5e9", "fill-opacity": 0 } // Ghost state
+    paint: { "fill-color": "#2cbcffff", "fill-opacity": 0 } // Ghost state
   });
 
   // 2. ORR
@@ -136,7 +136,7 @@ map.on("load", async () => {
     source: "orr-source",
     "source-layer": "orr",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#3b82f6", "line-width": 6, "line-opacity": 0 } // Ghost state
+    paint: { "line-color": "#000000ff", "line-width": 6, "line-opacity": 0 } // Ghost state
   });
 
   // 3. Highways
@@ -147,7 +147,7 @@ map.on("load", async () => {
     source: "highways-source",
     "source-layer": "highways",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#faa916", "line-width": 2.5, "line-opacity": 0 } // Ghost state
+    paint: { "line-color": "#ff8400ff", "line-width": 2.5, "line-opacity": 0 } // Ghost state
   });
 
   // 4. Metro
@@ -158,7 +158,7 @@ map.on("load", async () => {
     source: "metro-source",
     "source-layer": "metro",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#ef4444", "line-width": 5, "line-blur": 1, "line-opacity": 0 } // Ghost state
+    paint: { "line-color": "#f00b0bff", "line-width": 5, "line-blur": 1, "line-opacity": 0 } // Ghost state
   });
 
   // 5. Schools
@@ -174,7 +174,7 @@ map.on("load", async () => {
     layout: {
       visibility: "visible",
       "icon-image": "school-icon",
-      "icon-size": 0.02, // Made smaller as requested
+      "icon-size": 0.04, // Made smaller as requested
       "icon-allow-overlap": true
     },
     paint: {
