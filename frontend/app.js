@@ -174,7 +174,7 @@ map.on("load", async () => {
     layout: {
       visibility: "visible",
       "icon-image": "school-icon",
-      "icon-size": 0.05, // Made smaller as requested
+      "icon-size": 0.02, // Made smaller as requested
       "icon-allow-overlap": true
     },
     paint: {
