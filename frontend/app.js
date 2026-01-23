@@ -168,17 +168,17 @@ map.on("load", async () => {
   map.addSource("schools-source", { type: "vector", url: `pmtiles://${BASE_TILES_URL}/schools.pmtiles` });
   map.addLayer({
     id: "schools-layer",
-    type: "circle",
+    type: "symbol",
     source: "schools-source",
     "source-layer": "schools",
-    layout: { visibility: "visible" },
+    layout: {
+      visibility: "visible",
+      "icon-image": "school-icon",
+      "icon-size": 0.08, // Adjust size as needed for the PNG
+      "icon-allow-overlap": true
+    },
     paint: {
-      "circle-radius": 5,
-      "circle-color": "#a855f7",
-      "circle-stroke-width": 1.5,
-      "circle-stroke-color": "#ffffff",
-      "circle-opacity": 0,       // Ghost state
-      "circle-stroke-opacity": 0 // Fixed: Hide the white border too
+      "icon-opacity": 0 // Ghost state
     }
   });
 
@@ -242,6 +242,7 @@ map.on("load", async () => {
         const type = map.getLayer(id).type;
         if (type === "line") map.setPaintProperty(id, "line-opacity", targetOpacity);
         if (type === "fill") map.setPaintProperty(id, "fill-opacity", targetOpacity);
+        if (type === "symbol") map.setPaintProperty(id, "icon-opacity", targetOpacity);
         if (type === "circle") {
           map.setPaintProperty(id, "circle-opacity", targetOpacity);
           map.setPaintProperty(id, "circle-stroke-opacity", targetOpacity);
