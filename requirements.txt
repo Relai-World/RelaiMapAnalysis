@@ -1,12 +1,11 @@
 fastapi
 uvicorn
+gunicorn
 psycopg2-binary
 pandas
 numpy
 requests
 beautifulsoup4
 lxml
-tqdm
-torch
-transformers
+python-dotenv
 openpyxl

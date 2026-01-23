@@ -1,13 +1,18 @@
 import psycopg2
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 class BaseScraper:
     def __init__(self):
         self.conn = psycopg2.connect(
-            dbname="real_estate_intelligence",
-            user="postgres",
-            password="post@123",
-            host="localhost",
-            port=5432
+            dbname=os.getenv("DB_NAME", "real_estate_intelligence"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASSWORD", "post@123"),
+            host=os.getenv("DB_HOST", "localhost"),
+            port=os.getenv("DB_PORT", "5432")
         )
         self.cur = self.conn.cursor()
 

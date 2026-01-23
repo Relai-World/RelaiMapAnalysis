@@ -5,13 +5,24 @@ import psycopg2
 import requests
 import time
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 app = FastAPI(title="Real Estate Intelligence API")
 
+# Health Check Endpoint (Recommended for Render)
+@app.get("/")
+def health_check():
+    return {"status": "ok", "message": "West Hyderabad Intelligence API is running"}
+
 # ===============================
-# STATIC FILES (✅ REQUIRED FOR GEOJSON)
+# STATIC FILES REMOVED
 # ===============================
-# This exposes the frontend folder to the browser
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+# We are separating Frontend (GitHub Pages) and Backend (Render).
+# The backend will ONLY serve API JSON data now.
+# app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,11 +36,11 @@ app.add_middleware(
 # ===============================
 def get_db():
     return psycopg2.connect(
-        dbname="real_estate_intelligence",
-        user="postgres",
-        password="post@123",
-        host="localhost",
-        port=5432
+        dbname=os.getenv("DB_NAME", "real_estate_intelligence"),
+        user=os.getenv("DB_USER", "postgres"),
+        password=os.getenv("DB_PASSWORD", "post@123"),
+        host=os.getenv("DB_HOST", "localhost"),
+        port=os.getenv("DB_PORT", "5432")
     )
 
 # ===============================

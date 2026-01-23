@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>West Hyderabad Intelligence</title>
 
-  <link
-    href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css"
-    rel="stylesheet"
-  />
+  <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="pmtiles.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
+
 
   <!-- HEADER -->
   <div id="app-header">
@@ -19,12 +21,13 @@
     </div>
 
     <div class="header-actions">
-      
+
       <div id="layers-btn">
         <img class="layericon" src="assets/layers.png" alt="Schools" />
         <p class="layer-p">
-Layers
-        </p></div>
+          Layers
+        </p>
+      </div>
     </div>
   </div>
 
@@ -37,7 +40,7 @@ Layers
       <button id="close-layers">✕</button>
     </div>
 
-   
+
 
     <!-- Layers grid -->
     <div class="layers-grid">
@@ -65,7 +68,7 @@ Layers
         <img src="assets/orr.png" alt="Outer Ring Road" />
         <span>Outer Ring Road</span>
       </label>
-      
+
 
       <label class="layer-tile">
         <input type="checkbox" data-layer="lakes-layer" />
@@ -87,4 +90,5 @@ Layers
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script src="app.js"></script>
 </body>
+
 </html>

@@ -1,6 +1,43 @@
+const protocol = new pmtiles.Protocol();
+maplibregl.addProtocol("pmtiles", protocol.tile);
+
+// DEBUG: Check ORR Metadata
+async function checkORR() {
+  try {
+    const p = new pmtiles.PMTiles("pmtiles/orr.pmtiles");
+    const metadata = await p.getMetadata();
+    console.log("=== ORR METADATA ===");
+    if (metadata && metadata.vector_layers) {
+      console.log("LAYERS:", metadata.vector_layers);
+    } else {
+      console.log("Metadata:", metadata);
+    }
+  } catch (e) { console.error("ORR Check Failed:", e); }
+}
+checkORR();
+
+
+
 const map = new maplibregl.Map({
   container: "map",
-  style: "./style.json",
+  style: {
+    "version": 8,
+    "sources": {
+      "osm": {
+        "type": "raster",
+        "tiles": ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
+        "tileSize": 256,
+        "attribution": "&copy; OpenStreetMap Contributors"
+      }
+    },
+    "layers": [
+      {
+        "id": "osm",
+        "type": "raster",
+        "source": "osm"
+      }
+    ]
+  },
   center: [78.38, 17.44],
   zoom: 11,
   minZoom: 4,
@@ -79,7 +116,7 @@ map.on("load", async () => {
      🏫 SCHOOLS
   ===================================================== */
   map.loadImage(
-  "./assets/schools.png",
+    "./assets/schools.png",
     (error, image) => {
       if (error) throw error;
 
@@ -89,7 +126,7 @@ map.on("load", async () => {
 
       map.addSource("schools", {
         type: "vector",
-        tiles: ["http://localhost:8080/data/schools/{z}/{x}/{y}.pbf"],
+        url: "pmtiles://pmtiles/schools.pmtiles",
         minzoom: 6,
         maxzoom: 14
       });
@@ -101,7 +138,7 @@ map.on("load", async () => {
         "source-layer": "schools",
         layout: {
           "icon-image": "school-icon",
-          "icon-size": ["interpolate", ["linear"], ["zoom"], 8, 0.03, 18, 0.06],
+          "icon-size": 0.12,
           "icon-allow-overlap": true,
           "icon-ignore-placement": true,
           "visibility": "none"
@@ -115,7 +152,7 @@ map.on("load", async () => {
   ===================================================== */
   map.addSource("highways", {
     type: "vector",
-    tiles: ["http://localhost:8080/data/highways/{z}/{x}/{y}.pbf"],
+    url: "pmtiles://pmtiles/highways.pmtiles",
     minzoom: 6,
     maxzoom: 10
   });
@@ -127,7 +164,7 @@ map.on("load", async () => {
     "source-layer": "highways",
     layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
     paint: {
-      "line-color":"#FF8700",
+      "line-color": "#ad07f4",
       "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 5.2],
       "line-opacity": 0.9
     }
@@ -138,7 +175,7 @@ map.on("load", async () => {
   ===================================================== */
   map.addSource("metro", {
     type: "vector",
-    tiles: ["http://localhost:8080/data/metro/{z}/{x}/{y}.pbf"],
+    url: "pmtiles://pmtiles/metro.pmtiles",
     minzoom: 6,
     maxzoom: 10
   });
@@ -161,7 +198,7 @@ map.on("load", async () => {
   ===================================================== */
   map.addSource("orr", {
     type: "vector",
-    tiles: ["http://localhost:8080/data/orr/{z}/{x}/{y}.pbf"],
+    url: "pmtiles://pmtiles/orr.pmtiles",
     minzoom: 6,
     maxzoom: 10
   });
@@ -184,9 +221,9 @@ map.on("load", async () => {
   ===================================================== */
   map.addSource("lakes", {
     type: "vector",
-    tiles: ["http://localhost:8080/data/lakes/{z}/{x}/{y}.pbf"],
+    url: "pmtiles://pmtiles/lakes.pmtiles",
     minzoom: 6,
-    maxzoom: 10
+    maxzoom: 10 // Increased to allow overzooming
   });
 
   map.addLayer({
@@ -196,16 +233,24 @@ map.on("load", async () => {
     "source-layer": "lakes",
     layout: { visibility: "none" },
     paint: {
-      "fill-color": "#38bdf8",
+      "fill-color": "#16b3f6",
       "fill-opacity": 1.0,
-      "fill-outline-color": "#0284c7"
+      "fill-outline-color": "#2cdcfb"
     }
   });
 
   /* =====================================================
      📍 LOCATIONS
   ===================================================== */
-  const res = await fetch("http://127.0.0.1:8000/api/v1/insights");
+  // CONFIG: Auto-switch based on hostname
+  // If running locally (localhost), use local backend using .env or defaults
+  // If running on GitHub Pages, use your PROD backend URL
+  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
+  // REPLACE 'https://your-render-app.onrender.com' WITH YOUR ACTUAL RENDER URL!
+  const BACKEND_URL = isLocal ? "http://127.0.0.1:8000" : "https://west-hyderabad-intelligence.onrender.com";
+
+  const res = await fetch(`${BACKEND_URL}/api/v1/insights`);
   const data = await res.json();
 
   map.addSource("locations", {
@@ -225,8 +270,8 @@ map.on("load", async () => {
     type: "circle",
     source: "locations",
     paint: {
-      "circle-radius": 6,
-      "circle-color":"#2563eb", 
+      "circle-radius": 12,
+      "circle-color": "#2735d1",
       "circle-stroke-color": "#ffffff",
       "circle-stroke-width": 2
     }
@@ -257,7 +302,7 @@ map.on("load", async () => {
     const title = document.getElementById("app-title");
 
     title.style.visibility = "hidden";
-    card.style.display = "block";
+    card.style.display = "flex";
 
     map.easeTo({
       center: [p.longitude, p.latitude],
@@ -269,36 +314,43 @@ map.on("load", async () => {
     const imagePath = `assets/locations/${imageName}.jpg`;
 
     card.innerHTML = `
-      <div class="location-image">
-        <img src="${imagePath}" alt="${p.location}" onerror="this.style.display='none'" />
-      </div>
 
-      <p>${p.location}</p>
+       
+       <div class="location-image">
+         <img src="${imagePath}" alt="${p.location}" onerror="this.src='assets/locations/default.jpg'" style="object-fit:cover; width:100%; height:100%;" />
+       </div>
 
-      <div class="metrics">
-        <div class="metric-box">
-          <span>Market Sentiment</span>
-          <strong>${sentimentText(p.avg_sentiment)}</strong>
-        </div>
+       <div class="intel-scroll-container">
+          <h3>${p.location}</h3>
+          <p class="location-subtitle">Real Estate Intelligence</p>
 
-        <div class="metric-box">
-          <span>Growth Outlook</span>
-          <strong>${growthText(p.growth_score)}</strong>
-        </div>
+          <div class="metrics">
+            <div class="metric-box">
+              <span>Market Sentiment</span>
+              <strong style="color:#60a5fa">${sentimentText(p.avg_sentiment)}</strong>
+            </div>
+    
+            <div class="metric-box">
+              <span>Growth Outlook</span>
+              <strong style="color:#4ade80">${growthText(p.growth_score)}</strong>
+            </div>
+    
+            <div class="metric-box">
+              <span>Investment Score</span>
+              <strong style="color:#facc15">${investmentText(p.investment_score)}</strong>
+            </div>
+          </div>
 
-        <div class="metric-box">
-          <span>Investment Score</span>
-          <strong>${investmentText(p.investment_score)}</strong>
-        </div>
-      </div>
-
-      <div class="card-actions">
-        <button id="download-report">Download Report</button>
-      </div>
-    `;
+          <div class="card-actions" style="margin-top:32px;">
+            <button id="download-report" style="width:100%; padding:14px; background:#2563eb; color:white; font-weight:bold; border:none; border-radius:12px; font-size:1rem;">Download PDF Report</button>
+          </div>
+       </div>
+     `;
 
     document.getElementById("download-report").onclick =
       () => generateReport(p);
+
+
 
     if (activeMarker) activeMarker.remove();
     activeMarker = new maplibregl.Marker({ color: "#2563eb" })
