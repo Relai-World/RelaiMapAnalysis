@@ -168,7 +168,7 @@ map.on("load", async () => {
     source: "metro-source",
     "source-layer": "metro",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#f00b0bff", "line-width": 5, "line-blur": 1, "line-opacity": 0 } // Ghost state
+    paint: { "line-color": "#f00b0bff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 4.8], "line-blur": 1, "line-opacity": 0 } // Ghost state
   });
 
   // 5. Schools
