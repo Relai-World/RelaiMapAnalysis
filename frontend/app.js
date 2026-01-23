@@ -98,27 +98,88 @@ function generateReport(p) {
 map.on("load", async () => {
 
   /* =====================================================
-     📍 BASE TILE URL LOGIC (STILL NEEDED FOR SCHOOL ICON)
+     📍 BASE TILE URL LOGIC & PRE-FETCHING
   ===================================================== */
-  // If localhost, use simple relative path. If GitHub, use full absolute path to avoid lookup errors.
   const isLocalMap = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
   const BASE_TILES_URL = isLocalMap
     ? "maptiles"
     : "https://harjeet1309.github.io/west-hyderabad-intelliweb/frontend/maptiles";
 
-  /* =====================================================
-     🏫 SCHOOLS ICON
-  ===================================================== */
-  map.loadImage(
-    "./assets/schools.png",
-    (error, image) => {
-      if (!error && !map.hasImage("school-icon")) {
-        map.addImage("school-icon", image);
-      }
-    }
-  );
+  // SNAPPY LOADING: Pre-fetch headers for all PMTiles files
+  const pmtilesLayers = ["schools", "highways", "metro", "orr", "lakes"];
+  pmtilesLayers.forEach(name => {
+    const p = new pmtiles.PMTiles(`${BASE_TILES_URL}/${name}.pmtiles`);
+    p.getHeader().then(() => console.log(`✓ Warm-up: ${name} data ready`))
+      .catch(e => console.warn(`Warm-up failed for ${name}`, e));
+  });
 
-  // NOTE: Layers (Schools, Metro, Highways, ORR, Lakes) are now loaded from style.json automatically.
+  /* =====================================================
+     🏗️ ADD SOURCES & LAYERS (SNAPPY MODE)
+  ===================================================== */
+
+  // 1. Lakes
+  map.addSource("lakes-source", { type: "vector", url: `pmtiles://${BASE_TILES_URL}/lakes.pmtiles` });
+  map.addLayer({
+    id: "lakes-layer",
+    type: "fill",
+    source: "lakes-source",
+    "source-layer": "lakes",
+    layout: { visibility: "none" },
+    paint: { "fill-color": "#0ea5e9", "fill-opacity": 0.5 }
+  });
+
+  // 2. ORR
+  map.addSource("orr-source", { type: "vector", url: `pmtiles://${BASE_TILES_URL}/orr.pmtiles` });
+  map.addLayer({
+    id: "orr-layer",
+    type: "line",
+    source: "orr-source",
+    "source-layer": "orr",
+    layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
+    paint: { "line-color": "#3b82f6", "line-width": 6, "line-opacity": 0.9 }
+  });
+
+  // 3. Highways
+  map.addSource("highways-source", { type: "vector", url: `pmtiles://${BASE_TILES_URL}/highways.pmtiles` });
+  map.addLayer({
+    id: "highways-layer",
+    type: "line",
+    source: "highways-source",
+    "source-layer": "highways",
+    layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
+    paint: { "line-color": "#faa916", "line-width": 2.5, "line-opacity": 0.8 }
+  });
+
+  // 4. Metro
+  map.addSource("metro-source", { type: "vector", url: `pmtiles://${BASE_TILES_URL}/metro.pmtiles` });
+  map.addLayer({
+    id: "metro-layer",
+    type: "line",
+    source: "metro-source",
+    "source-layer": "metro",
+    layout: { visibility: "none", "line-join": "round", "line-cap": "round" },
+    paint: { "line-color": "#ef4444", "line-width": 5, "line-blur": 1 }
+  });
+
+  // 5. Schools
+  map.loadImage("./assets/schools.png", (err, img) => {
+    if (!err && !map.hasImage("school-icon")) map.addImage("school-icon", img);
+  });
+  map.addSource("schools-source", { type: "vector", url: `pmtiles://${BASE_TILES_URL}/schools.pmtiles` });
+  map.addLayer({
+    id: "schools-layer",
+    type: "circle",
+    source: "schools-source",
+    "source-layer": "schools",
+    layout: { visibility: "none" },
+    paint: {
+      "circle-radius": 5,
+      "circle-color": "#a855f7",
+      "circle-stroke-width": 1.5,
+      "circle-stroke-color": "#ffffff",
+      "circle-opacity": 0.9
+    }
+  });
 
 
   /* =====================================================
