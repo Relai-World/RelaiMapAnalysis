@@ -113,6 +113,15 @@ function generateReport(p) {
 map.on("load", async () => {
 
   /* =====================================================
+     📍 BASE TILE URL LOGIC
+  ===================================================== */
+  // If localhost, use simple relative path. If GitHub, use full absolute path to avoid lookup errors.
+  const isLocalMap = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  const BASE_TILES_URL = isLocalMap
+    ? "maptiles"
+    : "https://harjeet1309.github.io/west-hyderabad-intelliweb/frontend/maptiles";
+
+  /* =====================================================
      🏫 SCHOOLS
   ===================================================== */
   map.loadImage(
@@ -126,7 +135,7 @@ map.on("load", async () => {
 
       map.addSource("schools", {
         type: "vector",
-        url: "pmtiles://maptiles/schools.pmtiles",
+        url: `pmtiles://${BASE_TILES_URL}/schools.pmtiles`,
         minzoom: 6,
         maxzoom: 14
       });
@@ -152,7 +161,7 @@ map.on("load", async () => {
   ===================================================== */
   map.addSource("highways", {
     type: "vector",
-    url: "pmtiles://maptiles/highways.pmtiles",
+    url: `pmtiles://${BASE_TILES_URL}/highways.pmtiles`,
     minzoom: 6,
     maxzoom: 10
   });
@@ -175,7 +184,7 @@ map.on("load", async () => {
   ===================================================== */
   map.addSource("metro", {
     type: "vector",
-    url: "pmtiles://maptiles/metro.pmtiles",
+    url: `pmtiles://${BASE_TILES_URL}/metro.pmtiles`,
     minzoom: 6,
     maxzoom: 10
   });
@@ -198,7 +207,7 @@ map.on("load", async () => {
   ===================================================== */
   map.addSource("orr", {
     type: "vector",
-    url: "pmtiles://maptiles/orr.pmtiles",
+    url: `pmtiles://${BASE_TILES_URL}/orr.pmtiles`,
     minzoom: 6,
     maxzoom: 10
   });
@@ -221,7 +230,7 @@ map.on("load", async () => {
   ===================================================== */
   map.addSource("lakes", {
     type: "vector",
-    url: "pmtiles://maptiles/lakes.pmtiles",
+    url: `pmtiles://${BASE_TILES_URL}/lakes.pmtiles`,
     minzoom: 6,
     maxzoom: 10 // Increased to allow overzooming
   });
