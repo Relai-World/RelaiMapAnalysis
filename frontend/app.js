@@ -1,3 +1,5 @@
+console.log("App.js Loaded - V 1.5 - Absolute Paths Maptiles");
+
 const protocol = new pmtiles.Protocol();
 maplibregl.addProtocol("pmtiles", protocol.tile);
 
