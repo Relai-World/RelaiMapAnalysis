@@ -285,10 +285,8 @@ map.on("load", async () => {
     const imagePath = `assets/locations/${imageName}.jpg`;
 
     card.innerHTML = `
-
-       
        <div class="location-image">
-         <img src="${imagePath}" alt="${p.location}" onerror="this.src='assets/locations/default.jpg'" style="object-fit:cover; width:100%; height:100%;" />
+         <img src="${imagePath}" alt="${p.location}" onerror="this.src='assets/locations/default.jpg'" />
        </div>
 
        <div class="intel-scroll-container">
@@ -312,8 +310,8 @@ map.on("load", async () => {
             </div>
           </div>
 
-          <div class="card-actions" style="margin-top:32px;">
-            <button id="download-report" style="width:100%; padding:14px; background:#2563eb; color:white; font-weight:bold; border:none; border-radius:12px; font-size:1rem;">Download PDF Report</button>
+          <div class="card-actions">
+            <button id="download-report">Download PDF Report</button>
           </div>
        </div>
      `;
