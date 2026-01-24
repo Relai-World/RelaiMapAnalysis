@@ -15,10 +15,10 @@ body {
 
 /* Scale down the selected pin marker */
 .maplibregl-marker svg {
-  width: 30px !important;
-  height: 40px !important;
+  width: 24px !important;
+  height: 32px !important;
   display: block;
-  transform: translate(0, -10%);
+  transform: translate(0, -5%);
 }
 
 /* ===============================
