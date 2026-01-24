@@ -72,7 +72,8 @@ body {
   position: fixed;
   top: 80px;
   right: 16px;
-  width: 320px;
+  width: 260px;
+  /* Reduced from 320px */
   background: #0f172A;
   color: #020617;
   border-radius: 18px;
@@ -82,7 +83,8 @@ body {
 }
 
 .layers-sheet .layers-header {
-  padding: 16px 18px;
+  padding: 12px 14px;
+  /* Reduced from 16px 18px */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -94,16 +96,19 @@ body {
 .layers-sheet .layers-header button {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 16px;
+  /* Slightly smaller close icon */
   cursor: pointer;
 }
 
 /* Layers grid */
 .layers-grid {
-  padding: 16px;
+  padding: 12px;
+  /* Reduced padding */
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 10px;
+  /* Tighter gap */
 }
 
 /* Individual tiles */

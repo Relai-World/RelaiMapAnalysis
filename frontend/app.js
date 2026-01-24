@@ -62,7 +62,10 @@ const layersCard = document.getElementById("layers-card");
 const closeLayers = document.getElementById("close-layers");
 
 if (layersBtn && layersCard && closeLayers) {
-  layersBtn.onclick = () => layersCard.style.display = "block";
+  layersBtn.onclick = () => {
+    const isHidden = layersCard.style.display === "none" || !layersCard.style.display;
+    layersCard.style.display = isHidden ? "block" : "none";
+  };
   closeLayers.onclick = () => layersCard.style.display = "none";
 }
 
