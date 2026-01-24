@@ -6,6 +6,13 @@ body {
   font-family: Inter, system-ui, sans-serif;
   background: #020617;
   color: #e5e7eb;
+  box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
 }
 
 #map {
@@ -62,6 +69,8 @@ body {
   right: 10px;
   width: 32px;
   height: 32px;
+  padding: 0;
+  /* Ensure no padding */
   border-radius: 6px;
   background: #0f172a;
   border: 1px solid #1e293b;
@@ -81,6 +90,9 @@ body {
 .layericon {
   width: 20px;
   height: 20px;
+  margin: 0;
+  /* Ensure no margins */
+  display: block;
   filter: invert(1);
 }
 
