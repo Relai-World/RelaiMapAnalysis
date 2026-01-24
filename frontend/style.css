@@ -26,7 +26,7 @@ body {
 ================================ */
 #app-header {
   position: fixed;
-  top: 16px;
+  top: 110px;
   left: 16px;
   right: 16px;
   display: flex;
@@ -70,7 +70,7 @@ body {
 ================================ */
 #layers-card.layers-sheet {
   position: fixed;
-  top: 80px;
+  top: 170px;
   right: 16px;
   width: 260px;
   /* Reduced from 320px */
