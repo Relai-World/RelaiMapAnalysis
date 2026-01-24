@@ -29,6 +29,11 @@ const map = new maplibregl.Map({
   maxZoom: 18
 });
 
+// 🚀 EARLY FETCH: Start getting data immediately while map initializes
+const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+const BACKEND_URL = isLocal ? "http://127.0.0.1:8000" : "https://west-hyderabad-intelliweb.onrender.com";
+const insightsPromise = fetch(`${BACKEND_URL}/api/v1/insights`).then(res => res.json());
+
 map.addControl(new maplibregl.NavigationControl());
 
 let activeMarker = null;
@@ -200,16 +205,11 @@ map.on("load", async () => {
 
 
   /* =====================================================
-     📍 LOCATIONS
+     📍 LOCATIONS (OPTIMIZED)
   ===================================================== */
-  const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-  const BACKEND_URL = isLocal ? "http://127.0.0.1:8000" : "https://west-hyderabad-intelliweb.onrender.com";
-
   try {
-    const res = await fetch(`${BACKEND_URL}/api/v1/insights`);
-    if (!res.ok) throw new Error(`Backend Error: ${res.status}`);
-
-    const data = await res.json();
+    const data = await insightsPromise; // Wait for the early fetch
+    if (data.error) throw new Error(data.message);
 
     map.addSource("locations", {
       type: "geojson",
