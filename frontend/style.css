@@ -52,9 +52,8 @@ body {
 }
 
 #layers-btn {
-  padding: 12px 20px;
-  /* Larger touch target */
-  border-radius: 14px;
+  padding: 6px 14px;
+  border-radius: 12px;
   background: #0f172a;
   border: 1px solid #1e293b;
   cursor: pointer;
@@ -62,10 +61,7 @@ body {
   justify-content: center;
   align-items: center;
   font-weight: 600;
-  font-size: 1rem;
-  /* Larger text */
   color: #e5e7eb;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 #close-layers {
@@ -79,7 +75,7 @@ body {
   position: fixed;
   top: 80px;
   right: 16px;
-  width: 400px;
+  width: 320px;
   background: #0f172A;
   color: #020617;
   border-radius: 18px;
@@ -149,8 +145,6 @@ body {
 /* Individual tiles */
 .layer-tile {
   background: #ffffff;
-  ;
-
   border-radius: 14px;
   filter: invert(1);
   padding: 10px 8px;
@@ -161,19 +155,16 @@ body {
 }
 
 .layer-tile img {
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   margin-bottom: 6px;
-
 }
 
 .layer-tile span {
   font-size: 12px;
   font-weight: 600;
   display: block;
-
 }
-
 
 .layer-tile input {
   display: none;
@@ -187,75 +178,31 @@ body {
 /* ===============================
    INTEL CARD (UNCHANGED)
 ================================ */
-/* Sidebar Container */
-/* Centered Sidebar/Card */
 #intel-card {
   position: fixed;
-  top: 50%;
-  left: 32px;
-  transform: translateY(-50%);
-  width: 420px;
-  max-width: 90vw;
-  max-height: 95vh;
-  /* Allow it to be taller */
-  background: rgba(2, 6, 23, 0.98);
-  border-radius: 28px;
-  padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 25px 0 80px rgba(0, 0, 0, 0.7);
+  bottom: 20px;
+  left: 20px;
+  height: 500px;
+  width: 280px;
+  background: #020617;
+  border-radius: 16px;
+  padding: 12px;
+  border: 1px solid #1e293b;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
   display: none;
-  /* Hidden by default */
-  z-index: 100;
   flex-direction: column;
-  overflow: hidden;
-  animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes slideInLeft {
-  from {
-    transform: translate(-100%, -50%);
-    opacity: 0;
-  }
-
-  to {
-    transform: translate(0, -50%);
-    opacity: 1;
-  }
-}
-
-
-
-/* Inner Scrollable Area */
-.intel-scroll-container {
-  padding: 24px;
-  overflow-y: auto;
-  flex-grow: 1;
 }
 
 #intel-card h3 {
-  font-size: 2rem;
-  /* Even larger */
-  font-weight: 800;
-  color: #ffffff;
-  margin: 16px 0 6px 0;
-  line-height: 1.1;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-  /* Pop against dark bg */
-}
-
-#intel-card .location-subtitle {
-  font-size: 1.05rem;
-  color: #cbd5e1;
-  /* Much brighter grey */
-  font-weight: 600;
-  margin: 0 0 28px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  color: white;
 }
 
 #intel-card p {
-  font-size: 1rem;
-  margin: 0;
+  font-size: 20px;
+  margin: 10px 0;
 }
 
 /* ===============================
@@ -264,9 +211,10 @@ body {
 .metrics {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  /* Larger gap */
-  margin-top: 10px;
+  gap: 10px;
+  margin-top: 8px;
+  overflow-y: auto;
+  height: 260px;
 }
 
 .metrics::-webkit-scrollbar {
@@ -277,32 +225,23 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  /* More padding */
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  transition: transform 0.2s;
-}
-
-.metric-box:hover {
-  background: rgba(30, 41, 59, 0.9);
-  transform: translateY(-2px);
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(180deg,
+      rgba(15, 23, 42, 0.9),
+      rgba(2, 6, 23, 0.9));
+  border: 1px solid #1e293b;
 }
 
 .metric-box span {
-  font-size: 1.2rem;
-  /* Significantly larger (~19px) */
-  color: #e2e8f0;
-  /* Even brighter */
-  font-weight: 600;
+  font-size: 11px;
+  color: #94a3b8;
 }
 
 .metric-box strong {
-  font-size: 1.25rem;
-  /* 20px Value */
+  font-size: 15px;
   font-weight: 700;
-  /* Color is now inline, but base color here */
+  color: #e5e7eb;
 }
 
 .card-actions {
@@ -329,15 +268,17 @@ body {
    LOCATION IMAGE
 ================================ */
 .location-image {
-  width: 100%;
-  height: 240px;
-  position: relative;
-  /* Image acts as header */
+  width: 256px;
+  /* Adjusted to fit inside 280px card with padding */
+  height: 150px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  border: 1px solid #1e293b;
+  background: #020617;
 }
 
 .location-image img {
-  border-radius: 0;
-  /* Flush edges */
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -351,8 +292,6 @@ body {
 }
 
 .layer-p {
-
   font-size: 16px;
   font-weight: 600;
-
 }
