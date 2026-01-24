@@ -60,29 +60,25 @@ body {
 #layers-btn {
   width: 32px;
   height: 32px;
-  border-radius: 4px;
-  /* Square like map controls */
-  background: white;
-  /* Match map controls background */
-  border: 1px solid #ccc;
-  /* Match map controls border */
+  border-radius: 6px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
-  transition: background 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
 }
 
 #layers-btn:hover {
-  background: #f2f2f2;
+  background: #1e293b;
 }
 
 .layericon {
   width: 20px;
   height: 20px;
-  filter: none;
-  /* No invert needed on white background */
+  filter: invert(1);
 }
 
 /* ===============================
