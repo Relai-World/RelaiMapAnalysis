@@ -294,7 +294,7 @@ map.on("load", async () => {
 
        <div class="intel-scroll-container">
           <h3>${p.location}</h3>
-          <p class="location-subtitle">Real Estate Intelligence</p>
+          
 
           <div class="metrics">
             <div class="metric-box">
