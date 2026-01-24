@@ -225,7 +225,7 @@ map.on("load", async () => {
       type: "circle",
       source: "locations",
       paint: {
-        "circle-radius": 8,
+        "circle-radius": 6,
         "circle-color": "#2735d1",
         "circle-stroke-color": "#ffffff",
         "circle-stroke-width": 2
