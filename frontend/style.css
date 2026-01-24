@@ -26,43 +26,63 @@ body {
 ================================ */
 #app-header {
   position: fixed;
-  top: 110px;
+  top: 105px;
+  /* Adjusted to sit right below the map controls */
   left: 16px;
-  right: 16px;
+  right: 10px;
+  /* Align with map controls */
   display: flex;
   justify-content: space-between;
   align-items: center;
   z-index: 20;
+  pointer-events: none;
+  /* Allow clicking through the header space */
 }
 
 #app-title {
+  pointer-events: auto;
+  /* Re-enable for the title */
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(10px);
-  padding: 12px 16px;
-  border-radius: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
   font-weight: 700;
+  font-size: 0.9rem;
 }
 
 .header-actions {
+  pointer-events: auto;
+  /* Re-enable for the button */
   display: flex;
   gap: 10px;
 }
 
 #layers-btn {
-  padding: 6px 14px;
-  border-radius: 12px;
-  background: #0f172a;
-  border: 1px solid #1e293b;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  /* Square like map controls */
+  background: white;
+  /* Match map controls background */
+  border: 1px solid #ccc;
+  /* Match map controls border */
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-weight: 600;
-  color: #e5e7eb;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  transition: background 0.2s;
 }
 
-#close-layers {
-  color: white;
+#layers-btn:hover {
+  background: #f2f2f2;
+}
+
+.layericon {
+  width: 20px;
+  height: 20px;
+  filter: none;
+  /* No invert needed on white background */
 }
 
 /* ===============================
@@ -70,8 +90,9 @@ body {
 ================================ */
 #layers-card.layers-sheet {
   position: fixed;
-  top: 170px;
-  right: 16px;
+  top: 145px;
+  /* Positioned below the new icon-only button */
+  right: 10px;
   width: 260px;
   /* Reduced from 320px */
   background: #0f172A;
