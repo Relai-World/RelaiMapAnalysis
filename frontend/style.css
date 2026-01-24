@@ -100,20 +100,23 @@ body {
 
 /* Individual tiles */
 .layer-tile {
-  background: #ffffff;
+  background: rgba(0, 0, 0, 0.4);
   border-radius: 14px;
-  filter: invert(1);
   padding: 10px 8px;
   text-align: center;
   cursor: pointer;
   border: 2px solid transparent;
   transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .layer-tile img {
   width: 32px;
   height: 32px;
   margin-bottom: 6px;
+  filter: brightness(0) invert(1);
 }
 
 .layer-tile span {
@@ -121,6 +124,7 @@ body {
   /* Tighter for the grid */
   font-weight: 600;
   display: block;
+  color: #e5e7eb;
 }
 
 .layer-tile input {
@@ -130,8 +134,7 @@ body {
 /* Blue Highlight to match Screenshot */
 .layer-tile:has(input:checked) {
   border-color: #2563eb;
-  background: #000;
-  /* Deep black on invert */
+  background: rgba(37, 99, 235, 0.1);
   box-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
 }
 
