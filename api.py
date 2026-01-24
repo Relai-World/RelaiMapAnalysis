@@ -35,18 +35,20 @@ app.add_middleware(
 # DB CONNECTION
 # ===============================
 def get_db():
-    # Priority 1: Use full connection URI (Most reliable for Render + Supabase)
-    db_url = os.getenv("DATABASE_URL")
-    if db_url:
-        return psycopg2.connect(db_url)
-    
-    # Priority 2: Individual variables (Fallback)
+    # Attempt connection using individual variables (Safest for special characters in passwords)
+    host = os.getenv("DB_HOST", "localhost")
+    user = os.getenv("DB_USER", "postgres")
+    password = os.getenv("DB_PASSWORD", "post@123")
+    dbname = os.getenv("DB_NAME", "real_estate_intelligence")
+    port = os.getenv("DB_PORT", "5432")
+
     return psycopg2.connect(
-        dbname=os.getenv("DB_NAME", "real_estate_intelligence"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD", "post@123"),
-        host=os.getenv("DB_HOST", "localhost"),
-        port=os.getenv("DB_PORT", "6543") # Default to pooler port
+        host=host,
+        user=user,
+        password=password,
+        dbname=dbname,
+        port=port,
+        sslmode='require' if host != 'localhost' else 'prefer'
     )
 
 # ===============================
