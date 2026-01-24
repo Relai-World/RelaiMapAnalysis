@@ -268,70 +268,78 @@ map.on("load", async () => {
   });
 
   /* =====================================================
-     CLICK → INTEL CARD
+     📍 CLICK HANDLER (CONSOLIDATED)
   ===================================================== */
-  map.on("click", "location-core", e => {
-    const p = e.features[0].properties;
-    const card = document.getElementById("intel-card");
-    const title = document.getElementById("app-title");
-
-    title.style.visibility = "hidden";
-    card.style.display = "flex";
-
-    map.easeTo({
-      center: [p.longitude, p.latitude],
-      zoom: 13,
-      duration: 800
-    });
-
-    const imageName = p.location.toLowerCase().replace(/\s+/g, "_");
-    const imagePath = `assets/locations/${imageName}.jpg`;
-
-    card.innerHTML = `
-       <div class="location-image">
-         <img src="${imagePath}" alt="${p.location}" onerror="this.src='assets/locations/default.jpg'" />
-       </div>
-
-       <div class="intel-scroll-container">
-          <h3>${p.location}</h3>
-          <p class="location-subtitle">Real Estate Intelligence</p>
-
-          <div class="metrics">
-            <div class="metric-box">
-              <span>Market Sentiment</span>
-              <strong style="color:#60a5fa">${sentimentText(p.avg_sentiment)}</strong>
-            </div>
-    
-            <div class="metric-box">
-              <span>Growth Outlook</span>
-              <strong style="color:#4ade80">${growthText(p.growth_score)}</strong>
-            </div>
-    
-            <div class="metric-box">
-              <span>Investment Score</span>
-              <strong style="color:#facc15">${investmentText(p.investment_score)}</strong>
-            </div>
-          </div>
-
-          <div class="card-actions">
-            <button id="download-report">Download PDF Report</button>
-          </div>
-       </div>
-     `;
-
-    document.getElementById("download-report").onclick =
-      () => generateReport(p);
-
-
-
-    if (activeMarker) activeMarker.remove();
-    activeMarker = new maplibregl.Marker({ color: "#2563eb" })
-      .setLngLat([p.longitude, p.latitude])
-      .addTo(map);
-  });
-
   map.on("click", e => {
-    if (!map.queryRenderedFeatures(e.point, { layers: ["location-core"] }).length) {
+    const features = map.queryRenderedFeatures(e.point, { layers: ["location-core"] });
+
+    if (features.length > 0) {
+      // 1. HANDLE POINT CLICK
+      const p = features[0].properties;
+      const card = document.getElementById("intel-card");
+      const title = document.getElementById("app-title");
+
+      title.style.visibility = "hidden";
+      card.style.display = "flex";
+
+      map.easeTo({
+        center: [p.longitude, p.latitude],
+        zoom: 13,
+        duration: 800
+      });
+
+      const imageName = p.location.toLowerCase().replace(/\s+/g, "_");
+      const imagePath = `assets/locations/${imageName}.jpg`;
+
+      card.innerHTML = `
+         <div class="location-image">
+           <img src="${imagePath}" alt="${p.location}" onerror="this.src='assets/locations/default.jpg'" />
+         </div>
+
+         <div class="intel-scroll-container">
+            <h3>${p.location}</h3>
+            <p class="location-subtitle">Real Estate Intelligence</p>
+
+            <div class="metrics">
+              <div class="metric-box">
+                <span>Market Sentiment</span>
+                <strong style="color:#60a5fa">${sentimentText(p.avg_sentiment)}</strong>
+              </div>
+      
+              <div class="metric-box">
+                <span>Growth Outlook</span>
+                <strong style="color:#4ade80">${growthText(p.growth_score)}</strong>
+              </div>
+      
+              <div class="metric-box">
+                <span>Investment Score</span>
+                <strong style="color:#facc15">${investmentText(p.investment_score)}</strong>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <button id="download-report">Download PDF Report</button>
+            </div>
+         </div>
+       `;
+
+      document.getElementById("download-report").onclick = () => generateReport(p);
+
+      if (activeMarker) activeMarker.remove();
+
+      // Create marker but make it non-interactive so it doesn't block future clicks
+      const markerEl = document.createElement('div');
+      markerEl.className = 'custom-marker'; // We can style this or just leave it
+
+      activeMarker = new maplibregl.Marker({ color: "#2563eb" })
+        .setLngLat([p.longitude, p.latitude])
+        .addTo(map);
+
+      // Ensure the marker doesn't steal clicks from the dots
+      activeMarker.getElement().style.pointerEvents = "none";
+
+    } else {
+      // 2. HANDLE MAP CLICK (HIDE CARD)
       document.getElementById("app-title").style.visibility = "visible";
       document.getElementById("intel-card").style.display = "none";
       if (activeMarker) activeMarker.remove();
