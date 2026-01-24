@@ -225,10 +225,10 @@ map.on("load", async () => {
       type: "circle",
       source: "locations",
       paint: {
-        "circle-radius": 5,
+        "circle-radius": 8,
         "circle-color": "#2735d1",
         "circle-stroke-color": "#ffffff",
-        "circle-stroke-width": 1.5
+        "circle-stroke-width": 2
       }
     });
   } catch (err) {
