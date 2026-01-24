@@ -315,3 +315,126 @@ body {
   font-weight: 600;
   margin: 0;
 }
+
+/* ===============================
+   RESPONSIVE DESIGN (MOBILE)
+================================ */
+@media (max-width: 768px) {
+
+  /* 1. Header & Title */
+  #app-header {
+    top: 10px;
+    padding: 0 10px;
+  }
+
+  #app-title {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 10px;
+  }
+
+  /* 2. Intel Card as Bottom Sheet */
+  #intel-card {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 60vh;
+    border-radius: 24px 24px 0 0;
+    /* Only top rounded */
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    animation: slideUpMobile 0.4s cubic-bezier(0, 0.55, 0.45, 1);
+  }
+
+  @keyframes slideUpMobile {
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .location-image {
+    height: 160px;
+    /* Keep it decent size */
+    border-radius: 24px 24px 12px 12px;
+  }
+
+  #intel-card h3 {
+    font-size: 1.4rem;
+    margin-top: 8px;
+  }
+
+  .metric-box {
+    padding: 14px 16px;
+    border-radius: 14px;
+  }
+
+  .metric-box strong {
+    font-size: 1.1rem;
+  }
+
+  /* 3. Layers Sheet Behavior */
+  #layers-card.layers-sheet {
+    top: auto;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+    width: calc(100% - 32px);
+    max-width: 400px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .layers-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 20px;
+  }
+
+  .layer-tile {
+    padding: 12px 8px;
+  }
+
+  .layer-tile img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .layer-tile span {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  /* 4. Map Control Offset */
+  #layers-btn {
+    top: 80px;
+    /* Slightly higher on mobile */
+    right: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  #app-title {
+    max-width: 160px;
+    font-size: 0.75rem;
+  }
+
+  .layers-grid {
+    grid-template-columns: repeat(3, 1fr);
+    /* Stay 3 wide but smaller */
+  }
+
+  #intel-card {
+    max-height: 70vh;
+  }
+
+  #download-report {
+    padding: 16px;
+    font-size: 1rem;
+  }
+}
