@@ -13,6 +13,14 @@ body {
   height: 100vh;
 }
 
+/* Scale down the selected pin marker */
+.maplibregl-marker svg {
+  width: 30px !important;
+  height: 40px !important;
+  display: block;
+  transform: translate(0, -10%);
+}
+
 /* ===============================
    HEADER
 ================================ */
