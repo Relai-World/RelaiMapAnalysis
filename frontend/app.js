@@ -18,6 +18,21 @@ async function checkLakes() {
 }
 checkLakes();
 
+// DEBUG: Check Metro Metadata
+async function checkMetro() {
+  try {
+    const p = new pmtiles.PMTiles("maptiles/metro.pmtiles");
+    const metadata = await p.getMetadata();
+    console.log("=== METRO METADATA ===");
+    if (metadata && metadata.vector_layers) {
+      console.log("LAYERS:", metadata.vector_layers);
+    } else {
+      console.log("Metadata:", metadata);
+    }
+  } catch (e) { console.error("Metro Check Failed:", e); }
+}
+checkMetro();
+
 
 
 const map = new maplibregl.Map({
@@ -298,13 +313,38 @@ map.on("load", async () => {
     minzoom: 0,
     maxzoom: 14
   });
+
+  // Metro Tracks (Lines)
   map.addLayer({
     id: "metro-layer",
     type: "line",
     source: "metro-source",
     "source-layer": "metro",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#f00b0bff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 4.8], "line-blur": 1, "line-opacity": 0 } // Ghost state
+    paint: {
+      "line-color": "#f00b0b",
+      "line-width": ["interpolate", ["linear"], ["zoom"], 7, 2, 18, 6],
+      "line-blur": 0.5,
+      "line-opacity": 0
+    }
+  });
+
+  // Metro Stations (Points)
+  map.addLayer({
+    id: "metro-stations-layer",
+    type: "circle",
+    source: "metro-source",
+    "source-layer": "metro",
+    filter: ["==", ["geometry-type"], "Point"],
+    layout: { visibility: "visible" },
+    paint: {
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 3, 15, 8],
+      "circle-color": "#ffffff",
+      "circle-stroke-color": "#f00b0b",
+      "circle-stroke-width": 2,
+      "circle-opacity": 0,
+      "circle-stroke-opacity": 0
+    }
   });
 
   // 5. RRR (Regional Ring Road)
@@ -662,6 +702,15 @@ map.on("load", async () => {
         }
         if (type === "raster") map.setPaintProperty(id, "raster-opacity", targetOpacity);
         if (type === "heatmap") map.setPaintProperty(id, "heatmap-opacity", targetOpacity);
+      }
+
+      // Special handling for Metro (multi-layer)
+      if (id === "metro-layer") {
+        const stid = "metro-stations-layer";
+        if (map.getLayer(stid)) {
+          map.setPaintProperty(stid, "circle-opacity", targetOpacity);
+          map.setPaintProperty(stid, "circle-stroke-opacity", targetOpacity);
+        }
       }
 
       // Special handling for multi-layer sources (like Flood/Rainfall)
