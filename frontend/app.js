@@ -307,11 +307,10 @@ map.on("load", async () => {
     paint: { "line-color": "#64008fff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 4.8], "line-blur": 1, "line-opacity": 0 } // Ghost state
   });
 
-  // 4. Metro
+  // 4. Metro (Using GeoJSON directly to ensure LineStrings are rendered)
   map.addSource("metro-source", {
-    type: "vector", url: `pmtiles://${BASE_TILES_URL}/metro.pmtiles`,
-    minzoom: 0,
-    maxzoom: 14
+    type: "geojson",
+    data: "data/metro.geojson"
   });
 
   // Metro Tracks (Lines)
@@ -319,13 +318,11 @@ map.on("load", async () => {
     id: "metro-layer",
     type: "line",
     source: "metro-source",
-    "source-layer": "metro",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
     paint: {
-      "line-color": "#f00b0b",
-      "line-width": ["interpolate", ["linear"], ["zoom"], 7, 2, 18, 6],
-      "line-blur": 0.5,
-      "line-opacity": 0
+      "line-color": "#ef0000",
+      "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.5, 18, 5],
+      "line-opacity": 0 // Ghost state
     }
   });
 
@@ -334,7 +331,6 @@ map.on("load", async () => {
     id: "metro-stations-layer",
     type: "circle",
     source: "metro-source",
-    "source-layer": "metro",
     filter: ["==", ["geometry-type"], "Point"],
     layout: { visibility: "visible" },
     paint: {
