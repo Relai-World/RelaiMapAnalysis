@@ -1,0 +1,22 @@
+<svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="shadow" x="-40%" y="-10%" width="180%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.4" flood-color="rgba(0,0,0,0.30)"/>
+    </filter>
+  </defs>
+  <!-- Solid pin in the requested 3D-like shape (flat version) -->
+  <g filter="url(#shadow)" fill="none" fill-rule="evenodd">
+    <!-- Outer pin path (teardrop, filled dark) -->
+    <path d="M15 4.5
+             C10.858 4.5 7.5 7.86 7.5 12
+             C7.5 14.74 8.99 17.37 11.45 19.96
+             L15 24.5
+             L18.55 19.96
+             C21.01 17.37 22.5 14.74 22.5 12
+             C22.5 7.86 19.142 4.5 15 4.5 Z"
+          fill="#111111"/>
+    <!-- Inner cut-out circle (small, ivory to match background) -->
+    <circle cx="15" cy="12" r="3.0" fill="#F6F4EF"/>
+  </g>
+</svg>
+

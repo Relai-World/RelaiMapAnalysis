@@ -37,9 +37,8 @@ checkMetro();
 
 const map = new maplibregl.Map({
   container: "map",
+  // Neutral, slightly desaturated light basemap to match luxury UI
   style: 'https://tiles.openfreemap.org/styles/liberty',
-  //style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-  //style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
 
   center: [78.38, 17.44],
   zoom: 11,
@@ -55,6 +54,7 @@ const insightsPromise = fetch(`${BACKEND_URL}/api/v1/insights`).then(res => res.
 map.addControl(new maplibregl.NavigationControl());
 
 let activeMarker = null;
+let clickMarker = null; // lightweight marker for generic map clicks
 
 /* ===============================
    TEXT HELPERS (SCALE-ALIGNED - V2)
@@ -633,36 +633,31 @@ map.on("load", async () => {
       }
     });
 
-    // GLOW RING (renders behind the dot for depth)
+    // GLOW RING (renders behind the dot for depth) – subtle dark halo
     map.addLayer({
       id: "location-glow",
       type: "circle",
       source: "locations",
       paint: {
-        "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 10, 15, 18],
-        "circle-color": [
-          "interpolate", ["linear"], ["get", "investment_score"],
-          0.0, "#F43F5E",
-          0.5, "#EAB308",
-          0.7, "#10B981",
-          1.0, "#14B8A6"
-        ],
-        "circle-opacity": 0.12,
+        "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 9, 15, 14],
+        "circle-color": "#000000",
+        "circle-opacity": 0.22,
         "circle-stroke-width": 0,
-        "circle-blur": 1
+        "circle-blur": 1.2
       }
     });
 
-    // GOLD CORE DOT — uniform gold coin style
+    // GOLD CORE DOT — small, refined marker
     map.addLayer({
       id: "location-core",
       type: "circle",
       source: "locations",
       paint: {
-        "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 6, 14, 10],
-        "circle-color": "#D4AF37",
-        "circle-stroke-color": "#1A2744",
-        "circle-stroke-width": 2
+        "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 5, 14, 8],
+        "circle-color": "#C9A24A",
+        // Dark ring around the gold point instead of white
+        "circle-stroke-color": "#111111",
+        "circle-stroke-width": 1.5
       }
     });
   } catch (err) {
@@ -868,25 +863,25 @@ map.on("load", async () => {
 
       map.addSource('location-boundary', { type: 'geojson', data: polygon });
 
-      // Distinct teal fill — clearly differentiates the active locality
+      // Soft gold-tinted fill — distinguishes the active locality
       map.addLayer({
         id: 'location-boundary-fill',
         type: 'fill',
         source: 'location-boundary',
         paint: {
-          'fill-color': '#14B8A6',
-          'fill-opacity': 0.2
+          'fill-color': '#C9A24A',
+          'fill-opacity': 0.12
         }
       }, 'location-core');
 
-      // Bold boundary stroke
+      // Refined boundary stroke
       map.addLayer({
         id: 'location-boundary-line',
         type: 'line',
         source: 'location-boundary',
         paint: {
-          'line-color': '#0D9488',
-          'line-width': 3,
+          'line-color': '#B08C3E',
+          'line-width': 2,
           'line-opacity': 1
         }
       }, 'location-core');
@@ -1038,7 +1033,8 @@ map.on("load", async () => {
     if (activeMarker) activeMarker.remove();
     const markerEl = document.createElement('div');
     markerEl.className = 'active-location-marker';
-    activeMarker = new maplibregl.Marker({ element: markerEl })
+    // Anchor at the center so the pin sits in the middle of the gold circle
+    activeMarker = new maplibregl.Marker({ element: markerEl, anchor: 'center' })
       .setLngLat([p.longitude, p.latitude])
       .addTo(map);
   }
@@ -1705,6 +1701,20 @@ map.on("load", async () => {
       }
 
       if (!clickedLocation && !clickedAmenity) {
+        // Drop / move a simple point marker at the clicked coordinate
+        const lngLat = e.lngLat;
+        if (clickMarker) {
+          clickMarker.setLngLat(lngLat);
+        } else {
+          const el = document.createElement("div");
+          el.style.width = "10px";
+          el.style.height = "10px";
+          el.style.borderRadius = "50%";
+          el.style.background = "#2F2F2F";
+          el.style.border = "2px solid #FFFFFF";
+          el.style.boxShadow = "0 0 0 6px rgba(0,0,0,0.18)";
+          clickMarker = new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
+        }
 
         // Close Popup if clicking elsewhere
         if (currentPopup) {
