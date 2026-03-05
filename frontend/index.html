@@ -4,85 +4,147 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>West Hyderabad Intelligence</title>
+  <title>IntelliWeb — West Hyderabad Elite</title>
+  <meta name="description"
+    content="Exclusive real estate intelligence for West Hyderabad — property analytics, market trends, and location insights." />
 
+  <!-- MapLibre -->
   <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script src="pmtiles.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
+  <!-- ═══════════════════════════════════════════
+       LEFT SIDEBAR
+  ═══════════════════════════════════════════ -->
+  <aside id="sidebar">
 
-  <!-- HEADER -->
-  <div id="app-header">
-    <div id="app-title">
-      West Hyderabad Intelligence
+    <!-- Brand -->
+    <div id="sidebar-brand">
+      <div class="brand-block">
+        <div class="brand-name">Intelli<em>Web</em></div>
+        <div class="brand-sub">West Hyderabad Elite</div>
+      </div>
+      <div class="live-badge">
+        <span class="pulse-dot"></span> Live
+      </div>
     </div>
 
-    <div class="header-actions">
-
-      <div id="layers-btn"><img class="layericon" src="assets/layers.png" alt="Layers" /></div>
-    </div>
-  </div>
-
-  <!-- ============================
-       LAYERS CARD (UPDATED HTML)
-  ============================= -->
-  <div id="layers-card" class="layers-sheet">
-    <div class="layers-header">
-      <span>Layers</span>
-      <button id="close-layers">✕</button>
+    <!-- Search -->
+    <div class="search-container">
+      <input type="text" id="location-search" placeholder="Search elite locations…" autocomplete="off"
+        spellcheck="false" />
+      <div id="search-results"></div>
     </div>
 
-
-
-    <!-- Layers grid -->
-    <div class="layers-grid">
-
-      <label class="layer-tile">
-        <input type="checkbox" data-layer="schools-layer" />
-        <img src="assets/school.png" alt="Schools" />
-        <span>Schools</span>
-      </label>
-
-      <label class="layer-tile">
-        <input type="checkbox" data-layer="highways-layer" />
-        <img src="assets/highway.png" alt="Highways" />
-        <span>Highways</span>
-      </label>
-
-      <label class="layer-tile">
-        <input type="checkbox" data-layer="metro-layer" />
-        <img src="assets/metro.png" alt="Metro Lines" />
-        <span>Metro Lines</span>
-      </label>
-
-      <label class="layer-tile">
-        <input type="checkbox" data-layer="orr-layer" />
-        <img src="assets/orr.png" alt="Outer Ring Road" />
-        <span>Outer Ring Road</span>
-      </label>
-
-
-      <label class="layer-tile">
-        <input type="checkbox" data-layer="lakes-layer" />
-        <img src="assets/lakes.png" alt="Lakes" />
-        <span>Lakes</span>
-      </label>
-
+    <!-- Intel Card — fills remaining sidebar space -->
+    <div id="intel-card">
+      <div id="empty-state">
+        <div class="empty-icon-wrap">
+          <span>🏛️</span>
+        </div>
+        <h3>Intelligence Awaits</h3>
+        <p>Select any location pin on the map or type an active locality above to access exclusive property analytics.
+        </p>
+      </div>
     </div>
-  </div>
 
-  <!-- MAP -->
+  </aside>
+
+  <!-- ═══════════════════════════════════════════
+       MAP (fills right side)
+  ═══════════════════════════════════════════ -->
   <div id="map"></div>
 
-  <!-- INFO CARD -->
-  <div id="intel-card"></div>
+  <!-- Price Trends — top right of map -->
+  <a href="trends.html" class="nav-trends-btn" id="nav-trends">
+    📈 Price Trends
+  </a>
 
-  <!-- LIBS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <!-- ═══════════════════════════════════════════
+       LAYER BAR — horizontal, bottom center
+  ═══════════════════════════════════════════ -->
+  <div class="layer-controls">
+
+    <label class="layer-toggle">
+      <input type="checkbox" id="highways" data-layer="highways-layer" />
+      <div class="layer-card">
+        <img src="assets/highway.png" alt="Highways" />
+        <span>Highways</span>
+      </div>
+    </label>
+
+    <label class="layer-toggle">
+      <input type="checkbox" id="metro" data-layer="metro-layer" />
+      <div class="layer-card">
+        <img src="assets/metro.png" alt="Metro" />
+        <span>Metro</span>
+      </div>
+    </label>
+
+    <label class="layer-toggle">
+      <input type="checkbox" id="orr" data-layer="orr-layer" />
+      <div class="layer-card">
+        <img src="assets/orr.png" alt="ORR" />
+        <span>ORR</span>
+      </div>
+    </label>
+
+    <label class="layer-toggle">
+      <input type="checkbox" id="lakes" data-layer="lakes-layer" />
+      <div class="layer-card">
+        <img src="assets/lakes.png" alt="Lakes" />
+        <span>Lakes</span>
+      </div>
+    </label>
+
+    <label class="layer-toggle">
+      <input type="checkbox" id="rrr" data-layer="rrr-layer" />
+      <div class="layer-card">
+        <img src="assets/rrr.png" alt="RRR" />
+        <span>RRR</span>
+      </div>
+    </label>
+
+    <label class="layer-toggle">
+      <input type="checkbox" id="hmda" data-layer="hmda-layer" />
+      <div class="layer-card">
+        <img src="assets/HMDA.png" alt="HMDA" />
+        <span>HMDA</span>
+      </div>
+    </label>
+
+    <label class="layer-toggle">
+      <input type="checkbox" id="flood" data-layer="flood-risk-layer" />
+      <div class="layer-card">
+        <img src="assets/floods.png" alt="Floods" />
+        <span>Floods</span>
+      </div>
+    </label>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       AMENITIES RIGHT PANEL
+  ═══════════════════════════════════════════ -->
+  <div id="amenities-list-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h4 id="amenity-title">Nearby Amenities</h4>
+      <button id="close-amenities">✕</button>
+    </div>
+    <div id="amenities-list-content"></div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 

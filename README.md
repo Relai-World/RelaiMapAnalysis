@@ -1,88 +1,119 @@
-# 🏙️ West Hyderabad Intelligence
+# 🏢 West Hyderabad Real Estate Intelligence
+> **AI-Powered Investment Analysis for Hyderabad's Growth Corridors**
 
-**A Premium Real Estate Intelligence Dashboard for West Hyderabad.**
+![Status](https://img.shields.io/badge/Status-Production-green)
+![Tech](https://img.shields.io/badge/Stack-FastAPI%20%7C%20PostgreSQL%20%7C%20FinBERT-blue)
 
-[![Frontend](https://img.shields.io/badge/Frontend-GitHub--Pages-blue?style=for-the-badge&logo=github)](https://harjeet1309.github.io/west-hyderabad-intelliweb/)
-[![Backend](https://img.shields.io/badge/Backend-Render-green?style=for-the-badge&logo=render)](https://west-hyderabad-intelliweb.onrender.com)
-[![Database](https://img.shields.io/badge/Database-Supabase-3ecf8e?style=for-the-badge&logo=supabase)](https://supabase.com)
-
----
-
-## 🌟 Overview
-
-West Hyderabad Intelligence provides investors, developers, and home buyers with deep data-driven insights into the rapidly growing real estate market of West Hyderabad. The platform combines interactive geospatial data with market sentiment and investment potential analysis.
+A professional-grade real estate analytics platform that actively monitors news, social sentiment, and infrastructure developments to calculate **Growth Potential** and **Investment Risk** for key micro-markets in West Hyderabad (HITEC City, Financial District, etc.).
 
 ---
 
 ## 🚀 Key Features
 
-### 1. **Interactive Intelligence Map**
-- **Vector Layers**: High-performance mapping using **PMTiles** (Schools, Highways, Metro, ORR, Lakes).
-- **Customized Markers**: Minimalist design with interactive intelligence "hotspots" for key locations.
-- **Smart Toggling**: Toggle multiple infrastructure layers instantly from a compact, floating grid.
+### 📊 AI-Driven Sentiment (FinBERT)
+Unlike generic sentiment analysis, this system uses **ProsusAI/finbert** (Financial BERT) to analyze news from an **investor's perspective**. 
+- *OLD:* "Heavy construction in Kokapet" -> Negative (Noise/Dust).
+- *NEW:* "Heavy construction in Kokapet" -> **Positive** (Economic Growth/Development).
 
-### 2. **Deep Data Insights (Intel Card)**
-- **Market Sentiment**: Analyzing real estate trends to determine positive/neutral/negative outlooks.
-- **Growth Potential**: Predictive scoring for future appreciation.
-- **Investment Score**: Comprehensive rating (Excellent/Good/Average) based on integrated data points.
-- **Location Imagery**: Dynamic image fetching for every mapped location.
+### 📈 Dynamic Growth Scoring
+Calculates a **0-10 Growth Score** based on:
+1.  **News Volume (Buzz):** High activity = High relevance.
+2.  **Infrastructure Signals:** Metro, Flyovers, Tech Parks.
+3.  **Market Sentiment:** Weighted 30% in the final score.
 
-### 3. **Reporting & Persistence**
-- **PDF Generation**: Download professional location-based reports with a single click.
-- **Supabase Integration**: Robust PostgreSQL backend with PostGIS for location-based queries.
-
----
-
-## 🛠️ Technology Stack
-
-| Component | Technology |
-| :--- | :--- |
-| **Frontend** | Vanilla HTML5/JS/CSS, MapLibre GL JS, PMTiles, jsPDF |
-| **Backend** | Python, FastAPI, Psycopg2, Requests |
-| **Mapping** | Protomaps (PMTiles), Overpass API (OpenStreetMap) |
-| **Database** | PostgreSQL + PostGIS (Supabase/Neon) |
-| **Hosting** | GitHub Pages (UI), Render (API) |
+### 🗺️ Interactive Intelligence Map
+- **3D Visualization:** MapLibre GL JS tailored map.
+- **Micro-Market Insights:** Click any location for a detailed dossier (Price trends, Sentiment, Pros/Cons).
+- **Amenity Heatmaps:** 5km analysis of Schools, Hospitals, and Malls.
 
 ---
 
-## 💻 Local Development
+## 🏗️ Architecture
 
-### 1. Backend (FastAPI)
+The system is split into **three core components**:
+
+### 1. The Pipeline (`update_pipeline.py`)
+Runs locally or on a scheduled worker.
+- **Scrapes:** Google News, Reddit, Twitter.
+- **Processes:** Runs text through FinBERT Model.
+- **Upserts:** Pushes clean scores to the PostgreSQL Database.
+
+### 2. The API (`api.py`)
+Hosted on **Render / Cloud**.
+- **FastAPI:** High-performance async endpoints.
+- **PostgreSQL:** Stores `location_insights`, `price_trends`, and `amenities`.
+- **Endpoints:**
+    - `GET /api/v1/insights` (Main Map Data)
+    - `GET /api/v1/location/{id}/trends` (Price History)
+
+### 3. The Frontend (`frontend/`)
+Hosted on **GitHub Pages / Netlify**.
+- Pure HTML/JS (No framework overhead).
+- Connects to the API to fetch live data.
+- Uses **PMTiles** for serverless map data.
+
+---
+
+## 📂 Project Structure
+
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+├── api.py                 # Main Backend Application (FastAPI)
+├── update_pipeline.py     # Orchestrator for Data/AI Pipeline
+├── requirements.txt       # Lightweight dependencies for Cloud API
+├── requirements-ai.txt    # Heavy AI dependencies for Local Pipeline
+├── Procfile               # Deployment config for Render
+├── frontend/              # Web Application Code
+│   ├── app.js             # Map Logic & Data Fetching
+│   ├── index.html         # Main Dashboard
+│   └── ...
+├── scraper/               # News & Reddit Scrapers
+├── sentiment/             # FinBERT Model Logic
+├── aggregation/           # Scoring Algorithms (Growth/Inv Logic)
+├── utilities/             # Helper scripts (Migrations, Tests)
+└── docs/                  # Project Documentation
+```
 
-# Start the dev server
+---
+
+## 🛠️ Setup & Installation
+
+### Prerequisite: Database
+You need a PostgreSQL database (Local or Cloud like **Neon.tech** / **Supabase**).
+Create a `.env` file with:
+```ini
+DB_NAME=...
+DB_USER=...
+DB_PASSWORD=...
+DB_HOST=...
+DB_PORT=5432
+```
+
+### 1. Run the API (Backend)
+```bash
+pip install -r requirements.txt
 uvicorn api:app --reload
 ```
-*API accessible at `http://127.0.0.1:8000`*
 
-### 2. Frontend (Static Site)
+### 2. Run the Pipeline (Data Update)
+*Note: Requires ~2GB RAM for FinBERT.*
 ```bash
-# Using Python
-python -m http.server 3000 --directory frontend
-
-# OR Using NPX
-npx serve frontend
+pip install -r requirements-ai.txt
+python update_pipeline.py
 ```
-*Dashboard accessible at `http://localhost:3000`*
+
+### 3. Launch Frontend
+Open `frontend/index.html` in your browser (Live Server).
 
 ---
 
-## 📄 Documentation
+## 📜 Deployment
 
-For a detailed breakdown of the architecture, database schema, and system design, please refer to the [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md).
-
----
-
-## 🤝 Contribution
-
-1. Fork the project.
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the Branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
+- **Backend:** Deploy `api.py` to **Render** (Web Service).
+- **Frontend:** Deploy `frontend/` to **GitHub Pages**.
+- **Database:** Hosted on **Neon.tech** (Free Tier).
 
 ---
 
-*Developed with ❤️ for the West Hyderabad Community.*
+## 🛡️ License
+Proprietary Intelligence System.
+Built for Hyper-Local Real Estate Analysis.

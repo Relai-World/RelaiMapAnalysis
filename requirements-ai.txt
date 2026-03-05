@@ -1,3 +1,20 @@
+
+# AI & Scraping (Local Pipeline Only)
 torch
 transformers
+numpy
+pandas
+scikit-learn
 tqdm
+
+# Scraping
+playwright
+newspaper3k
+feedparser
+beautifulsoup4
+lxml
+openpyxl
+
+# Database
+psycopg2-binary
+python-dotenv

@@ -18,32 +18,50 @@ def clamp(value, min_v=0.0, max_v=1.0):
 
 def compute_growth_score(avg_sentiment, article_count):
     """
-    Robust growth signal calibrated for real-world news data.
-    - News is naturally negative-biased
-    - Activity volume must still matter
+    Activity-Driven Growth Logic (V2):
+    1. Volume is the primary driver of 'Growth' (Construction = Dust = Complaints, but also = Growth).
+    2. Sentiment acts as a slight modifier/bonus, not a gatekeeper.
     """
     if article_count == 0:
         return 0.0
 
-    volume_factor = math.log(article_count + 1, 10)
+    # 1. BUZZ SCORE (Logarithmic Scale)
+    # 10 articles -> 1.0
+    # 100 articles -> 2.0
+    # 1000 articles -> 3.0 (Tier 1 Hub)
+    buzz = math.log(article_count + 1, 10)
+    
+    # Normalize Buzz to 0-1 scale (Assuming max ~3000 articles => ~3.5)
+    buzz_normalized = clamp(buzz / 3.5)
 
-    # Neutralize news negativity bias
-    adjusted_sentiment = avg_sentiment + 0.5
+    # 2. SENTIMENT MODIFIER (Calibrated V3)
+    # Map -0.5..0.5 to 0..1 (Matches Frontend Calibration)
+    sentiment_normalized = clamp(avg_sentiment + 0.5)
+    
+    # 3. FINAL WEIGHTED SCORE
+    # 80% Buzz (Activity), 20% Sentiment (Quality)
+    final_score = (0.8 * buzz_normalized) + (0.2 * sentiment_normalized)
+    
+    # Boost factor for High Volume hubs to push them into the 0.8-0.9 range
+    if article_count > 500:
+        final_score *= 1.2
 
-    raw_score = adjusted_sentiment * volume_factor
+    return clamp(final_score)
 
-    # Normalize safely into 0–1
-    return clamp(raw_score / 3.0)
-
-def compute_investment_score(growth_score, confidence):
+def compute_investment_score(growth_score, avg_sentiment):
     """
-    Conservative investment signal.
-    Growth dominates, confidence stabilizes.
+    Investment Potential (V2):
+    - Highly correlated with Growth (Booming area = Good Investment).
+    - But heavily penalized by negative sentiment (Risk factor).
     """
-    return clamp(
-        0.7 * growth_score +
-        0.3 * confidence
-    )
+    # Calibrated Sentiment Normalization (Matches Frontend)
+    sentiment_normalized = clamp(avg_sentiment + 0.5)
+    
+    # Investment = 70% Growth Potenial + 30% "Vibe Check" (Sentiment)
+    # If it's growing but everyone hates it, it's a risky investment.
+    score = (0.7 * growth_score) + (0.3 * sentiment_normalized)
+    
+    return clamp(score)
 
 # ---------------- MAIN AGGREGATION ----------------
 def run():
@@ -57,15 +75,15 @@ def run():
     for (location_id,) in locations:
 
         # -------- SENTIMENT + ACTIVITY AGGREGATION --------
+        # -------- SENTIMENT + ACTIVITY AGGREGATION (NEW SOURCE) --------
         cur.execute("""
             SELECT
-                COUNT(r.id) AS article_count,
-                AVG(p.sentiment_score) AS avg_sentiment,
-                AVG(p.confidence) AS avg_confidence
-            FROM raw_scraped_data r
-            LEFT JOIN processed_sentiment_data p
-                ON p.raw_data_id = r.id
-            WHERE r.location_id = %s
+                COUNT(id) AS article_count,
+                AVG(sentiment_score) AS avg_sentiment,
+                AVG(confidence) AS avg_confidence
+            FROM news_balanced_corpus
+            WHERE location_id = %s
+              AND sentiment_score IS NOT NULL
         """, (location_id,))
 
         article_count, avg_sentiment, avg_confidence = cur.fetchone()
@@ -74,19 +92,11 @@ def run():
         avg_sentiment = float(avg_sentiment) if avg_sentiment is not None else 0.0
         avg_confidence = float(avg_confidence) if avg_confidence is not None else 0.0
 
+        # -------- RE-CALCULATE SCORES --------
         growth_score = compute_growth_score(avg_sentiment, article_count)
-        investment_score = compute_investment_score(growth_score, avg_confidence)
-
-        # -------- INFRA COUNTS (already in schema) --------
-        cur.execute("""
-            SELECT
-                school_count,
-                hospital_count
-            FROM locations
-            WHERE id = %s
-        """, (location_id,))
-
-        school_count, hospital_count = cur.fetchone()
+        
+        # Investment Score (V3 - Pure 70/30)
+        investment_score = compute_investment_score(growth_score, avg_sentiment)
 
         # -------- UPSERT LOCATION INSIGHTS --------
         cur.execute("""
@@ -95,26 +105,20 @@ def run():
                 avg_sentiment_score,
                 growth_score,
                 investment_score,
-                schools_count,
-                hospitals_count,
                 last_updated
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s)
             ON CONFLICT (location_id)
             DO UPDATE SET
                 avg_sentiment_score = EXCLUDED.avg_sentiment_score,
                 growth_score = EXCLUDED.growth_score,
                 investment_score = EXCLUDED.investment_score,
-                schools_count = EXCLUDED.schools_count,
-                hospitals_count = EXCLUDED.hospitals_count,
                 last_updated = EXCLUDED.last_updated
         """, (
             location_id,
             avg_sentiment,
             growth_score,
             investment_score,
-            school_count,
-            hospital_count,
             datetime.now()
         ))
 
@@ -122,7 +126,7 @@ def run():
     cur.close()
     conn.close()
 
-    print("✅ Location insights aggregation completed successfully.")
+    print("[OK] Location insights aggregation completed successfully.")
 
 # ---------------- ENTRY ----------------
 if __name__ == "__main__":

@@ -1,0 +1,3025 @@
+{
+  "source": "https://registration.telangana.gov.in",
+  "extracted_at": "2026-02-25T14:55:00.684947",
+  "total_districts": 33,
+  "districts": [
+    {
+      "district": "RANGAREDDY",
+      "code": "15_1",
+      "mandals": [
+        {
+          "mandal": "ABDULLAPURMET",
+          "code": "01",
+          "villages": [
+            {
+              "code": "1514034",
+              "name": "ABDULLAPUR"
+            },
+            {
+              "code": "1514041",
+              "name": "ANAJPUR"
+            },
+            {
+              "code": "1514010",
+              "name": "BACHARAM"
+            },
+            {
+              "code": "1514015",
+              "name": "BALJAGUDA"
+            },
+            {
+              "code": "1514012",
+              "name": "BANDARAVIRYAL"
+            },
+            {
+              "code": "1514036",
+              "name": "BATASINGARAM"
+            },
+            {
+              "code": "1514011",
+              "name": "DAIRA"
+            },
+            {
+              "code": "1514009",
+              "name": "GOWRELLI"
+            },
+            {
+              "code": "1514040",
+              "name": "GUNTAPALLE"
+            },
+            {
+              "code": "1514003",
+              "name": "HATHIGUDA"
+            },
+            {
+              "code": "1514033",
+              "name": "INAMGUDA"
+            },
+            {
+              "code": "1514023",
+              "name": "INJAPUR"
+            },
+            {
+              "code": "1514035",
+              "name": "KAWADIPALLE"
+            },
+            {
+              "code": "1514029",
+              "name": "KOHEDA"
+            },
+            {
+              "code": "1514018",
+              "name": "KUNTLOOR"
+            },
+            {
+              "code": "1514032",
+              "name": "LASKERGUDA"
+            },
+            {
+              "code": "1514025",
+              "name": "MANNEGUDA"
+            },
+            {
+              "code": "1514006",
+              "name": "MARRIPALLE"
+            },
+            {
+              "code": "1514038",
+              "name": "MAZIDPUR"
+            },
+            {
+              "code": "1514027",
+              "name": "MUNGANOOR"
+            }
+          ]
+        },
+        {
+          "mandal": "AMANGAL",
+          "code": "02",
+          "villages": [
+            {
+              "code": "1416009",
+              "name": "AKUTHOTAPALLE"
+            },
+            {
+              "code": "1416013",
+              "name": "AMANGAL"
+            },
+            {
+              "code": "1416014",
+              "name": "CHENNAMPALLE"
+            },
+            {
+              "code": "1416010",
+              "name": "KONAPUR"
+            },
+            {
+              "code": "1416016",
+              "name": "POLEPALLE"
+            },
+            {
+              "code": "1416011",
+              "name": "RAMANUTHULA"
+            },
+            {
+              "code": "1416008",
+              "name": "SETTIPALLE"
+            },
+            {
+              "code": "1416015",
+              "name": "SINGAM PALLE"
+            },
+            {
+              "code": "1416012",
+              "name": "VITHAIPALLE"
+            }
+          ]
+        },
+        {
+          "mandal": "BALAPUR",
+          "code": "03",
+          "villages": [
+            {
+              "code": "1515015",
+              "name": "ALMASGUDA"
+            },
+            {
+              "code": "1515017",
+              "name": "BADANGPET"
+            },
+            {
+              "code": "1515020",
+              "name": "BALAPUR"
+            },
+            {
+              "code": "1515018",
+              "name": "CHINTALAKUNTA"
+            },
+            {
+              "code": "1515016",
+              "name": "DAWOODKHANGUDA"
+            },
+            {
+              "code": "1515025",
+              "name": "JALPALLE"
+            },
+            {
+              "code": "1515012",
+              "name": "JILLALGUDA"
+            },
+            {
+              "code": "1515021",
+              "name": "KOTHAPET"
+            },
+            {
+              "code": "1515028",
+              "name": "KURMALGUDA"
+            },
+            {
+              "code": "1515022",
+              "name": "MALLAPUR"
+            },
+            {
+              "code": "1515027",
+              "name": "MAMIDIPALLE"
+            },
+            {
+              "code": "1515013",
+              "name": "MEDBOWLI"
+            },
+            {
+              "code": "1515014",
+              "name": "MEERPET"
+            },
+            {
+              "code": "1515029",
+              "name": "NADARGUL"
+            },
+            {
+              "code": "1515026",
+              "name": "PAPAYAKUMANDAN"
+            },
+            {
+              "code": "1515023",
+              "name": "RENUKAPUR"
+            },
+            {
+              "code": "1515024",
+              "name": "VENKATAPUR"
+            }
+          ]
+        },
+        {
+          "mandal": "CHEVELLA",
+          "code": "04",
+          "villages": [
+            {
+              "code": "1518031",
+              "name": "ALLAWADA"
+            },
+            {
+              "code": "1518004",
+              "name": "ALOOR I"
+            },
+            {
+              "code": "1518005",
+              "name": "ALOOR II"
+            },
+            {
+              "code": "1518006",
+              "name": "ALOOR III"
+            },
+            {
+              "code": "1518003",
+              "name": "ANANTAWARAM"
+            },
+            {
+              "code": "1518022",
+              "name": "BASTEPUR"
+            },
+            {
+              "code": "1518029",
+              "name": "CHANVELLI"
+            },
+            {
+              "code": "1518032",
+              "name": "CHEVELLA"
+            },
+            {
+              "code": "1518021",
+              "name": "DAMERGIDDA"
+            },
+            {
+              "code": "1518028",
+              "name": "DEVARAMPALLE"
+            },
+            {
+              "code": "1518019",
+              "name": "DEVUNI ERRAVELLY"
+            },
+            {
+              "code": "1518037",
+              "name": "EERLAPALLY"
+            },
+            {
+              "code": "1518015",
+              "name": "GOLLAPALLE"
+            },
+            {
+              "code": "1518036",
+              "name": "GUNDAL"
+            },
+            {
+              "code": "1518001",
+              "name": "HASTHEPUR"
+            },
+            {
+              "code": "1518020",
+              "name": "IBRAHIMPALLE"
+            },
+            {
+              "code": "1518014",
+              "name": "KAMMETA"
+            },
+            {
+              "code": "1518035",
+              "name": "KANDUWADA"
+            },
+            {
+              "code": "1518033",
+              "name": "KESAVARAM"
+            },
+            {
+              "code": "1518026",
+              "name": "KHANAPUR"
+            }
+          ]
+        },
+        {
+          "mandal": "CHOWDERGUDEM",
+          "code": "05",
+          "villages": [
+            {
+              "code": "1411035",
+              "name": "CHALIVENDRAMPALLE"
+            },
+            {
+              "code": "1411030",
+              "name": "CHEGIREDDI GHANPUR"
+            },
+            {
+              "code": "1411026",
+              "name": "CHENNAREDDIGUDA"
+            },
+            {
+              "code": "1411037",
+              "name": "EDIRA"
+            },
+            {
+              "code": "1411001",
+              "name": "GUNJALAPAHAD"
+            },
+            {
+              "code": "1411028",
+              "name": "GURRAMPALLE"
+            },
+            {
+              "code": "1411032",
+              "name": "HAZIPET"
+            },
+            {
+              "code": "1411023",
+              "name": "INDRANAGAR"
+            },
+            {
+              "code": "1411036",
+              "name": "JAKARAM"
+            },
+            {
+              "code": "1411024",
+              "name": "JILLED"
+            },
+            {
+              "code": "1411033",
+              "name": "MALKAPAHAD"
+            },
+            {
+              "code": "1411025",
+              "name": "PADMARAM"
+            },
+            {
+              "code": "1411031",
+              "name": "PEDDA YELKICHERLA"
+            },
+            {
+              "code": "1411029",
+              "name": "RAVIRYAL"
+            },
+            {
+              "code": "1411022",
+              "name": "THOOMPALLE"
+            },
+            {
+              "code": "1411004",
+              "name": "TUMMALAPALLE"
+            },
+            {
+              "code": "1411002",
+              "name": "VANAMPALLE"
+            },
+            {
+              "code": "1411027",
+              "name": "VEERANNAPETA"
+            }
+          ]
+        },
+        {
+          "mandal": "FAROOQNAGAR",
+          "code": "06",
+          "villages": [
+            {
+              "code": "1412006",
+              "name": "ALLISABGUDA"
+            },
+            {
+              "code": "1412027",
+              "name": "ANNARAM"
+            },
+            {
+              "code": "1412023",
+              "name": "BHEMARAM"
+            },
+            {
+              "code": "1412015",
+              "name": "BUCHIGUDA"
+            },
+            {
+              "code": "1412034",
+              "name": "BURGUL"
+            },
+            {
+              "code": "1412007",
+              "name": "CHATTANPALLE"
+            },
+            {
+              "code": "1412028",
+              "name": "CHILKAMARRI (CHELKA)"
+            },
+            {
+              "code": "1412022",
+              "name": "CHINCHOD"
+            },
+            {
+              "code": "1412020",
+              "name": "CHOWLAPALLE (WEST)"
+            },
+            {
+              "code": "1412008",
+              "name": "DOOSKAL"
+            },
+            {
+              "code": "1412003",
+              "name": "ELKATTA"
+            },
+            {
+              "code": "1412004",
+              "name": "FAROOQNAGAR (U.A)"
+            },
+            {
+              "code": "1412030",
+              "name": "GANTLAVELLI"
+            },
+            {
+              "code": "1412018",
+              "name": "GUNDLAKUNTA"
+            },
+            {
+              "code": "1412017",
+              "name": "HAJIPALLE"
+            },
+            {
+              "code": "1412026",
+              "name": "JAGAMMAGUDA"
+            },
+            {
+              "code": "1412029",
+              "name": "KAMMADANAM"
+            },
+            {
+              "code": "1412024",
+              "name": "KAMSANPALLE"
+            },
+            {
+              "code": "1412021",
+              "name": "KANDIVANAM"
+            },
+            {
+              "code": "1412012",
+              "name": "KANGAGUDA"
+            }
+          ]
+        },
+        {
+          "mandal": "GANDIPET",
+          "code": "07",
+          "villages": [
+            {
+              "code": "1516013",
+              "name": "ALIZAPUR"
+            },
+            {
+              "code": "1516016",
+              "name": "BAIRAGIGUDA"
+            },
+            {
+              "code": "1516024",
+              "name": "BANDLAGUDA  (JAGIR)"
+            },
+            {
+              "code": "1516017",
+              "name": "GANDAMGUDA"
+            },
+            {
+              "code": "1516005",
+              "name": "GANDIPET"
+            },
+            {
+              "code": "1516001",
+              "name": "GUNGURTHY"
+            },
+            {
+              "code": "1516026",
+              "name": "HIMAYATHSAGAR"
+            },
+            {
+              "code": "1516018",
+              "name": "HYDERSHAKOTI"
+            },
+            {
+              "code": "1516023",
+              "name": "JANIBEGUM"
+            },
+            {
+              "code": "1516002",
+              "name": "KHANAPUR"
+            },
+            {
+              "code": "1516027",
+              "name": "KISMATPUR"
+            },
+            {
+              "code": "1516004",
+              "name": "KOKAPET"
+            },
+            {
+              "code": "1516015",
+              "name": "MANCHIREVULA"
+            },
+            {
+              "code": "1516010",
+              "name": "MANIKONDA (JAGIR)"
+            },
+            {
+              "code": "1516009",
+              "name": "MANIKONDA (KHALSA)"
+            },
+            {
+              "code": "1516008",
+              "name": "MAQTHA KOUSARALI"
+            },
+            {
+              "code": "1516006",
+              "name": "NARSINGI"
+            },
+            {
+              "code": "1516014",
+              "name": "NEKNAMPUR"
+            },
+            {
+              "code": "1516025",
+              "name": "PEERAMCHERU"
+            },
+            {
+              "code": "1516011",
+              "name": "POKKALWADA"
+            }
+          ]
+        },
+        {
+          "mandal": "HAYATHNAGAR",
+          "code": "08",
+          "villages": [
+            {
+              "code": "1514019",
+              "name": "HAYATHNAGAR  (KHALSA)"
+            },
+            {
+              "code": "1514002",
+              "name": "HAYATHNAGAR (BAGATH)"
+            },
+            {
+              "code": "1514022",
+              "name": "HAYATHNAGAR AMANGAL"
+            },
+            {
+              "code": "1514020",
+              "name": "KALVANCHA"
+            },
+            {
+              "code": "1514021",
+              "name": "SAHEBNAGAR (KALAN)"
+            },
+            {
+              "code": "1514001",
+              "name": "SAHEBNAGAR (KHURD)"
+            }
+          ]
+        },
+        {
+          "mandal": "IBRAHIMPATNAM",
+          "code": "09",
+          "villages": [
+            {
+              "code": "1534002",
+              "name": "ADIBATLA"
+            },
+            {
+              "code": "1534017",
+              "name": "ALIMIYAKUNTA"
+            },
+            {
+              "code": "1534003",
+              "name": "BONGLOOR"
+            },
+            {
+              "code": "1534004",
+              "name": "CHINTAPALLEGUDA"
+            },
+            {
+              "code": "1534011",
+              "name": "DANDUMAILARAM"
+            },
+            {
+              "code": "1534020",
+              "name": "FEROZGUDA"
+            },
+            {
+              "code": "1534007",
+              "name": "IBRAHIMPATAM (KHALSA)"
+            },
+            {
+              "code": "1534018",
+              "name": "IBRAHIMPATNAM (BAGATH)"
+            },
+            {
+              "code": "1534006",
+              "name": "ISMAILSHAPAMPU"
+            },
+            {
+              "code": "1534027",
+              "name": "KAPPAPAHAD"
+            },
+            {
+              "code": "1535001",
+              "name": "KHANAPUR"
+            },
+            {
+              "code": "1534001",
+              "name": "KONGARA KALAN"
+            },
+            {
+              "code": "1534019",
+              "name": "MANGALPALLE"
+            },
+            {
+              "code": "1534012",
+              "name": "MUKNOOR"
+            },
+            {
+              "code": "1534008",
+              "name": "NAGANPALLE"
+            },
+            {
+              "code": "1534010",
+              "name": "NARREPALLE"
+            },
+            {
+              "code": "1534022",
+              "name": "POCHARAM"
+            },
+            {
+              "code": "1534009",
+              "name": "POLKAMPALLE"
+            },
+            {
+              "code": "1534013",
+              "name": "RAINGUDA"
+            },
+            {
+              "code": "1534015",
+              "name": "RAIPOLE"
+            }
+          ]
+        },
+        {
+          "mandal": "KADTHAL",
+          "code": "10",
+          "villages": [
+            {
+              "code": "1415010",
+              "name": "CHELLAMPALLE"
+            },
+            {
+              "code": "1416007",
+              "name": "CHERIKONDA(P.KURTY)"
+            },
+            {
+              "code": "1416006",
+              "name": "CHERIKONDA(PATTIPADKAL)"
+            },
+            {
+              "code": "1416004",
+              "name": "EKRAJGUDA"
+            },
+            {
+              "code": "1416003",
+              "name": "KADTHAL"
+            },
+            {
+              "code": "1416002",
+              "name": "KARKALPAHAD"
+            },
+            {
+              "code": "1415004",
+              "name": "MAKTHAMADHARAM"
+            },
+            {
+              "code": "1416005",
+              "name": "MUDWIN"
+            },
+            {
+              "code": "1415008",
+              "name": "NAGIREDDIGUDA"
+            },
+            {
+              "code": "1415007",
+              "name": "NYAMATHAPUR"
+            },
+            {
+              "code": "1415005",
+              "name": "RAVICHEDU"
+            },
+            {
+              "code": "1415011",
+              "name": "SALARPUR"
+            },
+            {
+              "code": "1415006",
+              "name": "TAKRAJGUDA"
+            },
+            {
+              "code": "1415009",
+              "name": "VAMPUGUDA"
+            },
+            {
+              "code": "1416001",
+              "name": "VASUDEVAPUR"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "district": "MEDCHAL-MALKAJGIRI",
+      "code": "15_2",
+      "mandals": [
+        {
+          "mandal": "ALWAL",
+          "code": "01",
+          "villages": [
+            {
+              "code": "1510006",
+              "name": "AKBARJHA"
+            },
+            {
+              "code": "1510003",
+              "name": "ALWAL (M)"
+            },
+            {
+              "code": "1510002",
+              "name": "DAMMAIGUDA"
+            },
+            {
+              "code": "1510005",
+              "name": "FARZANDGUDA"
+            },
+            {
+              "code": "1510008",
+              "name": "KOWKUR"
+            },
+            {
+              "code": "1510001",
+              "name": "LOTHKUNTA"
+            },
+            {
+              "code": "1510004",
+              "name": "MACHA BOLARAM"
+            },
+            {
+              "code": "1510009",
+              "name": "MAHADEVPUR"
+            },
+            {
+              "code": "1510007",
+              "name": "TURKAPALLE"
+            },
+            {
+              "code": "1510010",
+              "name": "YAPRAL"
+            }
+          ]
+        },
+        {
+          "mandal": "BACHUPALLY",
+          "code": "02",
+          "villages": [
+            {
+              "code": "1507010",
+              "name": "BACHPALLE"
+            },
+            {
+              "code": "1507011",
+              "name": "NIZAMPET"
+            }
+          ]
+        },
+        {
+          "mandal": "BALANAGAR",
+          "code": "03",
+          "villages": [
+            {
+              "code": "1506009",
+              "name": "BALANAGAR"
+            },
+            {
+              "code": "1506011",
+              "name": "BEGUMPET PAIGAH"
+            },
+            {
+              "code": "1506006",
+              "name": "BOBBUGUDA"
+            },
+            {
+              "code": "1506013",
+              "name": "BOWENPALLE"
+            },
+            {
+              "code": "1506010",
+              "name": "FATEHNAGAR"
+            },
+            {
+              "code": "1506012",
+              "name": "FEROZGUDA"
+            },
+            {
+              "code": "1506014",
+              "name": "HASHMATHPET"
+            },
+            {
+              "code": "1506008",
+              "name": "JINKALWADA"
+            }
+          ]
+        },
+        {
+          "mandal": "DUNDIGAL GANDIMAISAMMA",
+          "code": "04",
+          "villages": [
+            {
+              "code": "1507005",
+              "name": "BAHADURPALLE"
+            },
+            {
+              "code": "1507007",
+              "name": "BOWRAMPET"
+            },
+            {
+              "code": "1507004",
+              "name": "DOMMARA POCHAMPALLE"
+            },
+            {
+              "code": "1507016",
+              "name": "DULAPALLE"
+            },
+            {
+              "code": "1507003",
+              "name": "DUNDIGAL"
+            },
+            {
+              "code": "1507001",
+              "name": "GAGILAPUR"
+            },
+            {
+              "code": "1507017",
+              "name": "KOMPALLE"
+            },
+            {
+              "code": "1507009",
+              "name": "MALLAMPET"
+            },
+            {
+              "code": "1507002",
+              "name": "NAGLUR"
+            },
+            {
+              "code": "1507008",
+              "name": "SAMBHUPUR"
+            }
+          ]
+        },
+        {
+          "mandal": "GHATKESAR",
+          "code": "05",
+          "villages": [
+            {
+              "code": "1512010",
+              "name": "ANKUSHAPUR"
+            },
+            {
+              "code": "1512012",
+              "name": "ANNOJIGUDA"
+            },
+            {
+              "code": "1512009",
+              "name": "AUSHAPUR"
+            },
+            {
+              "code": "1512019",
+              "name": "BADESAHEBGUDA"
+            },
+            {
+              "code": "1512020",
+              "name": "EDULABAD"
+            },
+            {
+              "code": "1512011",
+              "name": "GHATKESAR (P)"
+            },
+            {
+              "code": "1512006",
+              "name": "ISMAILKHANGUDA"
+            },
+            {
+              "code": "1512015",
+              "name": "KACHWANISINGARAM"
+            },
+            {
+              "code": "1512008",
+              "name": "KONDAPUR"
+            },
+            {
+              "code": "1512018",
+              "name": "KORREMUL"
+            },
+            {
+              "code": "1512021",
+              "name": "MADHARAM"
+            },
+            {
+              "code": "1512013",
+              "name": "MAJARGUDA"
+            },
+            {
+              "code": "1512029",
+              "name": "MARRIPALLYGUDA"
+            },
+            {
+              "code": "1512016",
+              "name": "MUTHAWALLIGUDA"
+            },
+            {
+              "code": "1512014",
+              "name": "NAREPALLE"
+            },
+            {
+              "code": "1512007",
+              "name": "PADAMATISAIGUDA"
+            },
+            {
+              "code": "1512004",
+              "name": "POCHARAM"
+            },
+            {
+              "code": "1512017",
+              "name": "PRATHAPSINGARAM"
+            },
+            {
+              "code": "1512005",
+              "name": "YAMNAMPET"
+            }
+          ]
+        },
+        {
+          "mandal": "KAPRA",
+          "code": "06",
+          "villages": [
+            {
+              "code": "1512002",
+              "name": "CHERLAPALLE"
+            },
+            {
+              "code": "1509030",
+              "name": "JAWAHARNAGAR"
+            },
+            {
+              "code": "1511012",
+              "name": "KHAPRA (M)"
+            }
+          ]
+        },
+        {
+          "mandal": "KEESARA",
+          "code": "07",
+          "villages": [
+            {
+              "code": "1511013",
+              "name": "AHMADGUDA"
+            },
+            {
+              "code": "1511018",
+              "name": "ANKIREDDYPALLY"
+            },
+            {
+              "code": "1511016",
+              "name": "BOGARAM"
+            },
+            {
+              "code": "1511020",
+              "name": "BOGARAM MAKTHA"
+            },
+            {
+              "code": "1511008",
+              "name": "CHEERIYAL"
+            },
+            {
+              "code": "1511019",
+              "name": "DAMMAIGUDA"
+            },
+            {
+              "code": "1511002",
+              "name": "DHARMAVARAM"
+            },
+            {
+              "code": "1511014",
+              "name": "GODMAKUNTA"
+            },
+            {
+              "code": "1511007",
+              "name": "HARIDASPALLE"
+            },
+            {
+              "code": "1511005",
+              "name": "KEESARA"
+            },
+            {
+              "code": "1511009",
+              "name": "KEESARA DAIRA"
+            },
+            {
+              "code": "1511010",
+              "name": "KUNDANPALLE"
+            },
+            {
+              "code": "1511011",
+              "name": "NAGARAM"
+            },
+            {
+              "code": "1511003",
+              "name": "NARSAMPALLE"
+            },
+            {
+              "code": "1511015",
+              "name": "RAMPALLE"
+            },
+            {
+              "code": "1511017",
+              "name": "RAMPALLY DAYARA"
+            },
+            {
+              "code": "1511001",
+              "name": "THIMMAIPALLE"
+            },
+            {
+              "code": "1511006",
+              "name": "YADGARPALLE (EAST)"
+            },
+            {
+              "code": "1511004",
+              "name": "YADGARPALLE (WEST)"
+            }
+          ]
+        },
+        {
+          "mandal": "KUKATPALLY",
+          "code": "08",
+          "villages": [
+            {
+              "code": "1506005",
+              "name": "ALLAPUR"
+            },
+            {
+              "code": "1506003",
+              "name": "BHAGAMEERI"
+            },
+            {
+              "code": "1506001",
+              "name": "HYDERNAGAR"
+            },
+            {
+              "code": "1506004",
+              "name": "KUKATPALLE (M)"
+            },
+            {
+              "code": "1506007",
+              "name": "MOOSAPET"
+            },
+            {
+              "code": "1506002",
+              "name": "SHAMSHIGUDA"
+            }
+          ]
+        },
+        {
+          "mandal": "MALKAJGIRI",
+          "code": "09",
+          "villages": [
+            {
+              "code": "1510011",
+              "name": "AMMUGUDA"
+            },
+            {
+              "code": "1510012",
+              "name": "MALKAJGIRI (M)"
+            }
+          ]
+        },
+        {
+          "mandal": "MEDCHAL",
+          "code": "10",
+          "villages": [
+            {
+              "code": "1508011",
+              "name": "AKBARJAPET"
+            },
+            {
+              "code": "1508012",
+              "name": "ATEVELLE"
+            },
+            {
+              "code": "1508014",
+              "name": "BANDA MADHARAM"
+            },
+            {
+              "code": "1508016",
+              "name": "BANDAKUNTA"
+            },
+            {
+              "code": "1508013",
+              "name": "DABIRPUR"
+            },
+            {
+              "code": "1508023",
+              "name": "GHANPUR"
+            },
+            {
+              "code": "1508018",
+              "name": "GIRMAPUR"
+            },
+            {
+              "code": "1508024",
+              "name": "GOSAIGUDA"
+            },
+            {
+              "code": "1508019",
+              "name": "GOUDAVELLE"
+            },
+            {
+              "code": "1508027",
+              "name": "KANDLAKOI"
+            },
+            {
+              "code": "1508029",
+              "name": "KAZIGUDA"
+            },
+            {
+              "code": "1508004",
+              "name": "KONAIPALLE"
+            },
+            {
+              "code": "1508003",
+              "name": "MAISIREDDIPALLE"
+            },
+            {
+              "code": "1508020",
+              "name": "MEDCHAL"
+            },
+            {
+              "code": "1508025",
+              "name": "MUNIRABAD"
+            },
+            {
+              "code": "1508002",
+              "name": "NUTHANKAL"
+            },
+            {
+              "code": "1508028",
+              "name": "POCHAMPALLE"
+            },
+            {
+              "code": "1508021",
+              "name": "PUDOOR"
+            },
+            {
+              "code": "1508017",
+              "name": "RAILAPUR"
+            },
+            {
+              "code": "1508022",
+              "name": "RAJ BOLLARAM"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "district": "SANGAREDDY",
+      "code": "17_2",
+      "mandals": [
+        {
+          "mandal": "AMEENPUR",
+          "code": "01",
+          "villages": [
+            {
+              "code": "1737026",
+              "name": "AMEENAPUR"
+            },
+            {
+              "code": "1737025",
+              "name": "ILAPUR"
+            },
+            {
+              "code": "1737007",
+              "name": "KRISHTAREDDIPET"
+            },
+            {
+              "code": "1737024",
+              "name": "PATELGUDA"
+            },
+            {
+              "code": "1737023",
+              "name": "RENDLAGADDA"
+            },
+            {
+              "code": "1737006",
+              "name": "SULTANPUR"
+            },
+            {
+              "code": "1737005",
+              "name": "WADAKPALLE"
+            }
+          ]
+        },
+        {
+          "mandal": "ANDOLE",
+          "code": "02",
+          "villages": [
+            {
+              "code": "1726015",
+              "name": "AKSANPALLE"
+            },
+            {
+              "code": "1726024",
+              "name": "ALMAIPET"
+            },
+            {
+              "code": "1726010",
+              "name": "ANANTHASAGAR"
+            },
+            {
+              "code": "1726022",
+              "name": "ANDOLE"
+            },
+            {
+              "code": "1726014",
+              "name": "BRAHMANPALLE"
+            },
+            {
+              "code": "1726006",
+              "name": "CHINTAKUNTA"
+            },
+            {
+              "code": "1726019",
+              "name": "DAKOOR"
+            },
+            {
+              "code": "1726011",
+              "name": "DANAMPALLE"
+            },
+            {
+              "code": "1726020",
+              "name": "JOGIPET"
+            },
+            {
+              "code": "1726003",
+              "name": "KANSANPALLE"
+            },
+            {
+              "code": "1726005",
+              "name": "KICHANAPALLE"
+            },
+            {
+              "code": "1726017",
+              "name": "KODEKAL"
+            },
+            {
+              "code": "1726027",
+              "name": "KONDAREDDIPALLE"
+            },
+            {
+              "code": "1726008",
+              "name": "MANSANPALLE"
+            },
+            {
+              "code": "1726029",
+              "name": "MASANPALLY"
+            },
+            {
+              "code": "1726018",
+              "name": "NADLAPUR"
+            },
+            {
+              "code": "1726013",
+              "name": "NEERDIGUNTA"
+            },
+            {
+              "code": "1726009",
+              "name": "POSANIPET"
+            },
+            {
+              "code": "1726026",
+              "name": "POTHAREDDIPALLE"
+            },
+            {
+              "code": "1726004",
+              "name": "RAMSANPALLE"
+            }
+          ]
+        },
+        {
+          "mandal": "CHOWTAKUR",
+          "code": "27",
+          "villages": [
+            {
+              "code": "1733028",
+              "name": "CHAKRIYAL"
+            },
+            {
+              "code": "1733015",
+              "name": "CHOUTKUR"
+            },
+            {
+              "code": "1733027",
+              "name": "GANGOJIPET"
+            },
+            {
+              "code": "1733023",
+              "name": "KORPOLE"
+            },
+            {
+              "code": "1733024",
+              "name": "LINGAMPALLE"
+            },
+            {
+              "code": "1733014",
+              "name": "POSANIPALLE"
+            },
+            {
+              "code": "1733022",
+              "name": "SARAFPALLE"
+            },
+            {
+              "code": "1733020",
+              "name": "SERIRAMREDDIGUDA"
+            },
+            {
+              "code": "1733029",
+              "name": "SIVAMPET"
+            },
+            {
+              "code": "1733021",
+              "name": "SULTANPUR"
+            },
+            {
+              "code": "1733026",
+              "name": "TADDANPALLE"
+            },
+            {
+              "code": "1733030",
+              "name": "VENDIKOLE"
+            },
+            {
+              "code": "1733025",
+              "name": "VENKATAKISTAPUR @ ANGAD"
+            }
+          ]
+        },
+        {
+          "mandal": "GUMMADIDALA",
+          "code": "03",
+          "villages": [
+            {
+              "code": "1739013",
+              "name": "ANNARAM"
+            },
+            {
+              "code": "1739006",
+              "name": "ANTHARAM"
+            },
+            {
+              "code": "1739010",
+              "name": "BONTHAPALLE"
+            },
+            {
+              "code": "1739008",
+              "name": "DACHARAM"
+            },
+            {
+              "code": "1739011",
+              "name": "DOMADUGU"
+            },
+            {
+              "code": "1739009",
+              "name": "GUMMADIDALA"
+            },
+            {
+              "code": "1739007",
+              "name": "KANKUNTA"
+            },
+            {
+              "code": "1739002",
+              "name": "KOTHAPALLE"
+            },
+            {
+              "code": "1739001",
+              "name": "LAKSHMAPUR"
+            },
+            {
+              "code": "1739005",
+              "name": "MANDAPUR"
+            },
+            {
+              "code": "1739004",
+              "name": "NALLAPALLE"
+            },
+            {
+              "code": "1739003",
+              "name": "PYARANAGAR"
+            }
+          ]
+        },
+        {
+          "mandal": "HATHNOOR",
+          "code": "04",
+          "villages": [
+            {
+              "code": "1740033",
+              "name": "AKWANCHAGUDA"
+            },
+            {
+              "code": "1740021",
+              "name": "BORPATLA"
+            },
+            {
+              "code": "1740024",
+              "name": "CHANDAPUR"
+            },
+            {
+              "code": "1740004",
+              "name": "CHEEKUMADDUR"
+            },
+            {
+              "code": "1740027",
+              "name": "CHINTALCHERU"
+            },
+            {
+              "code": "1740013",
+              "name": "DEVALPALLE"
+            },
+            {
+              "code": "1740014",
+              "name": "DOULTABAD @ KOTHAPET"
+            },
+            {
+              "code": "1740008",
+              "name": "GOVINDARAJUPALLE"
+            },
+            {
+              "code": "1740023",
+              "name": "GUNDLA MACHANUR"
+            },
+            {
+              "code": "1740011",
+              "name": "HATHNOORA"
+            },
+            {
+              "code": "1740012",
+              "name": "KASAL"
+            },
+            {
+              "code": "1740029",
+              "name": "KODAPAK"
+            },
+            {
+              "code": "1740005",
+              "name": "KONIYAL"
+            },
+            {
+              "code": "1740003",
+              "name": "LINGAPUR"
+            },
+            {
+              "code": "1740017",
+              "name": "MACHERLA"
+            },
+            {
+              "code": "1740007",
+              "name": "MADHURA @ MADHARAM"
+            },
+            {
+              "code": "1740019",
+              "name": "MALKAPUR"
+            },
+            {
+              "code": "1740015",
+              "name": "MANGAPUR"
+            },
+            {
+              "code": "1740030",
+              "name": "NAGARAM"
+            },
+            {
+              "code": "1740009",
+              "name": "NAGULDEVPALLE"
+            }
+          ]
+        },
+        {
+          "mandal": "JHARASANGAM",
+          "code": "05",
+          "villages": [
+            {
+              "code": "1729035",
+              "name": "ANANTHASAGAR"
+            },
+            {
+              "code": "1729014",
+              "name": "BARDIPUR"
+            },
+            {
+              "code": "1729031",
+              "name": "BIDEKANNA"
+            },
+            {
+              "code": "1729017",
+              "name": "BOPANPALLE"
+            },
+            {
+              "code": "1729018",
+              "name": "BOREGAON"
+            },
+            {
+              "code": "1729024",
+              "name": "CHILEMAMIDI"
+            },
+            {
+              "code": "1729011",
+              "name": "CHILEPALLE"
+            },
+            {
+              "code": "1729034",
+              "name": "CHILKEPALLE"
+            },
+            {
+              "code": "1729025",
+              "name": "DEVARAMPALLE"
+            },
+            {
+              "code": "1729023",
+              "name": "EDAKULAPALLE"
+            },
+            {
+              "code": "1729032",
+              "name": "EDULAPALLE"
+            },
+            {
+              "code": "1729003",
+              "name": "GANGAPUR"
+            },
+            {
+              "code": "1729019",
+              "name": "GINIAMARPALLE"
+            },
+            {
+              "code": "1729033",
+              "name": "GINIYARPALLE"
+            },
+            {
+              "code": "1729022",
+              "name": "ISLAMPUR"
+            },
+            {
+              "code": "1729020",
+              "name": "JEERLAPALLE"
+            },
+            {
+              "code": "1729016",
+              "name": "JHARASANGAM"
+            },
+            {
+              "code": "1729021",
+              "name": "JUNEGAON"
+            },
+            {
+              "code": "1729010",
+              "name": "KAKKERWADA"
+            },
+            {
+              "code": "1729007",
+              "name": "KAMALPALLE"
+            }
+          ]
+        },
+        {
+          "mandal": "JINNARAM",
+          "code": "06",
+          "villages": [
+            {
+              "code": "1739020",
+              "name": "AMDOOR"
+            },
+            {
+              "code": "1739029",
+              "name": "BOLLARAM"
+            },
+            {
+              "code": "1739027",
+              "name": "CHETLAPOTHARAM"
+            },
+            {
+              "code": "1739012",
+              "name": "GADDIPOTHARAM"
+            },
+            {
+              "code": "1739015",
+              "name": "JINNARAM"
+            },
+            {
+              "code": "1739028",
+              "name": "KHAZIPALLE"
+            },
+            {
+              "code": "1739026",
+              "name": "KISTAIPALLE"
+            },
+            {
+              "code": "1739022",
+              "name": "KODAKANCHI"
+            },
+            {
+              "code": "1739030",
+              "name": "KORLAKUNTA"
+            },
+            {
+              "code": "1739025",
+              "name": "MADHARAM"
+            },
+            {
+              "code": "1739017",
+              "name": "MANGAMPET"
+            },
+            {
+              "code": "1739024",
+              "name": "NALTHUR"
+            },
+            {
+              "code": "1739018",
+              "name": "OOTLA"
+            },
+            {
+              "code": "1739016",
+              "name": "PALEM"
+            },
+            {
+              "code": "1739023",
+              "name": "PUTTAGUDA"
+            },
+            {
+              "code": "1739021",
+              "name": "SIVANAGAR"
+            },
+            {
+              "code": "1739019",
+              "name": "SOLAKPALLE"
+            },
+            {
+              "code": "1739014",
+              "name": "VAILAL"
+            }
+          ]
+        },
+        {
+          "mandal": "KALHER",
+          "code": "07",
+          "villages": [
+            {
+              "code": "1703014",
+              "name": "BACHEPALLE"
+            },
+            {
+              "code": "1703005",
+              "name": "BIBIPET"
+            },
+            {
+              "code": "1703006",
+              "name": "FATHEPOOR"
+            },
+            {
+              "code": "1703009",
+              "name": "KALHER"
+            },
+            {
+              "code": "1703012",
+              "name": "KHANAPOOR [B]"
+            },
+            {
+              "code": "1703017",
+              "name": "KHANAPUR[KADEEM]"
+            },
+            {
+              "code": "1703008",
+              "name": "KRISHNAPOOR"
+            },
+            {
+              "code": "1703011",
+              "name": "MAHADEV PALLE"
+            },
+            {
+              "code": "1703025",
+              "name": "MALHARPOOR"
+            },
+            {
+              "code": "1703007",
+              "name": "MARDI"
+            },
+            {
+              "code": "1703010",
+              "name": "MASAN PALLE"
+            },
+            {
+              "code": "1703015",
+              "name": "MEERKHANPET"
+            },
+            {
+              "code": "1703024",
+              "name": "MUNGEPALLE"
+            },
+            {
+              "code": "1703023",
+              "name": "NAGDHAR"
+            },
+            {
+              "code": "1703013",
+              "name": "RAMREDDI PET"
+            },
+            {
+              "code": "1703016",
+              "name": "RAPARTHY"
+            }
+          ]
+        },
+        {
+          "mandal": "KANDI",
+          "code": "08",
+          "villages": [
+            {
+              "code": "1736010",
+              "name": "ARUTLA"
+            },
+            {
+              "code": "1736012",
+              "name": "BYATHOLE"
+            },
+            {
+              "code": "1736025",
+              "name": "CHERIYAL"
+            },
+            {
+              "code": "1736011",
+              "name": "CHIDRUPPA"
+            },
+            {
+              "code": "1736027",
+              "name": "EDDUMAILARAM"
+            },
+            {
+              "code": "1736013",
+              "name": "ERDANOOR"
+            },
+            {
+              "code": "1736026",
+              "name": "INDRAKARAN"
+            },
+            {
+              "code": "1736028",
+              "name": "JULKAL"
+            },
+            {
+              "code": "1736023",
+              "name": "KALVEMULA"
+            },
+            {
+              "code": "1736016",
+              "name": "KANDI"
+            },
+            {
+              "code": "1736024",
+              "name": "KASIPUR"
+            },
+            {
+              "code": "1736015",
+              "name": "KOULAMPET"
+            },
+            {
+              "code": "1736022",
+              "name": "MAKTHAALLOOR"
+            },
+            {
+              "code": "1736014",
+              "name": "MAMIDIPALLE"
+            },
+            {
+              "code": "1736029",
+              "name": "TOPGONDA"
+            },
+            {
+              "code": "1736021",
+              "name": "UTHARPALLE"
+            }
+          ]
+        },
+        {
+          "mandal": "KANGTI",
+          "code": "09",
+          "villages": [
+            {
+              "code": "1702014",
+              "name": "BBHEEMRA"
+            },
+            {
+              "code": "1702019",
+              "name": "BHANSWADA"
+            },
+            {
+              "code": "1702034",
+              "name": "BHEEMRA"
+            },
+            {
+              "code": "1702003",
+              "name": "BORGI"
+            },
+            {
+              "code": "1702004",
+              "name": "CHAPTA [B]"
+            },
+            {
+              "code": "1702012",
+              "name": "CHAPTA [KHURD]"
+            },
+            {
+              "code": "1702002",
+              "name": "CHOWKANPALLE"
+            },
+            {
+              "code": "1702020",
+              "name": "DAMARAGIDDI [PANCHAMAHA"
+            },
+            {
+              "code": "1702001",
+              "name": "DEGULAWADI"
+            },
+            {
+              "code": "1702028",
+              "name": "ENKEMORI"
+            },
+            {
+              "code": "1702017",
+              "name": "GAJULPAHAD"
+            },
+            {
+              "code": "1702005",
+              "name": "GHANPUR"
+            },
+            {
+              "code": "1702007",
+              "name": "JAMGIBURG"
+            },
+            {
+              "code": "1702006",
+              "name": "JAMGIKHURD"
+            },
+            {
+              "code": "1702013",
+              "name": "KANGTI"
+            },
+            {
+              "code": "1702011",
+              "name": "MURKUNJAL"
+            },
+            {
+              "code": "1702022",
+              "name": "NAGANPALLE"
+            },
+            {
+              "code": "1702025",
+              "name": "NAGOOR [B]"
+            },
+            {
+              "code": "1702026",
+              "name": "NAGOOR [K]"
+            },
+            {
+              "code": "1702024",
+              "name": "RAMATHIRATH"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "district": "NALGONDA",
+      "code": "23_1",
+      "mandals": [
+        {
+          "mandal": "ADAVIDEVULAPALLY",
+          "code": "01",
+          "villages": [
+            {
+              "code": "2350004",
+              "name": "Adavi devula palli"
+            },
+            {
+              "code": "2350002",
+              "name": "Baleen palli"
+            },
+            {
+              "code": "2350003",
+              "name": "Chityala"
+            },
+            {
+              "code": "2350014",
+              "name": "Mudimanikam"
+            },
+            {
+              "code": "2350001",
+              "name": "Mulka charla"
+            },
+            {
+              "code": "2350005",
+              "name": "Ulshaya palem"
+            }
+          ]
+        },
+        {
+          "mandal": "ANUMULA",
+          "code": "02",
+          "villages": [
+            {
+              "code": "2351011",
+              "name": "Ambatpalli"
+            },
+            {
+              "code": "2351004",
+              "name": "Annaram"
+            },
+            {
+              "code": "2351015",
+              "name": "Anumula"
+            },
+            {
+              "code": "2351017",
+              "name": "Ibrahim peta"
+            },
+            {
+              "code": "2351001",
+              "name": "Kosalamarri"
+            },
+            {
+              "code": "2351021",
+              "name": "Kothapalli"
+            },
+            {
+              "code": "2351006",
+              "name": "Kummarikunta kalva"
+            },
+            {
+              "code": "2351010",
+              "name": "Kupaspalli"
+            },
+            {
+              "code": "2351005",
+              "name": "Marepalli"
+            },
+            {
+              "code": "2351002",
+              "name": "Mukkamala"
+            },
+            {
+              "code": "2351008",
+              "name": "Narayana puram"
+            },
+            {
+              "code": "2351016",
+              "name": "Palem"
+            },
+            {
+              "code": "2351018",
+              "name": "Perur"
+            },
+            {
+              "code": "2351007",
+              "name": "Pulimamidi"
+            },
+            {
+              "code": "2351013",
+              "name": "Ramadugu"
+            },
+            {
+              "code": "2351012",
+              "name": "Sreenadhapur"
+            },
+            {
+              "code": "2351014",
+              "name": "Thimmapur"
+            },
+            {
+              "code": "2351003",
+              "name": "Venkatadri palem"
+            },
+            {
+              "code": "2351009",
+              "name": "Yacharam"
+            }
+          ]
+        },
+        {
+          "mandal": "CHANDAMPETA",
+          "code": "03",
+          "villages": [
+            {
+              "code": "2359003",
+              "name": "ACHAMPET (P) CHANDAMPET"
+            },
+            {
+              "code": "2359016",
+              "name": "BOLLARAMPATTI(MUNAGALA)"
+            },
+            {
+              "code": "2359004",
+              "name": "CHANDAMPET"
+            },
+            {
+              "code": "2359013",
+              "name": "CHITRIYALA"
+            },
+            {
+              "code": "2359006",
+              "name": "GAGILLAPUR"
+            },
+            {
+              "code": "2359001",
+              "name": "GUNTI PALLI"
+            },
+            {
+              "code": "2359021",
+              "name": "KAMBALA PALLI"
+            },
+            {
+              "code": "2359002",
+              "name": "MUDUDONDLA"
+            },
+            {
+              "code": "2359014",
+              "name": "MURPUNUTHALA"
+            },
+            {
+              "code": "2359023",
+              "name": "POGILLA"
+            },
+            {
+              "code": "2359005",
+              "name": "POLE PALLI"
+            },
+            {
+              "code": "2359017",
+              "name": "REKULA GADDA"
+            },
+            {
+              "code": "2359022",
+              "name": "REKULA VALYAM"
+            },
+            {
+              "code": "2359015",
+              "name": "THELDEVARA PALLI"
+            },
+            {
+              "code": "2359020",
+              "name": "YALMALA MANDA"
+            }
+          ]
+        },
+        {
+          "mandal": "CHANDUR",
+          "code": "04",
+          "villages": [
+            {
+              "code": "2338012",
+              "name": "ANGADIPETA"
+            },
+            {
+              "code": "2338011",
+              "name": "BANGARIGADDA"
+            },
+            {
+              "code": "2338005",
+              "name": "BODANGI PARTHY"
+            },
+            {
+              "code": "2338013",
+              "name": "CHANDUR"
+            },
+            {
+              "code": "2355007",
+              "name": "Chamala palli"
+            },
+            {
+              "code": "2338010",
+              "name": "DONIPAMULA"
+            },
+            {
+              "code": "2338016",
+              "name": "GUNDREPALLE"
+            },
+            {
+              "code": "2338008",
+              "name": "IDIKUDA"
+            },
+            {
+              "code": "2338015",
+              "name": "KASTHALA"
+            },
+            {
+              "code": "2338003",
+              "name": "KONDAPURAM"
+            },
+            {
+              "code": "2338006",
+              "name": "KUMANDANIGUDA"
+            },
+            {
+              "code": "2338009",
+              "name": "NERMATA"
+            },
+            {
+              "code": "2338004",
+              "name": "PULLEMLA"
+            },
+            {
+              "code": "2338007",
+              "name": "SIRDEPALLE"
+            },
+            {
+              "code": "2338017",
+              "name": "THUMMALAPALLE"
+            },
+            {
+              "code": "2338014",
+              "name": "UDATHALA PALLE"
+            }
+          ]
+        },
+        {
+          "mandal": "CHINTHA PALLE",
+          "code": "05",
+          "villages": [
+            {
+              "code": "2356022",
+              "name": "ANAJPUR"
+            },
+            {
+              "code": "2356019",
+              "name": "CHINTHA PALLI"
+            },
+            {
+              "code": "2356012",
+              "name": "GADYA GOWRARAM"
+            },
+            {
+              "code": "2356001",
+              "name": "GODKONDLA"
+            },
+            {
+              "code": "2356021",
+              "name": "HUMANTHULA PALLI"
+            },
+            {
+              "code": "2356017",
+              "name": "KOKKIRAYALA GOWRARAM"
+            },
+            {
+              "code": "2356008",
+              "name": "KURMA PALLI"
+            },
+            {
+              "code": "2356005",
+              "name": "KURMAIDU"
+            },
+            {
+              "code": "2356003",
+              "name": "MADNAPUR"
+            },
+            {
+              "code": "2356020",
+              "name": "MALLAREDDI PALLI"
+            },
+            {
+              "code": "2356009",
+              "name": "MALLE PALLI P.K.KURTHI"
+            },
+            {
+              "code": "2356014",
+              "name": "MELVALA PALLI"
+            },
+            {
+              "code": "2356018",
+              "name": "NASARLA PALLI"
+            },
+            {
+              "code": "2356002",
+              "name": "POLEPALLE RAMNAGAR"
+            },
+            {
+              "code": "2356004",
+              "name": "SAKALSEREPALLY"
+            },
+            {
+              "code": "2356007",
+              "name": "TAKATLA PALLI"
+            },
+            {
+              "code": "2356016",
+              "name": "TEEDED"
+            },
+            {
+              "code": "2356015",
+              "name": "TIRUMALAPUR"
+            },
+            {
+              "code": "2356006",
+              "name": "UMMAPUR"
+            },
+            {
+              "code": "2356013",
+              "name": "UPPARA PALLI"
+            }
+          ]
+        },
+        {
+          "mandal": "CHITYAL",
+          "code": "06",
+          "villages": [
+            {
+              "code": "2321003",
+              "name": "AIPOOR"
+            },
+            {
+              "code": "2321014",
+              "name": "CHINAKAPARTHY"
+            },
+            {
+              "code": "2321008",
+              "name": "CHITYAL"
+            },
+            {
+              "code": "2321002",
+              "name": "GUNDRAM PALLE"
+            },
+            {
+              "code": "2321012",
+              "name": "NERADA"
+            },
+            {
+              "code": "2321007",
+              "name": "PEDAKAPARTHY"
+            },
+            {
+              "code": "2321004",
+              "name": "PERE PALLE"
+            },
+            {
+              "code": "2321005",
+              "name": "PITTAM PALLE"
+            },
+            {
+              "code": "2321009",
+              "name": "SHIVANENI GUDEM"
+            },
+            {
+              "code": "2321001",
+              "name": "SUNKENE PALLE"
+            },
+            {
+              "code": "2321015",
+              "name": "TALLA YELLEMLA"
+            },
+            {
+              "code": "2321013",
+              "name": "URMADLA"
+            },
+            {
+              "code": "2321010",
+              "name": "VANIPAKALA"
+            },
+            {
+              "code": "2321006",
+              "name": "VELIMINEDU"
+            },
+            {
+              "code": "2321011",
+              "name": "WATTIMARTHY"
+            },
+            {
+              "code": "2321016",
+              "name": "YELIKATTA"
+            }
+          ]
+        },
+        {
+          "mandal": "DAMERCHERLA",
+          "code": "07",
+          "villages": [
+            {
+              "code": "2350011",
+              "name": "Dameracherla"
+            },
+            {
+              "code": "2350008",
+              "name": "Dilawarpur"
+            },
+            {
+              "code": "2350017",
+              "name": "Irkigudem"
+            },
+            {
+              "code": "2350007",
+              "name": "Kalle pally"
+            },
+            {
+              "code": "2350010",
+              "name": "Kesawapur"
+            },
+            {
+              "code": "2350009",
+              "name": "Kondrapolu"
+            },
+            {
+              "code": "2350015",
+              "name": "Kotha palli"
+            },
+            {
+              "code": "2350012",
+              "name": "Narsapur"
+            },
+            {
+              "code": "2350016",
+              "name": "Thalla veerappa gudem"
+            },
+            {
+              "code": "2350006",
+              "name": "Timmapur"
+            },
+            {
+              "code": "2350018",
+              "name": "Vada palli"
+            },
+            {
+              "code": "2350013",
+              "name": "Veerla palem"
+            }
+          ]
+        },
+        {
+          "mandal": "DEVARAKONDA",
+          "code": "08",
+          "villages": [
+            {
+              "code": "2357017",
+              "name": "DEVARKONDA"
+            },
+            {
+              "code": "2357001",
+              "name": "GOTTIMUKKALA"
+            },
+            {
+              "code": "2357002",
+              "name": "IDDAM PALLI"
+            },
+            {
+              "code": "2357021",
+              "name": "KACHARAM"
+            },
+            {
+              "code": "2357019",
+              "name": "KOMME PALLI"
+            },
+            {
+              "code": "2357005",
+              "name": "KONDABHEEMANA PALLI"
+            },
+            {
+              "code": "2357023",
+              "name": "MADMADKA"
+            },
+            {
+              "code": "2357006",
+              "name": "MUDIGONDA"
+            },
+            {
+              "code": "2357022",
+              "name": "MYNAM PALLI"
+            },
+            {
+              "code": "2357003",
+              "name": "PADAMATI PALLI"
+            },
+            {
+              "code": "2357018",
+              "name": "PENCHIKAL PAHAD"
+            },
+            {
+              "code": "2357007",
+              "name": "SERE PALLI"
+            },
+            {
+              "code": "2357024",
+              "name": "SHAKAVALLY"
+            },
+            {
+              "code": "2357020",
+              "name": "TATIKOLE"
+            },
+            {
+              "code": "2357004",
+              "name": "TURUPU PALLI"
+            }
+          ]
+        },
+        {
+          "mandal": "GATTUPPAL",
+          "code": "33",
+          "villages": [
+            {
+              "code": "2337005",
+              "name": "ANTHAMPET"
+            },
+            {
+              "code": "2338001",
+              "name": "GHATTUPPAL"
+            },
+            {
+              "code": "2337007",
+              "name": "NAMAPUR"
+            },
+            {
+              "code": "2337006",
+              "name": "SOMRAJGUDA"
+            },
+            {
+              "code": "2338002",
+              "name": "THERATPALLE"
+            },
+            {
+              "code": "2335016",
+              "name": "VELMAKANNE"
+            }
+          ]
+        },
+        {
+          "mandal": "GUDIPLLY",
+          "code": "32",
+          "villages": [
+            {
+              "code": "2353007",
+              "name": "Bheemanapalli"
+            },
+            {
+              "code": "2353002",
+              "name": "Chilaka marry"
+            },
+            {
+              "code": "2353006",
+              "name": "Ghanpalli"
+            },
+            {
+              "code": "2353009",
+              "name": "Ghanpur"
+            },
+            {
+              "code": "2353011",
+              "name": "Ghatnemilipur"
+            },
+            {
+              "code": "2353004",
+              "name": "Gudipalli"
+            },
+            {
+              "code": "2353005",
+              "name": "Keshamneni palli"
+            },
+            {
+              "code": "2353010",
+              "name": "Madhapur"
+            },
+            {
+              "code": "2353008",
+              "name": "Polkampalli"
+            },
+            {
+              "code": "2353003",
+              "name": "Rollakal"
+            },
+            {
+              "code": "2353001",
+              "name": "Sure palli"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "district": "KARIMNAGAR",
+      "code": "20_1",
+      "mandals": [
+        {
+          "mandal": "CHIGURUMAMIDI",
+          "code": "01",
+          "villages": [
+            {
+              "code": "2053006",
+              "name": "BOMMANAPALLE"
+            },
+            {
+              "code": "2053004",
+              "name": "CHIGURUMAMIDI"
+            },
+            {
+              "code": "2053008",
+              "name": "INDURTHI"
+            },
+            {
+              "code": "2053010",
+              "name": "KONDAPUR"
+            },
+            {
+              "code": "2053001",
+              "name": "MUDIMANIKYAM"
+            },
+            {
+              "code": "2053003",
+              "name": "MULKANOOR"
+            },
+            {
+              "code": "2053009",
+              "name": "NAWABPETA"
+            },
+            {
+              "code": "2053002",
+              "name": "RAMANCHA"
+            },
+            {
+              "code": "2053005",
+              "name": "REKENDA"
+            },
+            {
+              "code": "2053007",
+              "name": "SUNDARAGIRI"
+            },
+            {
+              "code": "2053011",
+              "name": "VALAMPALLE"
+            }
+          ]
+        },
+        {
+          "mandal": "CHOPPADANDI",
+          "code": "02",
+          "villages": [
+            {
+              "code": "2030003",
+              "name": "ARNAKONDA"
+            },
+            {
+              "code": "2030004",
+              "name": "BHUPALAPATNAM"
+            },
+            {
+              "code": "2030011",
+              "name": "CHAKUNTA"
+            },
+            {
+              "code": "2030002",
+              "name": "CHITYALPALLE"
+            },
+            {
+              "code": "2030005",
+              "name": "CHOPPADANDI"
+            },
+            {
+              "code": "2030006",
+              "name": "GUMLAPUR"
+            },
+            {
+              "code": "2030007",
+              "name": "KATNEPALLE"
+            },
+            {
+              "code": "2030010",
+              "name": "KOLIMIKUNTA"
+            },
+            {
+              "code": "2030008",
+              "name": "KONERUPALLE"
+            },
+            {
+              "code": "2030001",
+              "name": "RAGAMPETA"
+            },
+            {
+              "code": "2030009",
+              "name": "RUKMAPUR"
+            },
+            {
+              "code": "2030012",
+              "name": "VEDURUGHATTA"
+            }
+          ]
+        },
+        {
+          "mandal": "ELLANDAKUNTA",
+          "code": "03",
+          "villages": [
+            {
+              "code": "2033005",
+              "name": "BUJUNOOR"
+            },
+            {
+              "code": "2033013",
+              "name": "CHINNAKOMATIPALLI"
+            },
+            {
+              "code": "2033012",
+              "name": "ELLANTHAKUNTA"
+            },
+            {
+              "code": "2033018",
+              "name": "KANAGARTHI"
+            },
+            {
+              "code": "2033017",
+              "name": "MALLIAL"
+            },
+            {
+              "code": "2033016",
+              "name": "PATHARLAPALLI"
+            },
+            {
+              "code": "2033006",
+              "name": "RACHAPALLI"
+            },
+            {
+              "code": "2033015",
+              "name": "SIRSEDU"
+            },
+            {
+              "code": "2033014",
+              "name": "TEKURTHI"
+            },
+            {
+              "code": "2033004",
+              "name": "VANTHADUPULA"
+            }
+          ]
+        },
+        {
+          "mandal": "GANGADHARA",
+          "code": "04",
+          "villages": [
+            {
+              "code": "2027018",
+              "name": "ACHAMPALLE"
+            },
+            {
+              "code": "2027005",
+              "name": "BURGUPALLE"
+            },
+            {
+              "code": "2027009",
+              "name": "GANGADHARA"
+            },
+            {
+              "code": "2027017",
+              "name": "GARSEKURTHI"
+            },
+            {
+              "code": "2027016",
+              "name": "GATTUBOOTHKUR"
+            },
+            {
+              "code": "2027011",
+              "name": "ISLAMPUR"
+            },
+            {
+              "code": "2027003",
+              "name": "KACHIREDDIPALLE"
+            },
+            {
+              "code": "2027004",
+              "name": "KONDAIPALLE"
+            },
+            {
+              "code": "2027014",
+              "name": "KURIKIAL"
+            },
+            {
+              "code": "2027012",
+              "name": "MALLAPUR"
+            },
+            {
+              "code": "2027008",
+              "name": "NAGIREDDIPUR"
+            },
+            {
+              "code": "2027006",
+              "name": "NARASIMHULAPALLE"
+            },
+            {
+              "code": "2027010",
+              "name": "NARAYANPUR"
+            },
+            {
+              "code": "2027015",
+              "name": "NAYALAKONDA PALLE"
+            },
+            {
+              "code": "2027002",
+              "name": "RYALAPALLE"
+            },
+            {
+              "code": "2027007",
+              "name": "SARVAREDDIPALLE"
+            },
+            {
+              "code": "2027013",
+              "name": "UPPARA MALLIAL"
+            },
+            {
+              "code": "2027019",
+              "name": "VADDYARAM"
+            },
+            {
+              "code": "2027001",
+              "name": "VENKATAIPALLE"
+            }
+          ]
+        },
+        {
+          "mandal": "GANNERUVARAM",
+          "code": "05",
+          "villages": [
+            {
+              "code": "2046001",
+              "name": "GANNERVARAM"
+            },
+            {
+              "code": "2046005",
+              "name": "GOPALPUR"
+            },
+            {
+              "code": "2046013",
+              "name": "GUNKULKONDAPUR"
+            },
+            {
+              "code": "2046012",
+              "name": "JANGAPALLE"
+            },
+            {
+              "code": "2046009",
+              "name": "KHASIMPET"
+            },
+            {
+              "code": "2046008",
+              "name": "MADHAPUR"
+            },
+            {
+              "code": "2046007",
+              "name": "MYLARAM"
+            },
+            {
+              "code": "2046010",
+              "name": "PARVELLA"
+            },
+            {
+              "code": "2046006",
+              "name": "SANGAM (HANMAJIPALLE)"
+            },
+            {
+              "code": "2046002",
+              "name": "YASWADA"
+            }
+          ]
+        },
+        {
+          "mandal": "HUZURABAD",
+          "code": "06",
+          "villages": [
+            {
+              "code": "2049011",
+              "name": "BORNAPALLE"
+            },
+            {
+              "code": "2049005",
+              "name": "CHELPUR"
+            },
+            {
+              "code": "2049007",
+              "name": "DHARMARAJU PALLE"
+            },
+            {
+              "code": "2049010",
+              "name": "HUZURABAD"
+            },
+            {
+              "code": "2049006",
+              "name": "JUPAK"
+            },
+            {
+              "code": "2049008",
+              "name": "KANDUGULA"
+            },
+            {
+              "code": "2049009",
+              "name": "KANUKULAGIDDA"
+            },
+            {
+              "code": "2049012",
+              "name": "KATREPALLE"
+            },
+            {
+              "code": "2049004",
+              "name": "POTHAREDDIPETA"
+            },
+            {
+              "code": "2049001",
+              "name": "SINGAPUR"
+            },
+            {
+              "code": "2049003",
+              "name": "SIRSAPALLE"
+            },
+            {
+              "code": "2049002",
+              "name": "THUMMANAPALLE"
+            }
+          ]
+        },
+        {
+          "mandal": "JAMMIKUNTA",
+          "code": "07",
+          "villages": [
+            {
+              "code": "2033007",
+              "name": "BIJGIRISHAREEF"
+            },
+            {
+              "code": "2033011",
+              "name": "DHARMARAM (P.B)"
+            },
+            {
+              "code": "2033010",
+              "name": "JAMMIKUNTA"
+            },
+            {
+              "code": "2033008",
+              "name": "KORAPALLI"
+            },
+            {
+              "code": "2033019",
+              "name": "MADIPALLI"
+            },
+            {
+              "code": "2033009",
+              "name": "SAIDABAD"
+            },
+            {
+              "code": "2033002",
+              "name": "THANGULA"
+            },
+            {
+              "code": "2033003",
+              "name": "VAVILALA"
+            },
+            {
+              "code": "2033001",
+              "name": "VILASAGAR"
+            }
+          ]
+        },
+        {
+          "mandal": "KARIMNAGAR",
+          "code": "08",
+          "villages": [
+            {
+              "code": "2036026",
+              "name": "KARIMNAGAR (U)"
+            }
+          ]
+        },
+        {
+          "mandal": "KARIMNAGAR RURAL",
+          "code": "09",
+          "villages": [
+            {
+              "code": "2036021",
+              "name": "AREPALLE"
+            },
+            {
+              "code": "2036027",
+              "name": "BOMMAKAL"
+            },
+            {
+              "code": "2036014",
+              "name": "CHAMANPALLE"
+            },
+            {
+              "code": "2036029",
+              "name": "CHEGURTI"
+            },
+            {
+              "code": "2036016",
+              "name": "CHERLABUTHKUR"
+            },
+            {
+              "code": "2036028",
+              "name": "DURSHED"
+            },
+            {
+              "code": "2036019",
+              "name": "ELBOTHARAM"
+            },
+            {
+              "code": "2036013",
+              "name": "FAKIRPET"
+            },
+            {
+              "code": "2036018",
+              "name": "IRUKULLA"
+            },
+            {
+              "code": "2036012",
+              "name": "JUBLINAGAR"
+            },
+            {
+              "code": "2036017",
+              "name": "MAQDUMPUR"
+            },
+            {
+              "code": "2036011",
+              "name": "NAGUNUR"
+            },
+            {
+              "code": "2036015",
+              "name": "TAHARAKONDAPUR"
+            },
+            {
+              "code": "2036020",
+              "name": "WALLAMPAHAD"
+            }
+          ]
+        },
+        {
+          "mandal": "KOTHAPALLI",
+          "code": "10",
+          "villages": [
+            {
+              "code": "2036003",
+              "name": "ASIFNAGAR @BAHUPET"
+            },
+            {
+              "code": "2036001",
+              "name": "BADDIPALLE"
+            },
+            {
+              "code": "2036023",
+              "name": "CHINTAKUNTA"
+            },
+            {
+              "code": "2036005",
+              "name": "ELGANDAL"
+            },
+            {
+              "code": "2036006",
+              "name": "KAMANPUR"
+            },
+            {
+              "code": "2036004",
+              "name": "KHAJIPUR"
+            },
+            {
+              "code": "2036010",
+              "name": "KOTHAPALLE(HAVELI)(URB)"
+            },
+            {
+              "code": "2036008",
+              "name": "LAKSHMIPUR"
+            },
+            {
+              "code": "2036007",
+              "name": "MALKAPUR"
+            },
+            {
+              "code": "2036002",
+              "name": "NAGULAMALIAL"
+            },
+            {
+              "code": "2036009",
+              "name": "REKURTHI"
+            },
+            {
+              "code": "2036022",
+              "name": "SEETHARAMPUR"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"uei": "UEI-EM-DAT-FL-2006-0001", "cause": "Flash flood", "severity": "nan", "score": 1, "date": "2006-04-15"}, "geometry": {"type": "Point", "coordinates": [82.81, 17.43]}}]}

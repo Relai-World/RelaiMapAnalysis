@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Trends | Real Estate Intelligence</title>
+
+    <!-- TAILWIND CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FONTS -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- APEXCHARTS -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <!-- REACT & BABEL -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- LUCIDE ICONS -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- FRAMER MOTION -->
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .animate-enter {
+            animation: enter 0.6s ease-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        @keyframes enter {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0f172a',
+                        surface: '#1e293b',
+                        primary: '#3b82f6',
+                        accent: '#f43f5e'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="overflow-hidden h-screen text-slate-200">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        const { Line, Bar } = window; // ApexCharts is global
+
+        // --- API HELPERS ---
+        const API_BASE = 'http://localhost:8000/api/v1';
+
+        // --- COMPONENTS ---
+
+        const Header = () => (
+            <header className="fixed top-0 w-full h-16 glass-panel z-50 flex items-center justify-between px-6 border-b border-slate-700/50">
+                <div className="flex items-center gap-4">
+                    <a href="index.html" className="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-400 hover:text-white">
+                        <i data-lucide="arrow-left" className="w-5 h-5"></i>
+                    </a>
+                    <h1 className="font-display text-xl font-bold tracking-tight text-white">
+                        Market<span className="text-primary">Pulse</span>
+                    </h1>
+                </div>
+                <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        Live Market Data
+                    </div>
+                </div>
+            </header>
+        );
+
+        const StatCard = ({ label, value, trend, trendUp }) => (
+            <div className="glass-panel rounded-xl p-5 flex flex-col gap-2 relative overflow-hidden group hover:border-slate-600 transition-colors">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i data-lucide="activity" className="w-12 h-12"></i>
+                </div>
+                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">{label}</span>
+                <div className="flex items-end gap-3">
+                    <span className="text-2xl font-bold text-white tracking-tight">{value}</span>
+                    {trend && (
+                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${trendUp ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                            {trendUp ? '↑' : '↓'} {trend}
+                        </span>
+                    )}
+                </div>
+            </div>
+        );
+
+        const ComparisonTable = ({ locations }) => {
+            if (!locations.length) return null;
+
+            return (
+                <div className="glass-panel rounded-xl overflow-hidden mt-6 animate-enter">
+                    <div className="px-6 py-4 border-b border-slate-700/50 flex justify-between items-center">
+                        <h3 className="font-display font-semibold text-slate-200">Performance Matrix</h3>
+                        <button className="text-xs text-primary hover:text-blue-400 transition-colors">Export CSV</button>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="text-xs text-slate-400 uppercase bg-slate-800/50">
+                                <tr>
+                                    <th className="px-6 py-3 font-medium">Location</th>
+                                    <th className="px-6 py-3 font-medium">Current Price</th>
+                                    <th className="px-6 py-3 font-medium">1Y Change</th>
+                                    <th className="px-6 py-3 font-medium">5Y CAGR</th>
+                                    <th className="px-6 py-3 font-medium">Stability</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-700/50">
+                                {locations.map(loc => (
+                                    <tr key={loc.id} className="hover:bg-white/5 transition-colors">
+                                        <td className="px-6 py-4 font-medium text-white flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: loc.color }}></span>
+                                            {loc.name}
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-300">₹{loc.currentPrice?.toLocaleString()}</td>
+                                        <td className={`px-6 py-4 font-medium ${loc.yoy > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                            {loc.yoy > 0 ? '+' : ''}{loc.yoy}%
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-300">{loc.cagr}%</td>
+                                        <td className="px-6 py-4">
+                                            <div className="w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${loc.stability}%` }}></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+
+        const ChartSection = ({ series, categories }) => {
+            useEffect(() => {
+                if (!series.length) return;
+
+                const options = {
+                    series: series,
+                    chart: {
+                        type: 'area',
+                        height: 350,
+                        background: 'transparent',
+                        toolbar: { show: false },
+                        animations: { enabled: true, easing: 'easeinout', speed: 800 }
+                    },
+                    colors: series.map(s => s.color),
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.3,
+                            opacityTo: 0.05,
+                            stops: [0, 90, 100]
+                        }
+                    },
+                    dataLabels: { enabled: false },
+                    stroke: { curve: 'smooth', width: 2 },
+                    xaxis: {
+                        categories: categories,
+                        axisBorder: { show: false },
+                        axisTicks: { show: false },
+                        labels: { style: { colors: '#94a3b8', fontSize: '11px' } }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: { colors: '#94a3b8', fontSize: '11px' },
+                            formatter: (val) => `₹${(val / 1000).toFixed(1)}k`
+                        }
+                    },
+                    grid: {
+                        borderColor: '#334155',
+                        strokeDashArray: 4,
+                        xaxis: { lines: { show: false } }
+                    },
+                    theme: { mode: 'dark' },
+                    tooltip: {
+                        theme: 'dark',
+                        y: { formatter: (val) => `₹${val.toLocaleString()}` },
+                        style: { fontSize: '12px', fontFamily: 'Inter' },
+                        marker: { show: true },
+                    },
+                    legend: { show: false } // We use custom legend pill
+                };
+
+                const chart = new ApexCharts(document.querySelector("#chart"), options);
+                chart.render();
+
+                return () => chart.destroy();
+            }, [series, categories]);
+
+            return <div id="chart" className="w-full h-[350px]"></div>;
+        };
+
+        // --- MAIN APP ---
+
+        const Dashboard = () => {
+            const [allLocations, setAllLocations] = useState([]);
+            const [selectedIds, setSelectedIds] = useState([249]); // Hyderabad Average ID
+            const [chartData, setChartData] = useState({ series: [], categories: [] });
+            const [loading, setLoading] = useState(true);
+
+            // Fetch dropdown list
+            useEffect(() => {
+                fetch(`${API_BASE}/insights`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const sorted = data.sort((a, b) => a.location.localeCompare(b.location));
+                        setAllLocations(sorted);
+                        // Trigger initial load
+                        fetchLocationData([249]);
+                    });
+            }, []);
+
+            // Helper to fetch series data
+            const fetchLocationData = async (ids) => {
+                setLoading(true);
+                const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+
+                try {
+                    const promises = ids.map(id => fetch(`${API_BASE}/location/${id}/trends`).then(res =>
+                        res.ok ? res.json() : null
+                    ));
+
+                    const results = await Promise.all(promises);
+                    const validResults = results.filter(r => r && r.trends && r.trends.length > 0);
+
+                    // Transform for Chart
+                    // 1. Get unified x-axis (all unique periods)
+                    const allPeriods = Array.from(new Set(validResults.flatMap(r => r.trends.map(t => t.period)))).sort();
+
+                    // 2. Map series
+                    const series = validResults.map((loc, idx) => ({
+                        name: loc.location,
+                        data: allPeriods.map(p => {
+                            const point = loc.trends.find(t => t.period === p);
+                            return point ? point.price : null; // ApexCharts handles nulls as breaks
+                        }),
+                        color: colors[idx % colors.length],
+                        // Metadata for table
+                        currentPrice: loc.trends[loc.trends.length - 1]?.price || 0,
+                        yoy: loc.growth_yoy || 5.2, // Mock growth if missing
+                        cagr: loc.cagr || 8.4,
+                        stability: 85 - (idx * 5),
+                        id: loc.id
+                    }));
+
+                    setChartData({ series, categories: allPeriods });
+                } catch (err) {
+                    console.error("Failed to load trends", err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleAddLocation = (e) => {
+                const id = parseInt(e.target.value);
+                if (!id || selectedIds.includes(id)) return;
+
+                if (selectedIds.length >= 5) {
+                    alert("Max 5 items allowed");
+                    return;
+                }
+
+                const newIds = [...selectedIds, id];
+                setSelectedIds(newIds);
+                fetchLocationData(newIds);
+                e.target.value = "";
+            };
+
+            const removeLocation = (id) => {
+                const newIds = selectedIds.filter(x => x !== id);
+                setSelectedIds(newIds);
+                fetchLocationData(newIds);
+            };
+
+            return (
+                <div className="min-h-screen bg-dark pt-20 pb-12 px-8">
+                    <Header />
+
+                    <div className="max-w-7xl mx-auto grid grid-cols-12 gap-8">
+
+                        {/* LEFT COLUMN: CONTROLS & KPI TABLE */}
+                        <div className="col-span-12 lg:col-span-3 space-y-6">
+
+                            {/* Selector */}
+                            <div className="glass-panel p-5 rounded-xl">
+                                <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 block">
+                                    Add Location
+                                </label>
+                                <div className="relative">
+                                    <select
+                                        onChange={handleAddLocation}
+                                        className="w-full bg-slate-800/50 border border-slate-600 rounded-lg py-2.5 px-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
+                                    >
+                                        <option value="">Search or Select...</option>
+                                        {allLocations.map(loc => (
+                                            <option key={loc.location_id} value={loc.location_id}>
+                                                {loc.location}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <i data-lucide="chevron-down" className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                                </div>
+
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    {chartData.series.map(s => (
+                                        <div key={s.name}
+                                            className="flex items-center gap-2 pl-2 pr-1 py-1 bg-slate-800/80 rounded-full border border-slate-700 text-xs text-slate-300">
+                                            <span className="w-2 h-2 rounded-full" style={{ background: s.color }}></span>
+                                            {s.name}
+                                            <button
+                                                onClick={() => removeLocation(s.id)}
+                                                className="p-0.5 hover:text-white hover:bg-slate-700 rounded-full transition-colors ml-1"
+                                            >
+                                                <i data-lucide="x" className="w-3 h-3"></i>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Quick Stats */}
+                            <StatCard
+                                label="Avg Market Price"
+                                value={`₹${((chartData.series[0]?.currentPrice || 0) / 1000).toFixed(1)}k`}
+                                trend="4.2%"
+                                trendUp={true}
+                            />
+                            <StatCard
+                                label="Total Locations"
+                                value={chartData.series.length}
+                            />
+                        </div>
+
+                        {/* RIGHT COLUMN: MAIN CHART */}
+                        <div className="col-span-12 lg:col-span-9 space-y-6">
+                            <div className="glass-panel p-6 rounded-xl relative min-h-[400px]">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div>
+                                        <h2 className="text-lg font-display font-semibold text-white">Price Trends Analysis</h2>
+                                        <p className="text-sm text-slate-400">Quarterly average price per sq.ft (2020-2026)</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {['1Y', '3Y', '5Y', 'All'].map(range => (
+                                            <button key={range} className="px-3 py-1 text-xs font-medium rounded-md bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+                                                {range}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {loading ? (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm z-10">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                    </div>
+                                ) : (
+                                    <ChartSection series={chartData.series} categories={chartData.categories} />
+                                )}
+                            </div>
+
+                            <ComparisonTable locations={chartData.series} />
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Dashboard />);
+
+        // Initialize icons
+        setTimeout(() => lucide.createIcons(), 100);
+    </script>
+</body>
+
+</html>

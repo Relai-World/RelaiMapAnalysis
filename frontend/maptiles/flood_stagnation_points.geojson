@@ -1,0 +1,2690 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5500901,
+          17.4114306
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Electrical Substation Near Uppal"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5428255,
+          17.4178196
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Habsiguda Main Road, Street No:1a to 3 Near Super Market"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5231594,
+          17.3607306
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Opp to ShivaGanga Theater"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5192763,
+          17.3688725
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Opp to Shyam Hotel"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5181929,
+          17.4366059
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Mettuguda(Near Rail Kalyan)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5172788,
+          17.4334897
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Alugaddabavi(near grave yard)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5146415,
+          17.3763657
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Siripuram Colony, Saleem Nagar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5124621,
+          17.3708013
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Opp to PS Malakpet"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5123931,
+          17.3613787
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Saidabad Bus Stop"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5119152,
+          17.4357624
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Under the railway bridge (on the railnilayam road near alugaddabavi)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5085623,
+          17.3484938
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Infornt of Crystal Bar Santoshnagar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5076653,
+          17.3443251
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Yadagiri Theater to Old Septic Tank in Santhosh Nagar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5072499,
+          17.4382638
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Women degree college,sp road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5066024,
+          17.3527596
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Swekar Hotel IS Sadan"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5062446,
+          17.356737
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Dhobighat"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5061399,
+          17.354591
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Near Royal Embassy School,  IS Sadan"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.505942,
+          17.4343331
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Under Oliphant Bridege(Rathifile Bus Station)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5050582,
+          17.4921901
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Boodevi nagar Rly under bridge"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5045033,
+          17.4039499
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "azambad junction to vst junction"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5042325,
+          17.4347163
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Rathifile Bus Station(Ganesh temple)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5037475,
+          17.5086163
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Old Alwal Petrol pump"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5014073,
+          17.3399655
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Infront of St Marys School,Phisalbanda"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5014073,
+          17.3399655
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Royal Sea Hotel, Santhosh Nagar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5010145,
+          17.4051608
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Bus bhavan to Azambad Junction"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.5003866,
+          17.3968784
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Tilak nagar road way fev Hospital"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4990265,
+          17.3747646
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Yashoda Hospital, Opp Akshya Hotel"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4980364,
+          17.4321758
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Bansilalpet Railway Bridge"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4975933,
+          17.3986656
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Baghlingampally sundaraiah Park"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4971549,
+          17.3892537
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Tourist Hotel T Junction"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.496008,
+          17.3767547
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Malakpet Railway Bridge ,Right"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4951805,
+          17.4230153
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Praga Tools"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4944957,
+          17.3770782
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Malakpet Railway Bridge ,Left"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4942351,
+          17.3985159
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Chikkad palli Market"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4930723,
+          17.3740961
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Near Railway Bridge, Azampura"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4930325,
+          17.3817198
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Grave yards harazpenta road (near traffic Police sttion,Nimboliadda)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4926421,
+          17.4313163
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Under the railway bridge,near to bible house,R.P road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4923749,
+          17.3774698
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Between Basheti Steel Traders to Chadergat Bus stop"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.489593,
+          17.3939648
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "hyderguda petrol Pump,Hyderguda"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4895244,
+          17.4328492
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Bombay hotel at Karbada Maidan"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4895,
+          17.3806897
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Opp victory Play ground"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4888058,
+          17.4384686
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "At M.G.Statue,MG Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4886983,
+          17.4008639
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "St.No.9,Himayath Nagar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4886335,
+          17.4332126
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "At Ranigunj,Near Bombay Hotel.M.G.Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4885375,
+          17.435463
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "James Street police station rocha bazar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4882208,
+          17.4401499
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "In front of digital shop.MG Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4874309,
+          17.4318136
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "At Karbal Maidan,M.G.Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4867158,
+          17.4429924
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "At CTO Bus stop S.P.Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.48557,
+          17.3986792
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Telugu Acadamy Himayath Nagar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4848092,
+          17.4430387
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "null"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4848092,
+          17.4430387
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Near fire station sp road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.484232,
+          17.4215044
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Necklace Rotary"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4837999,
+          17.4024316
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "St.No.6 Roads,near Durga Photo Studio"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4830558,
+          17.4113202
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Indira Park"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4829114,
+          17.4360955
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Oppositd Chetana Hospital"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4823929,
+          17.4369934
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "KIMS Hospital Opposite"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4821992,
+          17.4432975
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Near anand Theater newly Widned Portion S.P Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4821121,
+          17.3783617
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "CBS"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.481856,
+          17.3851357
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Opp Ent Hospital"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.480543,
+          17.385597
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Bank street"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4803839,
+          17.3899443
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Boggulakunta x road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4802061,
+          17.3938373
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "King koti x road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4797747,
+          17.3607961
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Bibi Bazar x road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4795861,
+          17.4425973
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Near to Ashock bhopal Chambers,sp road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4795114,
+          17.347204
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Puranapul Gandhi Statue"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.479381,
+          17.3716327
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Museum Road Gate -2"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4792296,
+          17.3586294
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Bibi Bazar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4792087,
+          17.3997246
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Cafe Bahar Hyderguda"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4786058,
+          17.3549019
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Aslam function hall near Volta Hotel"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4782255,
+          17.4423119
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Bharani Complex Minister Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4776642,
+          17.4064795
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Magal Darba Near Liberty X roads"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4775931,
+          17.4433028
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "NTR SP Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.476971,
+          17.3697982
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Nayab Hotel to Devandevi Kaman, Patharghati"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4764999,
+          17.3918548
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Opp St. George Grammer School,Abids"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.476381,
+          17.326741
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Chandrayangutta Flyover"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4754897,
+          17.4435461
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "H.P.S.New Foot Over Bridge,SP Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4751707,
+          17.3275416
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "M.B.N.P. X ROAD Swastic Oil Mill(Construction new flyover Bridge)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4750168,
+          17.3838544
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "M.J.Market junction"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4746738,
+          17.3618881
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Charminar Monument"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4743423,
+          17.3505847
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Nagulchinta X road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4742105,
+          17.3684844
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "High Court 94 Bus Stop"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4739977,
+          17.3579912
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Moghalpura Kaman"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4738111,
+          17.3597754
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Pounch Mohallah"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4735728,
+          17.4083595
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Lumbini park Bus stop"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.473097,
+          17.3685491
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "High Court Gate No-1"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4719736,
+          17.3683762
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "High Court Gate No-6"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4719505,
+          17.4079536
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Telugu Thalli Junction (Medicity Hospital Side)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.471352,
+          17.4009096
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "P.C.R.Near Gun Park and near Kalanjali"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4711193,
+          17.3974715
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "addl.Catchpits at Haj house"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4711146,
+          17.3906179
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "A-1Signal Taj Island and Shalimar Furniture"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.470732,
+          17.3895832
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Gruha Kalpa Building"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4701116,
+          17.39107
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Nampally Station Road,Opp Pertol Pump"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4698341,
+          17.3681127
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "City College"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4682529,
+          17.3396993
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Engine Bowli to Andhra Bank"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4681563,
+          17.3362999
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Engine Bowli X Road to Kings Garden"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4678368,
+          17.3385184
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Engine Bowli T Junction to Nabeel Funcation Hall"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4677647,
+          17.4028343
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Ravindra Bharathi Junction"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.467733,
+          17.3904772
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Nampally T junction"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4676249,
+          17.444592
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Hotel Nandini,SP Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4674966,
+          17.4091387
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Mint compound road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.467361,
+          17.3375509
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Engine Bowli Junction to vattepally Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4667211,
+          17.4071539
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Home science college"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4663684,
+          17.4446975
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Shyamlal Naala,near Reebok Showroom"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4658715,
+          17.3828788
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Darussalam Junction"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4641534,
+          17.3577139
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Bhadoorpura Junction"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4631941,
+          17.3847269
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Culverts At Afgal Sagar Nala"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4612866,
+          17.4227906
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Ramky Towers,somajiguda"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4607437,
+          17.4115195
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "khairthabad petrol pump"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4606918,
+          17.4029174
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Ganga Jamuna Road Near Wood Bridge Hotel"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4606223,
+          17.4159995
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Lake view guest house,Raj Bhavan Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4605583,
+          17.3613494
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Puranapool Graveyard"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4602738,
+          17.4092174
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Sardar apts to akbar tower,punjagutta"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4596886,
+          17.4163971
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Provision & sump Lake view ghest house"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.459096,
+          17.4215464
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Villa mary,Raj Bhavan Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.458788,
+          17.4029039
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "PTI Building, Masabtank"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4585384,
+          17.4161175
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "RTO Office in Somaji guda"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4583953,
+          17.4420359
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "HPS(Side entry point)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.45752,
+          17.4210125
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Kapadia Lane,Raj Bhavan Road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4568768,
+          17.4032345
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Mahaveer Hospital, Masabtank"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4560006,
+          17.4324895
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "In front of Manjeera Gust house"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4558917,
+          17.4306898
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "In front of CM Camp Office"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.455455,
+          17.4300206
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "GRT Jewlerry to Hindu News paper near Monappa"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4552987,
+          17.3953599
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Vijayanagar Colony Labour Adda"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4552963,
+          17.3891708
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Mallepally Junction"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4549941,
+          17.3574547
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "ZooPark Near HP Petrol Pump"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4548524,
+          17.4354078
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Mayank plaza to Lal bangla"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4543465,
+          17.3562165
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Infront of Akbar Hussian Hospital, Kishan Bagh"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4538612,
+          17.4040502
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Golkonda Hotel, Masabtank"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4531474,
+          17.4359962
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "D.K.Road I/F of S.S.Liquor shop"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4526906,
+          17.4283367
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Venkat plazaPanjagutta"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4524221,
+          17.4267919
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Panjagutta"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.452236,
+          17.4353744
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Lalbangla"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4514225,
+          17.4425573
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "In between traffic signal junction Balkampet yellamma temple and fathenagar bridge on the road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4512571,
+          17.4908075
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Durgaiah naar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.45122,
+          17.4410775
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Daram karam road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4509155,
+          17.4080328
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Jn.Of Rd.No 12 with 1 Banjara Hills"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4499125,
+          17.398819
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "NMDC, Masabtank"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4495809,
+          17.4386587
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Food World Opp Nagarjuna super market"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4495591,
+          17.3909139
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Asif Nagar X Roads"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4493973,
+          17.3286651
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Shastri Puram T Junction Near Baba Kanta"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4482414,
+          17.4259248
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Panjagutta starting flyover towards Monappa in front of Brisah showroom"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4480538,
+          17.4311666
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Beside Chermas Showroom,Ameerpet"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4479366,
+          17.4414208
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Near.L&O P.S.SR Nagar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4475445,
+          17.5118856
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Opp Andhra Bank in Shapur Nagar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4473727,
+          17.433867
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Dwaraka hotel"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4469209,
+          17.432673
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Ameerpet,(near Image Hospital)"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4469112,
+          17.4284079
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Road no 2,Banjara hills"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.446582,
+          17.4199978
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Road no 4"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4465162,
+          17.4272996
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Near sagar socity road no 2 Banjara hills"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4463176,
+          17.436765
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Aditya trade center (ie pass port Office) near Maitrivanam"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4448726,
+          17.4135411
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "CC road at rd no 11 Banjara Hills at plot 163 to 69"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4439524,
+          17.4368417
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Mythrivanam"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4427368,
+          17.3968338
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Piller No-2 and 3, Humayun Nagar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4416319,
+          17.4377111
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Saradhi studio to chamber & Boys hostel to chamber in srinivas colony"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4415549,
+          17.3912681
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Amba Theatre"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4410281,
+          17.392568
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Mehendipatnam, LIC  Park"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.438311,
+          17.3834665
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Yadav Bhavan"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4381935,
+          17.5163307
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Nehru nagar to Eer Green pan shop"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4381025,
+          17.3949599
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Near Pillar No-23 Beside Defence Boundary Wall"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4377509,
+          17.3933009
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Pulla Reddy College"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4377244,
+          17.4161393
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Road no 10,Banjara Hills"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4356765,
+          17.3840238
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Gudimalkapur Vegetable Market"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4310155,
+          17.3946404
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Pillar No-102, PVNR"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.429895,
+          17.417019
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Cancer Hospital Bus Stop"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4282316,
+          17.424529
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Kamalapuri colony plot no 158 to 161"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4261247,
+          17.4153294
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "TRS Office via traffice ps road no 12"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4246968,
+          17.4288326
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Devarakonda Basthi"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4212467,
+          17.4143591
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Lotu pond road no 12 Banjara hills"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4185917,
+          17.415392
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Road no 92,IOC,Jubilee hills"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4161703,
+          17.4272516
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Jubille Hills checkpost towards NTR Bhavan,Rd no 2,b/Hills"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4157511,
+          17.3991127
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Tolichoki x road"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.412209,
+          17.4192938
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "At CVR News"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4116582,
+          17.4169653
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Towards Apollo Hospital"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4098025,
+          17.4243855
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Sitara Jewellers"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.4047934,
+          17.4055876
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Brindavan Colony"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.399105,
+          17.433069
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Near Rd.no 45 dead end"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.3777887,
+          17.4554734
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Tanla Madhapur & Ward.no.112"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.3638014,
+          17.4512605
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "anjaiah nagar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.3620166,
+          17.500136
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Bollaram Road in Miyapur & Legend apartments to SMR high lands & taranagar"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          78.3256798,
+          17.4950634
+        ]
+      },
+      "properties": {
+        "category": "Water Stagnation",
+        "source": "Felt",
+        "address": "Praja Mega Polies Majeera Road"
+      }
+    }
+  ]
+}
