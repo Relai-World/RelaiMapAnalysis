@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IntelliWeb — West Hyderabad Elite</title>
+  <title>IntelliWeb — Hyderabad Elite</title>
   <meta name="description"
-    content="Exclusive real estate intelligence for West Hyderabad — property analytics, market trends, and location insights." />
+    content="Exclusive real estate intelligence for Hyderabad — property analytics, market trends, and location insights." />
 
   <!-- MapLibre -->
   <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
@@ -19,7 +19,7 @@
   <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=4.1" />
 </head>
 
 <body>
@@ -33,7 +33,7 @@
     <div id="sidebar-brand">
       <div class="brand-block">
         <div class="brand-name">Intelli<em>Web</em></div>
-        <div class="brand-sub">West Hyderabad Elite</div>
+        <div class="brand-sub">Hyderabad Elite</div>
       </div>
       <div class="live-badge">
         <span class="pulse-dot"></span> Live
@@ -51,7 +51,7 @@
     <div id="intel-card">
       <div id="empty-state">
         <div class="empty-icon-wrap">
-          <span>🏛️</span>
+          <img src="images/logo.png" alt="Logo" class="empty-logo" />
         </div>
         <h3>Intelligence Awaits</h3>
         <p>Select any location pin on the map or type an active locality above to access exclusive property analytics.
@@ -65,11 +65,6 @@
        MAP (fills right side)
   ═══════════════════════════════════════════ -->
   <div id="map"></div>
-
-  <!-- Price Trends — top right of map -->
-  <a href="trends.html" class="nav-trends-btn" id="nav-trends">
-    📈 Price Trends
-  </a>
 
   <!-- ═══════════════════════════════════════════
        LAYER BAR — horizontal, bottom center
@@ -145,7 +140,56 @@
     <div id="amenities-list-content"></div>
   </div>
 
-  <script src="app.js"></script>
+
+  <!-- ═══════════════════════════════════════════
+       PROPERTIES LIST PANEL (Right Side)
+  ═══════════════════════════════════════════ -->
+  <div id="properties-panel">
+    <div class="prop-panel-header">
+      <div class="prop-panel-title-row">
+        <span class="prop-panel-icon">🏢</span>
+        <div>
+          <h4 id="prop-panel-title">Properties</h4>
+          <span id="prop-panel-count" class="prop-panel-count">0 projects</span>
+        </div>
+      </div>
+      <button id="close-properties-panel" class="prop-panel-close">✕</button>
+    </div>
+    
+    <div id="prop-panel-body">
+      <div class="prop-loading" id="prop-loading">
+        <div class="prop-spinner"></div>
+        <span>Loading properties…</span>
+      </div>
+      <div id="prop-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       PROPERTY DETAIL DRAWER
+  ═══════════════════════════════════════════ -->
+  <div id="property-detail-drawer">
+    <div class="detail-header">
+      <button class="detail-back-btn" id="detail-back-btn">← Back</button>
+      <button class="detail-close-btn" id="detail-close-btn">✕</button>
+    </div>
+
+    <!-- Gallery -->
+    <div class="detail-gallery" id="detail-gallery"></div>
+
+    <!-- Hero -->
+    <div class="detail-hero">
+      <div class="detail-badges" id="detail-badges"></div>
+      <h2 class="detail-proj-name" id="detail-proj-name"></h2>
+      <p class="detail-builder" id="detail-builder"></p>
+      <div class="detail-key-stats" id="detail-key-stats"></div>
+    </div>
+
+    <!-- Sections populated by JS -->
+    <div class="detail-sections" id="detail-sections"></div>
+  </div>
+
+  <script src="app.js?v=4.1"></script>
 </body>
 
 </html>

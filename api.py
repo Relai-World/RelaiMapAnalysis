@@ -112,6 +112,45 @@ def insights():
         conn = get_db()
         cur = conn.cursor()
         cur.execute("""
+            WITH property_stats AS (
+                SELECT 
+                    LOWER(areaname) as area_lower,
+                    areaname as original_area,
+                    COUNT(*) as property_count,
+                    AVG(CAST(price_per_sft AS NUMERIC)) as avg_price_per_sft,
+                    MIN(CAST(price_per_sft AS NUMERIC)) as min_price_per_sft,
+                    MAX(CAST(price_per_sft AS NUMERIC)) as max_price_per_sft
+                FROM properties_final 
+                WHERE price_per_sft IS NOT NULL 
+                    AND price_per_sft != 'None' 
+                    AND price_per_sft != ''
+                    AND CAST(price_per_sft AS NUMERIC) > 0
+                GROUP BY LOWER(areaname), areaname
+            ),
+            location_property_matches AS (
+                SELECT 
+                    l.id as location_id,
+                    l.name as location_name,
+                    SUM(ps.property_count) as total_property_count,
+                    AVG(ps.avg_price_per_sft) as avg_price_per_sft,
+                    MIN(ps.min_price_per_sft) as min_price_per_sft,
+                    MAX(ps.max_price_per_sft) as max_price_per_sft
+                FROM locations l
+                LEFT JOIN property_stats ps ON (
+                    LOWER(ps.original_area) = LOWER(l.name)
+                    OR LOWER(REPLACE(ps.original_area, ' ', '')) = LOWER(REPLACE(l.name, ' ', ''))
+                    OR ps.original_area ILIKE l.name
+                    OR l.name ILIKE ps.original_area
+                )
+                GROUP BY l.id, l.name
+            ),
+            article_stats AS (
+                SELECT 
+                    location_id,
+                    COUNT(*) as article_count
+                FROM news_balanced_corpus 
+                GROUP BY location_id
+            )
             SELECT
                 l.id,
                 l.name,
@@ -120,10 +159,15 @@ def insights():
                 li.avg_sentiment_score,
                 li.growth_score,
                 li.investment_score,
-                (SELECT COUNT(*) FROM news_balanced_corpus WHERE location_id = l.id) as article_count
+                COALESCE(a.article_count, 0) as article_count,
+                COALESCE(lpm.avg_price_per_sft, 0) as avg_property_price,
+                COALESCE(lpm.total_property_count, 0) as property_count,
+                COALESCE(lpm.min_price_per_sft, 0) as min_property_price,
+                COALESCE(lpm.max_price_per_sft, 0) as max_property_price
             FROM locations l
-            JOIN location_insights li
-              ON li.location_id = l.id
+            JOIN location_insights li ON li.location_id = l.id
+            LEFT JOIN location_property_matches lpm ON lpm.location_id = l.id
+            LEFT JOIN article_stats a ON a.location_id = l.id
             ORDER BY l.name;
         """)
         rows = cur.fetchall()
@@ -143,6 +187,20 @@ def insights():
                 "Prices show consistent long-term appreciation."
             )
 
+            # Generate property cost summary
+            avg_price = float(r[8]) if r[8] else 0
+            property_count = int(r[9]) if r[9] else 0
+            min_price = float(r[10]) if r[10] else 0
+            max_price = float(r[11]) if r[11] else 0
+            
+            if property_count > 0:
+                if min_price == max_price:
+                    price_summary = f"Properties priced at ₹{avg_price:,.0f}/sqft ({property_count} properties available)"
+                else:
+                    price_summary = f"Properties range from ₹{min_price:,.0f} to ₹{max_price:,.0f}/sqft (avg ₹{avg_price:,.0f}/sqft, {property_count} properties)"
+            else:
+                price_summary = "No property pricing data available"
+
             results.append({
                 "location_id": r[0],
                 "location": r[1],
@@ -152,6 +210,11 @@ def insights():
                 "growth_score": float(r[5]),
                 "investment_score": float(r[6]),
                 "article_count": int(r[7]),
+                "avg_property_price": avg_price,
+                "property_count": property_count,
+                "min_property_price": min_price,
+                "max_property_price": max_price,
+                "price_summary": price_summary,
                 "sentiment_summary": s_fact,
                 "growth_summary": g_fact,
                 "invest_summary": i_fact
@@ -233,37 +296,58 @@ def get_location_trends(location_id: int):
         conn = get_db()
         cur = conn.cursor()
         
-        # Fetch location name
+        # Fetch location name from locations table (column is 'name', not 'location')
         cur.execute("SELECT name FROM locations WHERE id = %s", (location_id,))
         name_row = cur.fetchone()
-        location_name = name_row[0] if name_row else f"Location {location_id}"
+        if not name_row:
+            return {"error": "Location not found"}
         
-        # Fetch richer dataset: quarter (e.g. '2024Q1'), price, min/max
+        location_name = name_row[0]
+        
+        # Fetch price trends from new schema (location name + year columns)
         cur.execute("""
-            SELECT quarter, average_price, min_price, max_price 
+            SELECT location, year_2020, year_2021, year_2022, year_2023, year_2024, year_2025, year_2026
             FROM price_trends 
-            WHERE location_id = %s 
-            ORDER BY quarter ASC;
-        """, (location_id,))
+            WHERE LOWER(location) = LOWER(%s)
+        """, (location_name,))
         
-        rows = cur.fetchall()
+        row = cur.fetchone()
         
-        # Calculate growth metrics if enough data
+        if not row:
+            cur.close()
+            conn.close()
+            return {"error": "No price trends data available for this location"}
+        
+        # Build trends array from year columns
+        trends_data = []
+        years = [2020, 2021, 2022, 2023, 2024, 2025, 2026]
+        prices = [row[1], row[2], row[3], row[4], row[5], row[6], row[7]]
+        
+        for i, year in enumerate(years):
+            if prices[i]:  # Only include if price exists
+                trends_data.append({
+                    "year": year,
+                    "price": int(prices[i])
+                })
+        
+        # Calculate growth metrics
         growth_yoy = 0.0
         cagr = 0.0
         
-        if len(rows) >= 4:
-            current_price = float(rows[-1][1])
-            prev_year_price = float(rows[-5][1]) if len(rows) >= 5 else float(rows[0][1])
+        if len(trends_data) >= 2:
+            current_price = trends_data[-1]["price"]
+            start_price = trends_data[0]["price"]
+            years_span = trends_data[-1]["year"] - trends_data[0]["year"]
             
-            if prev_year_price > 0:
-                growth_yoy = round(((current_price - prev_year_price) / prev_year_price) * 100, 1)
+            # YoY growth (last year vs previous year)
+            if len(trends_data) >= 2:
+                prev_price = trends_data[-2]["price"]
+                if prev_price > 0:
+                    growth_yoy = round(((current_price - prev_price) / prev_price) * 100, 1)
             
-            # Simple CAGR approximation over available years
-            start_price = float(rows[0][1])
-            years = len(rows) / 4
-            if start_price > 0 and years > 0:
-                cagr = round((pow(current_price / start_price, 1/years) - 1) * 100, 1)
+            # CAGR calculation
+            if start_price > 0 and years_span > 0:
+                cagr = round((pow(current_price / start_price, 1/years_span) - 1) * 100, 1)
 
         cur.close()
         conn.close()
@@ -273,18 +357,12 @@ def get_location_trends(location_id: int):
             "location": location_name,
             "growth_yoy": growth_yoy,
             "cagr": cagr,
-            "trends": [
-                {
-                    "period": r[0], 
-                    "price": float(r[1]),
-                    "min": float(r[2]) if r[2] else 0,
-                    "max": float(r[3]) if r[3] else 0
-                } for r in rows
-            ]
+            "trends": trends_data
         }
+        
     except Exception as e:
-        print(f"🔥 TRENDS ERROR: {e}")
-        return {"trends": [], "error": str(e)}
+        print(f"Error fetching trends: {e}")
+        return {"error": str(e)}
 
 @app.get("/api/v1/market-trends")
 def get_market_trends():
@@ -293,19 +371,37 @@ def get_market_trends():
         conn = get_db()
         cur = conn.cursor()
         
-        # Aggregate across all locations per quarter
+        # Calculate average across all locations for each year
         cur.execute("""
-            SELECT quarter, AVG(average_price) as avg_price
-            FROM price_trends 
-            GROUP BY quarter 
-            ORDER BY quarter ASC;
+            SELECT 
+                AVG(year_2020) as avg_2020,
+                AVG(year_2021) as avg_2021,
+                AVG(year_2022) as avg_2022,
+                AVG(year_2023) as avg_2023,
+                AVG(year_2024) as avg_2024,
+                AVG(year_2025) as avg_2025,
+                AVG(year_2026) as avg_2026
+            FROM price_trends
         """)
         
-        rows = cur.fetchall()
+        row = cur.fetchone()
         cur.close()
         conn.close()
         
-        return [{"period": r[0], "price": round(float(r[1]), 2)} for r in rows]
+        if not row:
+            return []
+        
+        # Build response array
+        years = [2020, 2021, 2022, 2023, 2024, 2025, 2026]
+        result = []
+        for i, year in enumerate(years):
+            if row[i]:
+                result.append({
+                    "year": year,
+                    "price": round(float(row[i]), 2)
+                })
+        
+        return result
     except Exception as e:
         print(f"🔥 MARKET TRENDS ERROR: {e}")
         return []
@@ -315,79 +411,299 @@ def get_market_trends():
 # ===============================
 @app.get("/api/v1/location-costs")
 def get_all_location_costs():
-    """Get property cost statistics for all locations"""
+    """Get property cost statistics for all locations - USES properties_final with optimized fuzzy matching"""
     try:
         conn = get_db()
         cur = conn.cursor()
+        
+        # Use the same optimized approach as insights endpoint
         cur.execute("""
+            WITH property_stats AS (
+                SELECT 
+                    LOWER(areaname) as area_lower,
+                    areaname as original_area,
+                    COUNT(*) as property_count,
+                    AVG(CAST(price_per_sft AS NUMERIC)) as avg_price_per_sft,
+                    MIN(CAST(price_per_sft AS NUMERIC)) as min_price_per_sft,
+                    MAX(CAST(price_per_sft AS NUMERIC)) as max_price_per_sft,
+                    AVG(CAST(baseprojectprice AS NUMERIC)) as avg_base_price
+                FROM properties_final 
+                WHERE price_per_sft IS NOT NULL 
+                    AND price_per_sft != 'None' 
+                    AND price_per_sft != ''
+                    AND CAST(price_per_sft AS NUMERIC) > 0
+                GROUP BY LOWER(areaname), areaname
+            ),
+            location_property_matches AS (
+                SELECT 
+                    l.name as location_name,
+                    SUM(ps.property_count) as total_property_count,
+                    AVG(ps.avg_price_per_sft) as avg_price_per_sft,
+                    MIN(ps.min_price_per_sft) as min_price_per_sft,
+                    MAX(ps.max_price_per_sft) as max_price_per_sft,
+                    AVG(ps.avg_base_price) as avg_base_price
+                FROM locations l
+                LEFT JOIN property_stats ps ON (
+                    LOWER(ps.original_area) = LOWER(l.name)
+                    OR LOWER(REPLACE(ps.original_area, ' ', '')) = LOWER(REPLACE(l.name, ' ', ''))
+                    OR ps.original_area ILIKE l.name
+                    OR l.name ILIKE ps.original_area
+                )
+                WHERE ps.property_count IS NOT NULL
+                GROUP BY l.name
+                HAVING SUM(ps.property_count) > 0
+            )
             SELECT 
                 location_name,
-                property_count,
-                avg_base_price,
-                avg_price_sqft,
-                min_base_price,
-                max_base_price,
-                min_price_sqft,
-                max_price_sqft
-            FROM location_costs
-            ORDER BY location_name;
+                total_property_count,
+                avg_price_per_sft,
+                min_price_per_sft,
+                max_price_per_sft,
+                avg_base_price
+            FROM location_property_matches
+            ORDER BY avg_price_per_sft DESC;
         """)
+        
         rows = cur.fetchall()
+        results = []
+        
+        for row in rows:
+            results.append({
+                "location": row[0],
+                "count": row[1],
+                "avgBase": round(float(row[5]) / 10000000, 2) if row[5] else 0,  # Convert to Crores
+                "avgSqft": round(float(row[2]), 0),
+                "minBase": round(float(row[5]) / 10000000, 2) if row[5] else 0,  # Using avg as min/max
+                "maxBase": round(float(row[5]) / 10000000, 2) if row[5] else 0,
+                "minSqft": round(float(row[3]), 0),
+                "maxSqft": round(float(row[4]), 0)
+            })
+        
         cur.close()
         conn.close()
+        return results
         
-        return [{
-            "location": r[0],
-            "count": r[1],
-            "avgBase": round(float(r[2]) / 10000000, 2),  # Convert to Crores
-            "avgSqft": round(float(r[3]), 0),
-            "minBase": round(float(r[4]) / 10000000, 2),  # Convert to Crores
-            "maxBase": round(float(r[5]) / 10000000, 2),  # Convert to Crores
-            "minSqft": round(float(r[6]), 0),
-            "maxSqft": round(float(r[7]), 0)
-        } for r in rows]
     except Exception as e:
         print(f"🔥 LOCATION COSTS ERROR: {e}")
         return {"error": str(e)}
 
 @app.get("/api/v1/location-costs/{location_name}")
 def get_location_cost(location_name: str):
-    """Get property cost statistics for a specific location"""
+    """Get property cost statistics for a specific location - USES properties_final data"""
     try:
         conn = get_db()
         cur = conn.cursor()
         cur.execute("""
             SELECT 
-                location_name,
-                property_count,
-                avg_base_price,
-                avg_price_sqft,
-                min_base_price,
-                max_base_price,
-                min_price_sqft,
-                max_price_sqft
-            FROM location_costs
-            WHERE location_name ILIKE %s;
-        """, (location_name,))
+                %s as search_name,
+                'Hyderabad' as city,
+                COUNT(*) as property_count,
+                AVG(CAST(price_per_sft AS NUMERIC)) as avg_price_per_sft,
+                MIN(CAST(price_per_sft AS NUMERIC)) as min_price_per_sft,
+                MAX(CAST(price_per_sft AS NUMERIC)) as max_price_per_sft,
+                AVG(CAST(baseprojectprice AS NUMERIC)) as avg_base_price
+            FROM properties_final 
+            WHERE (LOWER(areaname) = LOWER(%s)
+                   OR LOWER(REPLACE(areaname, ' ', '')) = LOWER(REPLACE(%s, ' ', ''))
+                   OR areaname ILIKE %s
+                   OR %s ILIKE areaname)
+                AND price_per_sft IS NOT NULL 
+                AND price_per_sft != 'None' 
+                AND price_per_sft != ''
+                AND CAST(price_per_sft AS NUMERIC) > 0
+        """, (location_name, location_name, location_name, location_name, location_name))
         row = cur.fetchone()
         cur.close()
         conn.close()
         
-        if row:
+        if row and row[2] > 0:  # Check if property_count > 0
             return {
                 "location": row[0],
-                "count": row[1],
-                "avgBase": round(float(row[2]) / 10000000, 2),  # Convert to Crores
+                "count": row[2],
+                "avgBase": round(float(row[6]) / 10000000, 2) if row[6] else 0,  # Convert to Crores
                 "avgSqft": round(float(row[3]), 0),
-                "minBase": round(float(row[4]) / 10000000, 2),  # Convert to Crores
-                "maxBase": round(float(row[5]) / 10000000, 2),  # Convert to Crores
-                "minSqft": round(float(row[6]), 0),
-                "maxSqft": round(float(row[7]), 0)
+                "minBase": round(float(row[6]) / 10000000, 2) if row[6] else 0,  # Using avg as min/max
+                "maxBase": round(float(row[6]) / 10000000, 2) if row[6] else 0,
+                "minSqft": round(float(row[4]), 0),
+                "maxSqft": round(float(row[5]), 0)
             }
         else:
             return {"error": "Location not found"}
     except Exception as e:
         print(f"🔥 LOCATION COST ERROR: {e}")
+        return {"error": str(e)}
+
+# ===============================
+# PROPERTY COSTS FROM PROPERTIES_FINAL
+# ===============================
+@app.get("/api/v1/property-costs")
+def get_all_property_costs():
+    """Get property cost statistics from properties_final table for all locations with optimized fuzzy matching"""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Use the same optimized approach as insights endpoint
+        cur.execute("""
+            WITH property_stats AS (
+                SELECT 
+                    LOWER(areaname) as area_lower,
+                    areaname as original_area,
+                    COUNT(*) as property_count,
+                    AVG(CAST(price_per_sft AS NUMERIC)) as avg_price_per_sft,
+                    MIN(CAST(price_per_sft AS NUMERIC)) as min_price_per_sft,
+                    MAX(CAST(price_per_sft AS NUMERIC)) as max_price_per_sft,
+                    AVG(CAST(baseprojectprice AS NUMERIC)) as avg_base_price,
+                    COUNT(DISTINCT buildername) as builder_count
+                FROM properties_final 
+                WHERE price_per_sft IS NOT NULL 
+                    AND price_per_sft != 'None' 
+                    AND price_per_sft != ''
+                    AND CAST(price_per_sft AS NUMERIC) > 0
+                GROUP BY LOWER(areaname), areaname
+            ),
+            location_property_matches AS (
+                SELECT 
+                    l.name as location_name,
+                    SUM(ps.property_count) as total_property_count,
+                    AVG(ps.avg_price_per_sft) as avg_price_per_sft,
+                    MIN(ps.min_price_per_sft) as min_price_per_sft,
+                    MAX(ps.max_price_per_sft) as max_price_per_sft,
+                    AVG(ps.avg_base_price) as avg_base_price,
+                    SUM(ps.builder_count) as builder_count
+                FROM locations l
+                LEFT JOIN property_stats ps ON (
+                    LOWER(ps.original_area) = LOWER(l.name)
+                    OR LOWER(REPLACE(ps.original_area, ' ', '')) = LOWER(REPLACE(l.name, ' ', ''))
+                    OR ps.original_area ILIKE l.name
+                    OR l.name ILIKE ps.original_area
+                )
+                WHERE ps.property_count IS NOT NULL
+                GROUP BY l.name
+                HAVING SUM(ps.property_count) > 0
+            )
+            SELECT 
+                location_name,
+                'Hyderabad' as city,
+                total_property_count,
+                avg_price_per_sft,
+                min_price_per_sft,
+                max_price_per_sft,
+                avg_base_price,
+                builder_count
+            FROM location_property_matches
+            ORDER BY avg_price_per_sft DESC;
+        """)
+        
+        rows = cur.fetchall()
+        results = []
+        
+        for row in rows:
+            results.append({
+                "area_name": row[0],
+                "city": row[1],
+                "property_count": int(row[2]),
+                "avg_price_per_sft": round(float(row[3]), 0),
+                "min_price_per_sft": round(float(row[4]), 0),
+                "max_price_per_sft": round(float(row[5]), 0),
+                "avg_base_price": round(float(row[6]) / 10000000, 2) if row[6] else 0,  # Convert to Crores
+                "builder_count": int(row[7]),
+                "price_range": f"₹{round(float(row[4]), 0):,} - ₹{round(float(row[5]), 0):,}/sqft"
+            })
+        
+        cur.close()
+        conn.close()
+        return results
+        
+    except Exception as e:
+        print(f"🔥 PROPERTY COSTS ERROR: {e}")
+        return {"error": str(e)}
+
+@app.get("/api/v1/property-costs/{area_name}")
+def get_area_property_costs(area_name: str):
+    """Get detailed property cost statistics for a specific area from properties_final table"""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT 
+                %s as search_name,
+                'Hyderabad' as city,
+                COUNT(*) as property_count,
+                AVG(CAST(price_per_sft AS NUMERIC)) as avg_price_per_sft,
+                MIN(CAST(price_per_sft AS NUMERIC)) as min_price_per_sft,
+                MAX(CAST(price_per_sft AS NUMERIC)) as max_price_per_sft,
+                AVG(CAST(baseprojectprice AS NUMERIC)) as avg_base_price,
+                MIN(CAST(baseprojectprice AS NUMERIC)) as min_base_price,
+                MAX(CAST(baseprojectprice AS NUMERIC)) as max_base_price,
+                COUNT(DISTINCT buildername) as builder_count,
+                COUNT(DISTINCT projectname) as project_count,
+                -- Get top builders in this area
+                STRING_AGG(DISTINCT buildername, ', ') as builders
+            FROM properties_final 
+            WHERE (LOWER(areaname) = LOWER(%s)
+                   OR LOWER(REPLACE(areaname, ' ', '')) = LOWER(REPLACE(%s, ' ', ''))
+                   OR areaname ILIKE %s
+                   OR %s ILIKE areaname)
+                AND price_per_sft IS NOT NULL 
+                AND price_per_sft != 'None' 
+                AND price_per_sft != ''
+                AND CAST(price_per_sft AS NUMERIC) > 0
+        """, (area_name, area_name, area_name, area_name, area_name))
+        
+        row = cur.fetchone()
+        
+        if row:
+            # Get sample properties
+            cur.execute("""
+                SELECT projectname, buildername, price_per_sft, baseprojectprice, bhk
+                FROM properties_final 
+                WHERE (LOWER(areaname) = LOWER(%s)
+                       OR LOWER(REPLACE(areaname, ' ', '')) = LOWER(REPLACE(%s, ' ', ''))
+                       OR areaname ILIKE %s
+                       OR %s ILIKE areaname)
+                    AND price_per_sft IS NOT NULL 
+                    AND price_per_sft != 'None' 
+                    AND price_per_sft != ''
+                ORDER BY CAST(price_per_sft AS NUMERIC) DESC
+                LIMIT 5
+            """, (area_name, area_name, area_name, area_name))
+            
+            sample_properties = cur.fetchall()
+            
+            result = {
+                "area_name": row[0],
+                "city": row[1],
+                "property_count": int(row[2]),
+                "avg_price_per_sft": round(float(row[3]), 0),
+                "min_price_per_sft": round(float(row[4]), 0),
+                "max_price_per_sft": round(float(row[5]), 0),
+                "avg_base_price": round(float(row[6]) / 10000000, 2) if row[6] else 0,  # Convert to Crores
+                "min_base_price": round(float(row[7]) / 10000000, 2) if row[7] else 0,  # Convert to Crores
+                "max_base_price": round(float(row[8]) / 10000000, 2) if row[8] else 0,  # Convert to Crores
+                "builder_count": int(row[9]),
+                "project_count": int(row[10]),
+                "builders": row[11],
+                "price_range": f"₹{round(float(row[4]), 0):,} - ₹{round(float(row[5]), 0):,}/sqft",
+                "sample_properties": [
+                    {
+                        "project_name": prop[0],
+                        "builder_name": prop[1],
+                        "price_per_sft": f"₹{float(prop[2]):,.0f}",
+                        "base_price": f"₹{float(prop[3])/10000000:.2f} Cr" if prop[3] and prop[3] != 'None' else "N/A",
+                        "bhk": prop[4] if prop[4] and prop[4] != 'None' else "N/A"
+                    } for prop in sample_properties
+                ]
+            }
+            
+            cur.close()
+            conn.close()
+            return result
+        else:
+            return {"error": "Area not found"}
+            
+    except Exception as e:
+        print(f"🔥 AREA PROPERTY COSTS ERROR: {e}")
         return {"error": str(e)}
 
 # ===============================
@@ -882,6 +1198,393 @@ def get_all_boundaries():
         }
     except Exception as e:
         return {"error": str(e)}
+
+
+# ===============================
+# REAL ESTATE PROJECTS APIs
+# ===============================
+
+@app.get("/api/v1/properties")
+def get_properties_endpoint(area: str, bhk: str = None):
+    """API endpoint to get properties by area with optional BHK filtering"""
+    return get_properties_by_area(area, bhk)
+
+def get_properties_by_area(area: str, bhk_filter: str = None):
+    """Get real estate projects for a given area name (fuzzy match) from properties_final table - GROUPED BY PROJECT."""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+
+        # Build the WHERE clause with optional BHK filtering
+        where_conditions = [
+            """(
+                -- Exact match on areaname (case insensitive)
+                LOWER(areaname) = LOWER(%s)
+                -- Exact match without spaces
+                OR LOWER(REPLACE(areaname, ' ', '')) = LOWER(REPLACE(%s, ' ', ''))
+                -- areaname starts with search term
+                OR LOWER(areaname) LIKE LOWER(%s) || '%%'
+                -- areaname contains search term as whole word (with comma or space boundaries)
+                OR LOWER(areaname) LIKE '%%' || LOWER(%s) || ', %%'
+                OR LOWER(areaname) LIKE '%%,' || LOWER(%s)
+            )"""
+        ]
+
+        params = [area, area, area, area, area]
+
+        # Add BHK filter if provided
+        if bhk_filter and bhk_filter.strip():
+            # Handle both integer and decimal formats (e.g., '2' matches '2.0')
+            where_conditions.append("(bhk = %s OR bhk = %s)")
+            bhk_val = bhk_filter.strip()
+            params.extend([bhk_val, f"{bhk_val}.0"])
+
+        where_clause = " AND ".join(where_conditions)
+
+        # Use strict matching - only exact matches or very close variants
+        cur.execute(f"""
+            SELECT
+                id, projectname, buildername, project_type, communitytype,
+                status, project_status, isavailable, configsoldoutstatus,
+                city, state,
+                areaname, projectlocation, google_place_name,
+                google_place_address, google_place_location,
+                google_maps_location, mobile_google_map_url,
+                baseprojectprice, price_per_sft, total_buildup_area,
+                floor_rise_charges, floor_rise_amount_per_floor,
+                floor_rise_applicable_above_floor_no, facing_charges,
+                preferential_location_charges,
+                preferential_location_charges_conditions,
+                amount_for_extra_car_parking, price_per_sft_update_date,
+                project_launch_date, possession_date, construction_status,
+                construction_material, total_land_area, number_of_towers,
+                number_of_floors, number_of_flats_per_floor,
+                total_number_of_units, open_space, carpet_area_percentage,
+                floor_to_ceiling_height,
+                bhk, sqfeet, sqyard, facing, no_of_car_parkings,
+                external_amenities, specification, powerbackup,
+                no_of_passenger_lift, no_of_service_lift,
+                visitor_parking, ground_vehicle_movement,
+                main_door_height, available_banks_for_loan, home_loan,
+                builder_age, builder_completed_properties,
+                builder_ongoing_projects, builder_operating_locations,
+                builder_origin_city, builder_total_properties,
+                builder_upcoming_properties,
+                poc_name, poc_contact, poc_role,
+                alternative_contact, useremail,
+                images, google_place_rating, google_place_user_ratings_total,
+                rera_number
+            FROM properties_final
+            WHERE {where_clause}
+            ORDER BY
+                CASE
+                    WHEN LOWER(areaname) = LOWER(%s) THEN 0
+                    WHEN LOWER(REPLACE(areaname, ' ', '')) = LOWER(REPLACE(%s, ' ', '')) THEN 1
+                    WHEN LOWER(areaname) LIKE LOWER(%s) || '%%' THEN 2
+                    ELSE 3
+                END,
+                CAST(COALESCE(NULLIF(google_place_rating, ''), '0') AS NUMERIC) DESC,
+                CAST(COALESCE(NULLIF(price_per_sft, ''), '0') AS NUMERIC) DESC
+            LIMIT 200;
+        """, params + [area, area, area])
+
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        cols = [
+            "id","projectname","buildername","project_type","communitytype",
+            "status","project_status","isavailable","configsoldoutstatus",
+            "city","state",
+            "areaname","projectlocation","google_place_name",
+            "google_place_address","google_place_location",
+            "google_maps_location","mobile_google_map_url",
+            "baseprojectprice","price_per_sft","total_buildup_area",
+            "floor_rise_charges","floor_rise_amount_per_floor",
+            "floor_rise_applicable_above_floor_no","facing_charges",
+            "preferential_location_charges",
+            "preferential_location_charges_conditions",
+            "amount_for_extra_car_parking","price_per_sft_update_date",
+            "project_launch_date","possession_date","construction_status",
+            "construction_material","total_land_area","number_of_towers",
+            "number_of_floors","number_of_flats_per_floor",
+            "total_number_of_units","open_space","carpet_area_percentage",
+            "floor_to_ceiling_height",
+            "bhk","sqfeet","sqyard","facing","no_of_car_parkings",
+            "external_amenities","specification","powerbackup",
+            "no_of_passenger_lift","no_of_service_lift",
+            "visitor_parking","ground_vehicle_movement",
+            "main_door_height","available_banks_for_loan","home_loan",
+            "builder_age","builder_completed_properties",
+            "builder_ongoing_projects","builder_operating_locations",
+            "builder_origin_city","builder_total_properties",
+            "builder_upcoming_properties",
+            "poc_name","poc_contact","poc_role",
+            "alternative_contact","useremail",
+            "images","google_place_rating","google_place_user_ratings_total",
+            "rera_number"
+        ]
+
+        # Convert to individual property cards (not grouped by project)
+        properties = []
+        for r in rows:
+            property_data = {}
+            for i, col in enumerate(cols):
+                val = r[i]
+                # Handle numeric conversions safely
+                if val and col in ["baseprojectprice", "price_per_sft", "google_place_rating"] and isinstance(val, str):
+                    try:
+                        val = float(val) if val != 'None' and val != '' and val is not None else None
+                    except (ValueError, TypeError):
+                        val = None
+                elif hasattr(val, '__float__') and not isinstance(val, (int, float)):
+                    try:
+                        val = float(val)
+                    except (ValueError, TypeError):
+                        val = None
+                property_data[col] = val
+
+            # Create individual property card with all required fields
+            property_card = {
+                # Card view fields
+                'id': property_data.get('id'),
+                'projectname': property_data.get('projectname'),
+                'buildername': property_data.get('buildername'),
+                'project_type': property_data.get('project_type'),
+                'bhk': property_data.get('bhk'),
+                'sqfeet': property_data.get('sqfeet'),
+                'price_per_sft': property_data.get('price_per_sft'),
+                'construction_status': property_data.get('construction_status'),
+                'areaname': property_data.get('areaname'),
+                'images': property_data.get('images'),
+                'google_place_location': property_data.get('google_place_location'),
+
+
+                # Full detail fields for when card is clicked
+                'full_details': {
+                    # Basic Info
+                    'projectname': property_data.get('projectname'),
+                    'buildername': property_data.get('buildername'),
+                    'project_type': property_data.get('project_type'),
+                    'communitytype': property_data.get('communitytype'),
+                    'status': property_data.get('status'),
+                    'project_status': property_data.get('project_status'),
+                    'isavailable': property_data.get('isavailable'),
+                    'images': property_data.get('images'),
+
+                    # Location
+                    'areaname': property_data.get('areaname'),
+                    'projectlocation': property_data.get('projectlocation'),
+                    'google_place_name': property_data.get('google_place_name'),
+                    'google_place_address': property_data.get('google_place_address'),
+                    'google_maps_location': property_data.get('google_maps_location'),
+                    'mobile_google_map_url': property_data.get('mobile_google_map_url'),
+
+                    # Pricing
+                    'baseprojectprice': property_data.get('baseprojectprice'),
+                    'price_per_sft': property_data.get('price_per_sft'),
+                    'total_buildup_area': property_data.get('total_buildup_area'),
+                    'price_per_sft_update_date': property_data.get('price_per_sft_update_date'),
+                    'floor_rise_charges': property_data.get('floor_rise_charges'),
+                    'floor_rise_amount_per_floor': property_data.get('floor_rise_amount_per_floor'),
+                    'floor_rise_applicable_above_floor_no': property_data.get('floor_rise_applicable_above_floor_no'),
+                    'facing_charges': property_data.get('facing_charges'),
+                    'preferential_location_charges': property_data.get('preferential_location_charges'),
+                    'preferential_location_charges_conditions': property_data.get('preferential_location_charges_conditions'),
+                    'amount_for_extra_car_parking': property_data.get('amount_for_extra_car_parking'),
+
+                    # Project Details
+                    'project_launch_date': property_data.get('project_launch_date'),
+                    'possession_date': property_data.get('possession_date'),
+                    'construction_status': property_data.get('construction_status'),
+                    'construction_material': property_data.get('construction_material'),
+                    'total_land_area': property_data.get('total_land_area'),
+                    'number_of_towers': property_data.get('number_of_towers'),
+                    'number_of_floors': property_data.get('number_of_floors'),
+                    'number_of_flats_per_floor': property_data.get('number_of_flats_per_floor'),
+                    'total_number_of_units': property_data.get('total_number_of_units'),
+                    'open_space': property_data.get('open_space'),
+                    'carpet_area_percentage': property_data.get('carpet_area_percentage'),
+                    'floor_to_ceiling_height': property_data.get('floor_to_ceiling_height'),
+
+                    # Unit Configuration
+                    'bhk': property_data.get('bhk'),
+                    'sqfeet': property_data.get('sqfeet'),
+                    'sqyard': property_data.get('sqyard'),
+                    'facing': property_data.get('facing'),
+                    'no_of_car_parkings': property_data.get('no_of_car_parkings'),
+
+                    # Amenities & Specs
+                    'external_amenities': property_data.get('external_amenities'),
+                    'specification': property_data.get('specification'),
+                    'powerbackup': property_data.get('powerbackup'),
+                    'no_of_passenger_lift': property_data.get('no_of_passenger_lift'),
+                    'no_of_service_lift': property_data.get('no_of_service_lift'),
+                    'visitor_parking': property_data.get('visitor_parking'),
+                    'ground_vehicle_movement': property_data.get('ground_vehicle_movement'),
+                    'main_door_height': property_data.get('main_door_height'),
+                    'home_loan': property_data.get('home_loan'),
+                    'available_banks_for_loan': property_data.get('available_banks_for_loan'),
+
+                    # Builder Profile
+                    'builder_age': property_data.get('builder_age'),
+                    'builder_completed_properties': property_data.get('builder_completed_properties'),
+                    'builder_ongoing_projects': property_data.get('builder_ongoing_projects'),
+                    'builder_upcoming_properties': property_data.get('builder_upcoming_properties'),
+                    'builder_total_properties': property_data.get('builder_total_properties'),
+                    'builder_operating_locations': property_data.get('builder_operating_locations'),
+                    'builder_origin_city': property_data.get('builder_origin_city'),
+
+                    # Point of Contact
+                    'poc_name': property_data.get('poc_name'),
+                    'poc_contact': property_data.get('poc_contact'),
+                    'poc_role': property_data.get('poc_role'),
+                    'alternative_contact': property_data.get('alternative_contact'),
+                    'useremail': property_data.get('useremail'),
+
+                    # Additional
+                    'google_place_rating': property_data.get('google_place_rating'),
+                    'google_place_user_ratings_total': property_data.get('google_place_user_ratings_total'),
+                    'rera_number': property_data.get('rera_number')
+                }
+            }
+
+            properties.append(property_card)
+
+        # Sort by rating (handle None values)
+        properties.sort(key=lambda x: x['full_details'].get('google_place_rating') or 0, reverse=True)
+
+        return properties
+
+    except Exception as e:
+        print(f"🔥 PROPERTIES ERROR: {e}")
+        return {"error": str(e)}
+@app.get("/api/v1/properties")
+def get_properties_endpoint(area: str, bhk: str = None):
+    """API endpoint to get properties by area with optional BHK filtering"""
+    return get_properties_by_area(area, bhk)
+
+
+           
+
+
+@app.get("/api/v1/properties/{property_id}")
+def get_property_detail(property_id: int):
+    """Get full detail for a single property from properties_final table."""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT
+                id, projectname, buildername, project_type, communitytype,
+                status, project_status, isavailable, configsoldoutstatus,
+                city, state,
+                areaname, projectlocation, google_place_name,
+                google_place_address, google_place_location,
+                google_maps_location, mobile_google_map_url,
+                baseprojectprice, price_per_sft, total_buildup_area,
+                floor_rise_charges, floor_rise_amount_per_floor,
+                floor_rise_applicable_above_floor_no, facing_charges,
+                preferential_location_charges,
+                preferential_location_charges_conditions,
+                amount_for_extra_car_parking, price_per_sft_update_date,
+                project_launch_date, possession_date, construction_status,
+                construction_material, total_land_area, number_of_towers,
+                number_of_floors, number_of_flats_per_floor,
+                total_number_of_units, open_space, carpet_area_percentage,
+                floor_to_ceiling_height,
+                bhk, sqfeet, sqyard, facing, no_of_car_parkings,
+                external_amenities, specification, powerbackup,
+                no_of_passenger_lift, no_of_service_lift,
+                visitor_parking, ground_vehicle_movement,
+                main_door_height, available_banks_for_loan, home_loan,
+                builder_age, builder_completed_properties,
+                builder_ongoing_projects, builder_operating_locations,
+                builder_origin_city, builder_total_properties,
+                builder_upcoming_properties,
+                poc_name, poc_contact, poc_role,
+                alternative_contact, useremail,
+                images, google_place_rating, google_place_user_ratings_total,
+                rera_number, projectbrochure
+            FROM properties_final
+            WHERE id = %s;
+        """, (property_id,))
+        r = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not r:
+            return {"error": "Property not found"}
+
+        cols = [
+            "id","projectname","buildername","project_type","communitytype",
+            "status","project_status","isavailable","configsoldoutstatus",
+            "city","state",
+            "areaname","projectlocation","google_place_name",
+            "google_place_address","google_place_location",
+            "google_maps_location","mobile_google_map_url",
+            "baseprojectprice","price_per_sft","total_buildup_area",
+            "floor_rise_charges","floor_rise_amount_per_floor",
+            "floor_rise_applicable_above_floor_no","facing_charges",
+            "preferential_location_charges",
+            "preferential_location_charges_conditions",
+            "amount_for_extra_car_parking","price_per_sft_update_date",
+            "project_launch_date","possession_date","construction_status",
+            "construction_material","total_land_area","number_of_towers",
+            "number_of_floors","number_of_flats_per_floor",
+            "total_number_of_units","open_space","carpet_area_percentage",
+            "floor_to_ceiling_height",
+            "bhk","sqfeet","sqyard","facing","no_of_car_parkings",
+            "external_amenities","specification","powerbackup",
+            "no_of_passenger_lift","no_of_service_lift",
+            "visitor_parking","ground_vehicle_movement",
+            "main_door_height","available_banks_for_loan","home_loan",
+            "builder_age","builder_completed_properties",
+            "builder_ongoing_projects","builder_operating_locations",
+            "builder_origin_city","builder_total_properties",
+            "builder_upcoming_properties",
+            "poc_name","poc_contact","poc_role",
+            "alternative_contact","useremail",
+            "images","google_place_rating","google_place_user_ratings_total",
+            "rera_number","projectbrochure"
+        ]
+
+        result = {}
+        for i, col in enumerate(cols):
+            val = r[i]
+            # Handle numeric conversions safely for properties_final data
+            if val and col in ["baseprojectprice", "price_per_sft", "google_place_rating"] and isinstance(val, str):
+                try:
+                    val = float(val) if val != 'None' and val != '' and val is not None else None
+                except (ValueError, TypeError):
+                    val = None
+            elif hasattr(val, '__float__') and not isinstance(val, (int, float)):
+                try:
+                    val = float(val)
+                except (ValueError, TypeError):
+                    val = None
+            result[col] = val
+        
+        # Return in the same format as the list endpoint
+        property_card = {
+            'id': result.get('id'),
+            'projectname': result.get('projectname'),
+            'buildername': result.get('buildername'),
+            'project_type': result.get('project_type'),
+            'bhk': result.get('bhk'),
+            'sqfeet': result.get('sqfeet'),
+            'price_per_sft': result.get('price_per_sft'),
+            'construction_status': result.get('construction_status'),
+            'areaname': result.get('areaname'),
+            'images': result.get('images'),
+            'full_details': result
+        }
+        
+        return property_card
+    except Exception as e:
+        print(f"🔥 PROPERTY DETAIL ERROR: {e}")
+        return {"error": str(e)}
+
 
 if __name__ == "__main__":
     import uvicorn

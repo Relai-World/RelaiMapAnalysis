@@ -39,30 +39,7 @@ THEMES = {
     "Entertainment": "movie OR film OR cinema OR actor OR actress OR concert OR event OR celebration OR festival"
 }
 
-ALIASES = {
-    "Kajaguda": ["Khajaguda"], 
-    "Khajaguda": ["Kajaguda"], 
-    "BEERAMGUDA": ["Beeramguda", "Bheeramguda"],
-    "Tellapur": ["Telapur"], 
-    "Kollur": ["Kolur"], 
-    "Narsingi": ["Narasingi"],
-    "Financial District": ["Nanakramguda", "ISB Road"], 
-    "Hitech City": ["HITEC City", "HITEX"],
-    "LB Nagar": ["Lal Bahadur Nagar", "L.B. Nagar"],
-    "Manikonda": ["Manykonda"],
-    "Miyapur": ["Myapur"],
-    "Kokapet": ["Kokapeta"],
-    "Mokila": ["Mokila Village"],
-    "Karmanghat": ["Karmaanghat"],
-    "Lakdikapool": ["Lakdi ka pul", "Lakdikapul"],
-    "Keesara": ["Kesara"],
-    "Kompally": ["Kompalli"],
-    "Medipally": ["Medipalli"],
-    "Moula Ali": ["Mouala Ali"],
-    "Malkajgiri": ["Malkajigiri"],
-    "Mehdipatnam": ["Mehadipatnam"],
-    "Kothapet": ["Kothapeta"]
-}
+ALIASES = {}
 
 class PortableScraperDB:
     def __init__(self):
@@ -286,17 +263,26 @@ if __name__ == "__main__":
     # Start from Shamirpet (ID: 217)
     LOCS_TO_SCRAPE = [
         
-        (161, 'Meerpet'),
-        (162, 'Mehdipatnam'),
-        (163, 'Miyapur'),
-        (165, 'Moosapet'),
-        (166, 'Moti Nagar'),
-        (167, 'Moula Ali'),
-        (168, 'Muthangi'),
-        (170, 'Nacharam'),
-        (171, 'Nadergul'),
-        (172, 'Nagaram'),
-        (173, 'Nagole'),
+       (37, "Alkapur Main Road"), (66, "Damarigidda"), (177, "Palgutta"), (209, "Patighanpur"), (214, "Peeranchuruvu"),
+            (111, "Podur"), (113, "Appa Junction Peerancheru"), (118, "Depalle"), (134, "gourelly"), (77, "Gollur"),
+            (208, "Pati, Kollur"), (149, "Kandawada"), (95, "Krishnareddypet"), (164, "Mansanpally"), (62, "Chegur"),
+            (121, "Sirigiripuram"), (65, "Chiryala"), (41, "Bacharam"), (86, "Gowdavalli"), (192, "Konapur"),
+            (235, "Yamnampet"), (216, "Sainikpuri"), (137, "Uppal Bhagath"), (233, "Velmala"), (213, "Peeramcheruvu"),
+            (161, "Mangalpalli"), (141, "Injapur"), (64, "Chitkul"), (157, "Laxmiguda"), (43, "Bandlaguda-Nagole"),
+            (225, "Toroor"), (71, "Gandi Maisamma"), (70, "Gandamguda"), (146, "Kalyan Nagar"), (94, "Kowkur"),
+            (56, "Budwel"), (232, "Velimela"), (38, "Annojiguda"), (185, "Narapally"), (68, "Dulapally"),
+            (140, "Hastinapuram"), (147, "Kamalanagar"), (39, "Appa Junction"), (184, "Muthangi"), (47, "BEERAMGUDA"),
+            (138, "Guttala Begumpet"), (190, "Khajaguda"), (215, "Puppalguda"), (217, "Rudraram"), (143, "Isnapur"),
+            (159, "Manchirevula"), (228, "Turkapally"), (191, "Kismatpur"), (220, "Shamsheergunj"), (42, "Bahadurpally"),
+            (88, "Gundlapochampally"), (176, "Padmarao Nagar"), (218, "Rampally"), (133, "Gopanpally"), (55, "Bowrampet"),
+            (63, "Chengicherla"), (158, "Mallampet"), (201, "Mansoorabad"), (69, "Gagillapur"), (103, "Moula Ali"),
+            (36, "Adibatla"), (211, "Peerzadiguda"), (67, "Dammaiguda"), (193, "Kongara Kalan"), (180, "Nadergul"),
+            (219, "Raviryal"), (224, "Thumkunta"), (229, "Turkayamjal"), (160, "Mamidipally"), (207, "Patancheruvu"),
+            (150, "Kandlakoya"), (186, "Neknampur"), (131, "Gajularamaram"), (221, "Shadnagar"), (102, "Mokila"),
+            (163, "Manneguda"), (202, "Pocharam"), (139, "Himayat Nagar"), (135, "Habsiguda"), (54, "Bollaram"),
+            (200, "Machirevula"), (44, "Bandlaguda Jagir"), (136, "Hakimpet"), (181, "Nallakunta"), (212, "Saidabad"),
+            (114, "Sanath Nagar"), (154, "Karmanghat"), (155, "Kavadiguda"), (187, "Neopolis"), (59, "Chandanagar"),
+            (120, "Puppalaguda"), (132, "Hafeezpet")
     ]
     
     scraper = PortableScraperDB()

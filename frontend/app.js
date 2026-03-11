@@ -46,12 +46,39 @@ const map = new maplibregl.Map({
   maxZoom: 18
 });
 
+// Load amenity icons when map is ready
+map.on('load', () => {
+  // Map of amenity types to icon files
+  const amenityIcons = {
+    'hospitals': 'images/hospital.png',
+    'schools': 'images/schools.png',
+    'parks': 'images/tree.png',
+    'malls': 'images/mall.png',
+    'restaurants': 'images/dinner.png',
+    'banks': 'images/bank.png',
+    'metro': 'images/train-station.png'
+  };
+
+  // Load each icon
+  Object.entries(amenityIcons).forEach(([type, path]) => {
+    map.loadImage(path, (error, image) => {
+      if (error) {
+        console.error(`Failed to load ${type} icon:`, error);
+        return;
+      }
+      if (!map.hasImage(`icon-${type}`)) {
+        map.addImage(`icon-${type}`, image);
+      }
+    });
+  });
+});
+
 // 🚀 EARLY FETCH: Start getting data immediately while map initializes
 const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 const BACKEND_URL = isLocal ? "http://127.0.0.1:8000" : "https://west-hyderabad-intelliweb.onrender.com";
 const insightsPromise = fetch(`${BACKEND_URL}/api/v1/insights`).then(res => res.json());
 
-map.addControl(new maplibregl.NavigationControl());
+map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
 let activeMarker = null;
 let clickMarker = null; // lightweight marker for generic map clicks
@@ -125,7 +152,7 @@ function generateReport(p) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
   doc.setTextColor(37, 99, 235); // Blue
-  doc.text("WEST HYDERABAD INTELLIGENCE", 14, y);
+  doc.text("HYDERABAD INTELLIGENCE", 14, y);
   y += 10;
 
   doc.setFontSize(14);
@@ -248,7 +275,7 @@ function generateReport(p) {
   // FOOTER
   doc.setFontSize(9);
   doc.setTextColor(180);
-  doc.text("Source: West Hyderabad Real Estate Intelligence Platform", 14, 285);
+  doc.text("Source: Hyderabad Real Estate Intelligence Platform", 14, 285);
   doc.text("Disclaimer: Data is for informational purposes only.", 14, 290);
 
   doc.save(`${p.location}_Detailed_Report.pdf`);
@@ -289,7 +316,9 @@ map.on("load", async () => {
     source: "orr-source",
     "source-layer": "orr",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#000000ff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.5, 18, 6], "line-blur": 1, "line-opacity": 0 } // Ghost state
+    paint: { "line-color": "#000000ff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.5, 18, 6], "line-blur": 1, "line-opacity": 0 }, // Ghost state
+    minzoom: 0,
+    maxzoom: 24
   });
 
   // 3. Highways
@@ -304,7 +333,9 @@ map.on("load", async () => {
     source: "highways-source",
     "source-layer": "highways",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#64008fff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 4.8], "line-blur": 1, "line-opacity": 0 } // Ghost state
+    paint: { "line-color": "#64008fff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 4.8], "line-blur": 1, "line-opacity": 0 }, // Ghost state
+    minzoom: 0,
+    maxzoom: 24
   });
 
   // 4. Metro (Using GeoJSON directly to ensure LineStrings are rendered)
@@ -323,7 +354,9 @@ map.on("load", async () => {
       "line-color": "#ef0000",
       "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.5, 18, 5],
       "line-opacity": 0 // Ghost state
-    }
+    },
+    minzoom: 0,
+    maxzoom: 24
   });
 
   // Metro Stations (Points)
@@ -340,7 +373,9 @@ map.on("load", async () => {
       "circle-stroke-width": 2,
       "circle-opacity": 0,
       "circle-stroke-opacity": 0
-    }
+    },
+    minzoom: 0,
+    maxzoom: 24
   });
 
   // 5. RRR (Regional Ring Road)
@@ -358,7 +393,9 @@ map.on("load", async () => {
       "line-color": "#ff8c00", // Dark Orange
       "line-width": 3,
       "line-opacity": 0 // Ghost state
-    }
+    },
+    minzoom: 0,
+    maxzoom: 24
   });
 
   // 6. HMDA Boundary
@@ -377,7 +414,9 @@ map.on("load", async () => {
       "line-width": 2,
       "line-dasharray": [4, 2], // Dashed line for boundary
       "line-opacity": 0 // Ghost state
-    }
+    },
+    minzoom: 0,
+    maxzoom: 24
   });
 
   // 1. Lakes (Moved to end)
@@ -391,7 +430,9 @@ map.on("load", async () => {
     paint: {
       "fill-color": "#0077ff",
       "fill-opacity": 0
-    }
+    },
+    minzoom: 0,
+    maxzoom: 24
   });
 
   // 7. Natural Drainage Network (REAL DATA from Felt Pipeline)
@@ -428,7 +469,9 @@ map.on("load", async () => {
         16, ["match", ["get", "ORDER"], 7, 12.0, 6, 9.0, 5, 6.0, 3.0]
       ],
       "line-opacity": 0 // Ghost state
-    }
+    },
+    minzoom: 0,
+    maxzoom: 24
   });
 
   // Keep Stagnation Points as a sub-layer
@@ -450,7 +493,9 @@ map.on("load", async () => {
       "circle-opacity": 0,
       "circle-stroke-opacity": 0,
       "circle-blur": 0.5 // Softer look for stagnation points
-    }
+    },
+    minzoom: 0,
+    maxzoom: 24
   });
 
 
@@ -488,7 +533,9 @@ map.on("load", async () => {
       "circle-stroke-width": 1,
       "circle-opacity": 0, // Ghost state
       "circle-stroke-opacity": 0
-    }
+    },
+    minzoom: 0,
+    maxzoom: 24
   });
 
   // Adding Labels for Rainfall mm
@@ -572,6 +619,8 @@ map.on("load", async () => {
               searchInput.value = loc.location;
               handleLocationSelect(loc);
               searchResults.style.display = "none";
+              // Load properties for the selected location
+              loadPropertiesForLocation(loc.location);
             };
             searchResults.appendChild(div);
           });
@@ -603,6 +652,8 @@ map.on("load", async () => {
             handleLocationSelect(bestMatch);
             searchResults.style.display = "none";
             searchInput.blur();
+            // Load properties for the selected location
+            loadPropertiesForLocation(bestMatch.location);
           } else {
             // Keep "No result found" visible if already there, or ensure it shows
             if (searchResults.style.display === "none") {
@@ -633,31 +684,31 @@ map.on("load", async () => {
       }
     });
 
-    // GLOW RING (renders behind the dot for depth) – subtle dark halo
+    // GLOW RING (renders behind the dot for depth) – Minimal Bronze Glow
     map.addLayer({
       id: "location-glow",
       type: "circle",
       source: "locations",
       paint: {
-        "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 9, 15, 14],
-        "circle-color": "#000000",
-        "circle-opacity": 0.22,
+        "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 8, 15, 12],
+        "circle-color": "#A68A3D", // Bronze
+        "circle-opacity": 0.1,
         "circle-stroke-width": 0,
-        "circle-blur": 1.2
+        "circle-blur": 2
       }
     });
 
-    // GOLD CORE DOT — small, refined marker
+    // CHARCOAL CORE — Sharp & Minimal
     map.addLayer({
       id: "location-core",
       type: "circle",
       source: "locations",
       paint: {
-        "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 5, 14, 8],
-        "circle-color": "#C9A24A",
-        // Dark ring around the gold point instead of white
-        "circle-stroke-color": "#111111",
-        "circle-stroke-width": 1.5
+        "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 3.5, 14, 5.5],
+        "circle-color": "#1A1C1E", // Deep Onyx
+        "circle-stroke-color": "#FFFFFF",
+        "circle-stroke-width": 1.5,
+        "circle-stroke-opacity": 1
       }
     });
   } catch (err) {
@@ -738,8 +789,7 @@ map.on("load", async () => {
           card.innerHTML = `
             <div style="padding: 18px;">
               <div style="margin-bottom: 18px;">
-                <h2 class="serif" style="margin: 0 0 4px 0; font-size: 1.4rem; color: var(--text-100);">Flood Intelligence</h2>
-                <p style="color: var(--text-400); font-size: 10px; margin: 0; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;">18 September 2025 Reports</p>
+                <h2 class="serif" style="margin: 0; font-size: 1.4rem; color: var(--text-100);">Flood Intelligence</h2>
               </div>
               
               <div style="display: grid; gap: 10px; margin-bottom: 20px;">
@@ -863,26 +913,26 @@ map.on("load", async () => {
 
       map.addSource('location-boundary', { type: 'geojson', data: polygon });
 
-      // Soft gold-tinted fill — distinguishes the active locality
+      // Soft onyx-tinted fill
       map.addLayer({
         id: 'location-boundary-fill',
         type: 'fill',
         source: 'location-boundary',
         paint: {
-          'fill-color': '#C9A24A',
-          'fill-opacity': 0.12
+          'fill-color': '#1A1C1E',
+          'fill-opacity': 0.04
         }
       }, 'location-core');
 
-      // Refined boundary stroke
+      // Refined boundary stroke — Minimal Charcoal
       map.addLayer({
         id: 'location-boundary-line',
         type: 'line',
         source: 'location-boundary',
         paint: {
-          'line-color': '#B08C3E',
-          'line-width': 2,
-          'line-opacity': 1
+          'line-color': '#A68A3D',
+          'line-width': 1.5,
+          'line-opacity': 0.4
         }
       }, 'location-core');
 
@@ -897,6 +947,31 @@ map.on("load", async () => {
   async function handleLocationSelect(p) {
     // START CLEANUP: Remove previous amenities if they exist
     clearAmenities();
+
+    // RESET PROPERTIES PANEL: close drawer and clear stale content from previous location
+    const propertiesPanel = document.getElementById('properties-panel');
+    const detailDrawer = document.getElementById('property-detail-drawer');
+    const propList = document.getElementById('prop-list');
+    const propLoading = document.getElementById('prop-loading');
+    const propPanelCount = document.getElementById('prop-panel-count');
+
+    if (detailDrawer) detailDrawer.classList.remove('open');
+    if (propertiesPanel) {
+      propertiesPanel.classList.remove('open', 'detail-open');
+    }
+    if (propList) propList.innerHTML = '';
+    if (propLoading) propLoading.style.display = 'none';
+    if (propPanelCount) propPanelCount.textContent = '0 projects';
+
+    // Reset navigation state so "Back to Projects" doesn't carry over old data
+    window.currentProjectsList = null;
+    window.currentProject = null;
+    window.currentConfigsList = null;
+    window._propertyPinProjects = null;
+    // Remove property pins from previous location
+    if (map.getLayer('property-pins-layer')) map.removeLayer('property-pins-layer');
+    if (map.getLayer('property-pins-labels')) map.removeLayer('property-pins-labels');
+    if (map.getSource('property-pins')) map.removeSource('property-pins');
     // END CLEANUP
 
     const card = document.getElementById("intel-card");
@@ -923,9 +998,9 @@ map.on("load", async () => {
     // Store current location ID for amenity buttons
     currentLocationId = p.location_id;
 
-    const sentimentScore = Math.min(Math.max((p.avg_sentiment + 0.5) * 100, 0), 100).toFixed(0);
-    const growthVal = Math.min((p.growth_score * 10), 10).toFixed(1);
-    const investVal = Math.min((p.investment_score * 10), 10).toFixed(1);
+    const sentimentScore = Math.min(Math.max(((p.avg_sentiment + 1) / 2) * 100, 0), 100).toFixed(0);
+    const growthVal = Math.min(Math.max(p.growth_score * 100, 0), 100).toFixed(0);
+    const investVal = Math.min(Math.max(p.investment_score * 100, 0), 100).toFixed(0);
 
     card.innerHTML = `
       <!-- HERO WITH SMART FALLBACK -->
@@ -941,27 +1016,32 @@ map.on("load", async () => {
           style="opacity:0; transition:opacity 0.4s ease;"
         />
         <div class="location-hero-overlay">
-          <div class="location-hero-tag">📍 Elite Location</div>
           <div class="location-hero-name">${p.location}</div>
-          <div class="location-hero-sub">Investment Score: ${investVal} / 10</div>
         </div>
       </div>
 
       <!-- METRICS (3 col) -->
       <div class="metrics">
-        <div class="metric-box ${p.avg_sentiment >= 0 ? 'positive' : 'negative'}">
-          <span>Sentiment</span>
+        <div class="metric-box ${p.avg_sentiment >= 0.2 ? 'positive' : p.avg_sentiment >= -0.2 ? 'neutral' : 'negative'}">
+          <span>SENTIMENT</span>
           <strong>${sentimentScore}%</strong>
+          <div class="metric-label">${sentimentScore >= 60 ? '😊 Positive' : sentimentScore >= 35 ? '😐 Neutral' : '😟 Negative'}</div>
+          <div class="metric-fact">${p.sentiment_summary || 'Community sentiment analysis'}</div>
         </div>
-        <div class="metric-box ${p.growth_score >= 0.6 ? 'positive' : 'neutral'}">
-          <span>Growth</span>
-          <strong>${growthVal}/10</strong>
+        <div class="metric-box ${p.growth_score >= 0.6 ? 'positive' : p.growth_score >= 0.35 ? 'neutral' : 'negative'}">
+          <span>GROWTH</span>
+          <strong>${growthVal}%</strong>
+          <div class="metric-label">${parseFloat(growthVal) >= 70 ? '🚀 Strong' : parseFloat(growthVal) >= 45 ? '📈 Moderate' : '📉 Low'}</div>
+          <div class="metric-fact">${p.growth_summary || 'Infrastructure development analysis'}</div>
         </div>
-        <div class="metric-box ${p.investment_score >= 0.7 ? 'positive' : 'neutral'}">
-          <span>Invest</span>
-          <strong>${investVal}/10</strong>
+        <div class="metric-box ${p.investment_score >= 0.7 ? 'positive' : p.investment_score >= 0.4 ? 'neutral' : 'negative'}">
+          <span>INVEST</span>
+          <strong>${investVal}%</strong>
+          <div class="metric-label">${parseFloat(investVal) >= 70 ? '💎 High' : parseFloat(investVal) >= 45 ? '✅ Medium' : '⚠️ Risky'}</div>
+          <div class="metric-fact">${p.invest_summary || 'Investment potential analysis'}</div>
         </div>
       </div>
+
 
       <!-- PROPERTY COSTS (fetched dynamically) -->
       <div id="property-costs-container">
@@ -998,7 +1078,7 @@ map.on("load", async () => {
             <span class="btn-icon">🏞️</span>
             <span class="btn-label">Parks</span>
           </button>
-          <button class="amenity-btn" data-amenity="metro_stations">
+          <button class="amenity-btn" data-amenity="metro">
             <span class="btn-icon">🚇</span>
             <span class="btn-label">Metro</span>
           </button>
@@ -1042,6 +1122,8 @@ map.on("load", async () => {
   map.on("click", "location-core", async e => {
     const p = e.features[0].properties;
     handleLocationSelect(p);
+    // NEW: Also load properties for this location
+    loadPropertiesForLocation(p.location);
   });
 
   map.on('mouseenter', 'location-core', () => {
@@ -1049,6 +1131,684 @@ map.on("load", async () => {
   });
   map.on('mouseleave', 'location-core', () => {
     map.getCanvas().style.cursor = '';
+  });
+
+  /* ===============================
+     PROPERTIES PANEL FUNCTIONS
+  =============================== */
+
+  function loadPropertiesForLocation(locationName) {
+    const panel = document.getElementById('properties-panel');
+    const listContainer = document.getElementById('prop-list');
+    const loadingEl = document.getElementById('prop-loading');
+    const countEl = document.getElementById('prop-panel-count');
+
+    // Open panel and show loading state
+    panel.classList.add('open');
+    loadingEl.style.display = 'flex';
+    listContainer.innerHTML = '';
+    countEl.textContent = 'Loading...';
+
+    fetch(`${BACKEND_URL}/api/v1/properties?area=${encodeURIComponent(locationName)}`)
+      .then(res => res.json())
+      .then(properties => {
+        loadingEl.style.display = 'none';
+
+        if (!properties || properties.length === 0) {
+          listContainer.innerHTML = `
+            <div class="prop-empty">
+              <div class="prop-empty-icon">🏢</div>
+              <p>No properties found in ${locationName}</p>
+            </div>
+          `;
+          countEl.textContent = '0 properties';
+          window.allLocationProperties = [];
+          return;
+        }
+
+        window.allLocationProperties = properties;
+        window.currentPropertyIndex = 0;
+
+        // Group by project name AND builder to avoid mixing different projects with same name
+        const projectGroups = {};
+        properties.forEach(property => {
+          const projectKey = `${property.projectname || 'Unnamed Project'}_${property.buildername || 'Unknown Builder'}`;
+          if (!projectGroups[projectKey]) {
+            projectGroups[projectKey] = {
+              projectname: property.projectname || 'Unnamed Project',
+              buildername: property.buildername,
+              project_type: property.project_type,
+              construction_status: property.construction_status,
+              areaname: property.areaname,
+              images: property.images,
+              properties: []
+            };
+          }
+          projectGroups[projectKey].properties.push(property);
+        });
+
+        const projects = Object.values(projectGroups)
+          .sort((a, b) => b.properties.length - a.properties.length);
+
+        countEl.textContent = `${projects.length} project${projects.length !== 1 ? 's' : ''} (${properties.length} units)`;
+
+        // Render project cards
+        projects.forEach(project => {
+          const card = createProjectGroupCard(project);
+          listContainer.appendChild(card);
+        });
+
+        // ── PROPERTY MAP PINS (additive — does not affect panel) ──────────
+        // Store projects so pin click handler can look up the right project
+        window._propertyPinProjects = projects;
+
+        // Clear any pins from a previous location
+        if (map.getLayer('property-pins-layer')) map.removeLayer('property-pins-layer');
+        if (map.getLayer('property-pins-labels')) map.removeLayer('property-pins-labels');
+        if (map.getSource('property-pins')) map.removeSource('property-pins');
+
+        // One GeoJSON feature per project — use first property with valid lat/lng
+        const pinFeatures = [];
+        projects.forEach((project, idx) => {
+          for (const prop of project.properties) {
+            const locStr = prop.google_place_location;
+            if (!locStr) continue;
+            try {
+              const loc = typeof locStr === 'string' ? JSON.parse(locStr) : locStr;
+              const lat = parseFloat(loc.lat);
+              const lng = parseFloat(loc.lng);
+              if (!isNaN(lat) && !isNaN(lng)) {
+                pinFeatures.push({
+                  type: 'Feature',
+                  geometry: { type: 'Point', coordinates: [lng, lat] },
+                  properties: {
+                    project_index: idx,
+                    projectname: project.projectname,
+                    buildername: project.buildername || '',
+                    price_per_sft: prop.price_per_sft || 0,
+                    unit_count: project.properties.length
+                  }
+                });
+                break; // one pin per project
+              }
+            } catch (e) { /* skip malformed */ }
+          }
+        });
+
+        if (pinFeatures.length > 0) {
+          map.addSource('property-pins', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: pinFeatures }
+          });
+
+          // Gold circle
+          map.addLayer({
+            id: 'property-pins-layer',
+            type: 'circle',
+            source: 'property-pins',
+            paint: {
+              'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 7, 15, 11],
+              'circle-color': '#C9A24A',
+              'circle-stroke-color': '#FFFFFF',
+              'circle-stroke-width': 2,
+              'circle-opacity': 0.92
+            }
+          });
+
+          // Price label above each pin
+          map.addLayer({
+            id: 'property-pins-labels',
+            type: 'symbol',
+            source: 'property-pins',
+            layout: {
+              'text-field': [
+                'case',
+                ['>', ['get', 'price_per_sft'], 0],
+                ['concat', '₹', ['to-string', ['round', ['get', 'price_per_sft']]], '/sqft'],
+                ''
+              ],
+              'text-size': 10,
+              'text-offset': [0, -1.8],
+              'text-anchor': 'bottom',
+              'text-font': ['Noto Sans Regular'],
+              'text-allow-overlap': false
+            },
+            paint: {
+              'text-color': '#C9A24A',
+              'text-halo-color': '#1A1C1E',
+              'text-halo-width': 1.5
+            }
+          });
+
+          // Click pin → open that project's full detail in the already-open panel
+          map.on('click', 'property-pins-layer', (e) => {
+            const pinProps = e.features[0].properties;
+            const proj = (window._propertyPinProjects || [])[pinProps.project_index];
+            if (!proj) return;
+
+            // Reset nav state so back button works correctly
+            window.currentProjectsList = null;
+            window.currentProject = null;
+            window.currentConfigsList = null;
+
+            // Clear list and show this project's detail
+            listContainer.innerHTML = '';
+            showProjectConfigurations(proj);
+          });
+
+          map.on('mouseenter', 'property-pins-layer', () => {
+            map.getCanvas().style.cursor = 'pointer';
+          });
+          map.on('mouseleave', 'property-pins-layer', () => {
+            map.getCanvas().style.cursor = '';
+          });
+        }
+        // ── END PROPERTY MAP PINS ──────────────────────────────────────────
+      })
+      .catch(err => {
+        console.error('Properties fetch error:', err);
+        loadingEl.style.display = 'none';
+        window.allLocationProperties = [];
+        listContainer.innerHTML = `
+          <div class="prop-empty">
+            <div class="prop-empty-icon">⚠️</div>
+            <p>Failed to load properties. Please try again.</p>
+          </div>
+        `;
+      });
+  }
+
+
+
+  function openPropertyDetailWithConfigs(proj) {
+    const drawer = document.getElementById('property-detail-drawer');
+    const panel = document.getElementById('properties-panel');
+
+    // Show drawer
+    drawer.classList.add('open');
+    panel.classList.add('detail-open');
+
+    // If only one config, use the simple view
+    if (!proj.allConfigs || proj.allConfigs.length === 1) {
+      openPropertyDetail(proj.id);
+      return;
+    }
+
+    // Multiple configs - fetch FULL details first, then show tabs
+    drawer.innerHTML = `
+      <div class="detail-header">
+        <button class="detail-back-btn" id="detail-back-btn">← Back</button>
+        <button class="detail-close-btn" id="detail-close-btn">✕</button>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:center; padding:60px 20px;">
+        <div class="prop-spinner"></div>
+        <span style="margin-left:12px; color:var(--t3);">Loading details...</span>
+      </div>
+    `;
+
+    // Fetch full property details
+    fetch(`${BACKEND_URL}/api/v1/properties/${proj.id}`)
+      .then(res => res.json())
+      .then(fullProp => {
+        // Merge full details with the grouped configs
+        const enrichedProj = {
+          ...fullProp,
+          allConfigs: proj.allConfigs,
+          bhkTypes: proj.bhkTypes,
+          configCount: proj.configCount
+        };
+        renderPropertyDetailWithTabs(enrichedProj);
+      })
+      .catch(err => {
+        console.error('Property detail fetch error:', err);
+        drawer.innerHTML = `
+          <div class="detail-header">
+            <button class="detail-back-btn" id="detail-back-btn">← Back</button>
+            <button class="detail-close-btn" id="detail-close-btn">✕</button>
+          </div>
+          <div style="padding:40px 20px; text-align:center; color:var(--t3);">
+            <p>Failed to load property details.</p>
+          </div>
+        `;
+      });
+  }
+
+  function renderPropertyDetailWithTabs(proj) {
+    const drawer = document.getElementById('property-detail-drawer');
+    const configs = proj.allConfigs;
+
+    // Parse images from first config
+    let images = [];
+    if (configs[0].images) {
+      try {
+        images = JSON.parse(configs[0].images);
+        if (!Array.isArray(images)) images = [];
+      } catch (e) {
+        images = [];
+      }
+    }
+
+    // Build gallery HTML
+    let galleryHTML = '';
+    if (images.length > 0) {
+      galleryHTML = images.map(img => `<img src="${img}" alt="${proj.projectname}" />`).join('');
+    } else {
+      galleryHTML = '<div class="detail-gallery-placeholder">🏢</div>';
+    }
+
+    // Build badges
+    let badgesHTML = '';
+    if (proj.project_type) badgesHTML += `<span class="detail-badge detail-badge-type">${proj.project_type}</span>`;
+    if (proj.city) badgesHTML += `<span class="detail-badge detail-badge-city">${proj.city}</span>`;
+    if (proj.construction_status) badgesHTML += `<span class="detail-badge detail-badge-status">${proj.construction_status}</span>`;
+
+    // Build configuration tabs
+    const tabsHTML = configs.map((config, idx) => `
+      <button class="config-tab ${idx === 0 ? 'active' : ''}" data-config-idx="${idx}">
+        ${config.bhk || 'Config ' + (idx + 1)}
+      </button>
+    `).join('');
+
+    // Build configuration content
+    const configContentsHTML = configs.map((config, idx) => {
+      const keyStats = `
+        <div class="detail-stat-box">
+          <span class="detail-stat-val">${config.bhk || 'N/A'}</span>
+          <span class="detail-stat-lbl">BHK</span>
+        </div>
+        <div class="detail-stat-box">
+          <span class="detail-stat-val">${config.sqfeet ? config.sqfeet.toLocaleString() : 'N/A'}</span>
+          <span class="detail-stat-lbl">Sqft</span>
+        </div>
+        <div class="detail-stat-box">
+          <span class="detail-stat-val">${config.price_per_sft ? '₹' + config.price_per_sft.toLocaleString() : 'N/A'}</span>
+          <span class="detail-stat-lbl">Per Sqft</span>
+        </div>
+      `;
+
+      return `
+        <div class="config-content ${idx === 0 ? 'active' : ''}" data-config-idx="${idx}">
+          <div class="detail-key-stats">${keyStats}</div>
+          
+          <div class="detail-sections">
+            ${buildDetailSection('💰 Pricing', [
+        { label: 'Base Price', value: config.baseprojectprice ? `₹${(config.baseprojectprice / 10000000).toFixed(2)} Cr` : null },
+        { label: 'Price / sqft', value: config.price_per_sft ? `₹${config.price_per_sft.toLocaleString()}` : null },
+        { label: 'Total Buildup Area', value: config.total_buildup_area ? `${config.total_buildup_area} sqft` : null },
+        { label: 'Price Last Updated', value: config.price_per_sft_update_date },
+        { label: 'Floor Rise Charges', value: config.floor_rise_charges },
+        { label: 'Floor Rise ₹/floor', value: config.floor_rise_amount_per_floor },
+        { label: 'Applicable Above Floor No', value: config.floor_rise_applicable_above_floor_no },
+        { label: 'Facing Charges', value: config.facing_charges },
+        { label: 'PLC', value: config.preferential_location_charges },
+        { label: 'PLC Conditions', value: config.preferential_location_charges_conditions, span: true },
+        { label: 'Extra Parking Cost', value: config.amount_for_extra_car_parking }
+      ])}
+            
+            ${buildDetailSection('🛏️ Unit Configuration', [
+        { label: 'BHK Config', value: config.bhk },
+        { label: 'Area (sqft)', value: config.sqfeet },
+        { label: 'Area (sqyard)', value: config.sqyard },
+        { label: 'Facing', value: config.facing },
+        { label: 'Car Parkings', value: config.no_of_car_parkings }
+      ])}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    drawer.innerHTML = `
+      <div class="detail-header">
+        <button class="detail-back-btn" id="detail-back-btn">← Back</button>
+        <button class="detail-close-btn" id="detail-close-btn">✕</button>
+      </div>
+      
+      <div class="detail-scrollable">
+        <div class="detail-gallery">${galleryHTML}</div>
+        
+        <div class="detail-hero">
+          <div class="detail-badges">${badgesHTML}</div>
+          <h2 class="detail-proj-name">${proj.projectname || 'Unnamed Project'}</h2>
+          <p class="detail-builder">${proj.buildername || 'Builder not specified'}</p>
+        </div>
+        
+        <div class="config-tabs-container">
+          <div class="config-tabs">${tabsHTML}</div>
+        </div>
+        
+        <div class="config-contents-wrapper">${configContentsHTML}</div>
+        
+        <div class="detail-sections-common">
+          ${buildDetailSection('🏠 Basic Info', [
+      { label: 'Project Name', value: proj.projectname },
+      { label: 'Builder', value: proj.buildername },
+      { label: 'Type', value: proj.project_type },
+      { label: 'Community', value: proj.communitytype },
+      { label: 'Status', value: proj.status },
+      { label: 'Project Status', value: proj.project_status },
+      { label: 'Availability', value: proj.isavailable }
+    ])}
+          
+          ${buildDetailSection('📍 Location', [
+      { label: 'Area', value: proj.areaname },
+      { label: 'Location', value: proj.projectlocation },
+      { label: 'Google Name', value: proj.google_place_name },
+      { label: 'Full Address', value: proj.google_place_address, span: true },
+      { label: 'Maps Link', value: proj.google_maps_location, link: true },
+      { label: 'Open in Maps', value: proj.mobile_google_map_url, link: true }
+    ])}
+          
+          ${buildDetailSection('🏗️ Project Details', [
+      { label: 'Launch Date', value: proj.project_launch_date },
+      { label: 'Possession Date', value: proj.possession_date },
+      { label: 'Construction Status', value: proj.construction_status },
+      { label: 'Material', value: proj.construction_material },
+      { label: 'Land Area', value: proj.total_land_area ? `${proj.total_land_area} sqft` : null },
+      { label: 'Towers', value: proj.number_of_towers },
+      { label: 'Floors', value: proj.number_of_floors },
+      { label: 'Flats/Floor', value: proj.number_of_flats_per_floor },
+      { label: 'Total Units', value: proj.total_number_of_units },
+      { label: 'Open Space %', value: proj.open_space },
+      { label: 'Carpet Area %', value: proj.carpet_area_percentage },
+      { label: 'Floor-to-Ceiling Height', value: proj.floor_to_ceiling_height }
+    ])}
+          
+          ${buildDetailSection('🏊 Amenities & Specs', [
+      { label: 'External Amenities', value: proj.external_amenities, span: true },
+      { label: 'Specifications', value: proj.specification, span: true },
+      { label: 'Power Backup', value: proj.powerbackup },
+      { label: 'Passenger Lifts', value: proj.no_of_passenger_lift },
+      { label: 'Service Lifts', value: proj.no_of_service_lift },
+      { label: 'Visitor Parking', value: proj.visitor_parking },
+      { label: 'Ground Vehicle Movement', value: proj.ground_vehicle_movement },
+      { label: 'Main Door Height', value: proj.main_door_height },
+      { label: 'Home Loan', value: proj.home_loan },
+      { label: 'Banks for Loan', value: proj.available_banks_for_loan, span: true }
+    ])}
+          
+          ${buildDetailSection('👷 Builder Profile', [
+      { label: 'Years in Business', value: proj.builder_age },
+      { label: 'Completed Projects', value: proj.builder_completed_properties },
+      { label: 'Ongoing Projects', value: proj.builder_ongoing_projects },
+      { label: 'Upcoming Projects', value: proj.builder_upcoming_properties },
+      { label: 'Total Projects', value: proj.builder_total_properties },
+      { label: 'Operating Cities', value: proj.builder_operating_locations },
+      { label: 'Headquarters', value: proj.builder_origin_city }
+    ])}
+          
+          ${buildDetailSection('📞 Point of Contact', [
+      { label: 'Contact Name', value: proj.poc_name },
+      { label: 'Phone', value: proj.poc_contact },
+      { label: 'Role', value: proj.poc_role },
+      { label: 'Alt. Contact', value: proj.alternative_contact },
+      { label: 'Email', value: proj.useremail }
+    ])}
+        </div>
+      </div>
+    `;
+
+    // Add tab click handlers
+    drawer.querySelectorAll('.config-tab').forEach(tab => {
+      tab.onclick = () => {
+        const idx = tab.dataset.configIdx;
+
+        // Update active tab
+        drawer.querySelectorAll('.config-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Update active content
+        drawer.querySelectorAll('.config-content').forEach(c => c.classList.remove('active'));
+        drawer.querySelector(`.config-content[data-config-idx="${idx}"]`).classList.add('active');
+      };
+    });
+  }
+
+  function openPropertyDetail(propertyId) {
+    const drawer = document.getElementById('property-detail-drawer');
+    const panel = document.getElementById('properties-panel');
+
+    // Show drawer
+    drawer.classList.add('open');
+    panel.classList.add('detail-open');
+
+    // Show loading state
+    drawer.innerHTML = `
+      <div class="detail-header">
+        <button class="detail-back-btn" id="detail-back-btn">← Back</button>
+        <button class="detail-close-btn" id="detail-close-btn">✕</button>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:center; padding:60px 20px;">
+        <div class="prop-spinner"></div>
+        <span style="margin-left:12px; color:var(--t3);">Loading details...</span>
+      </div>
+    `;
+
+    // Fetch full property details
+    fetch(`${BACKEND_URL}/api/v1/properties/${propertyId}`)
+      .then(res => res.json())
+      .then(prop => {
+        renderPropertyDetail(prop);
+      })
+      .catch(err => {
+        console.error('Property detail fetch error:', err);
+        drawer.innerHTML = `
+          <div class="detail-header">
+            <button class="detail-back-btn" id="detail-back-btn">← Back</button>
+            <button class="detail-close-btn" id="detail-close-btn">✕</button>
+          </div>
+          <div style="padding:40px 20px; text-align:center; color:var(--t3);">
+            <p>Failed to load property details.</p>
+          </div>
+        `;
+      });
+  }
+
+  function renderPropertyDetail(prop) {
+    const drawer = document.getElementById('property-detail-drawer');
+
+    // Parse images
+    let images = [];
+    if (prop.images) {
+      try {
+        images = JSON.parse(prop.images);
+        if (!Array.isArray(images)) images = [];
+      } catch (e) {
+        images = [];
+      }
+    }
+
+    // Build gallery HTML
+    let galleryHTML = '';
+    if (images.length > 0) {
+      galleryHTML = images.map(img => `<img src="${img}" alt="${prop.projectname}" />`).join('');
+    } else {
+      galleryHTML = '<div class="detail-gallery-placeholder">🏢</div>';
+    }
+
+    // Build badges
+    let badgesHTML = '';
+    if (prop.project_type) badgesHTML += `<span class="detail-badge detail-badge-type">${prop.project_type}</span>`;
+    if (prop.city) badgesHTML += `<span class="detail-badge detail-badge-city">${prop.city}</span>`;
+    if (prop.construction_status) badgesHTML += `<span class="detail-badge detail-badge-status">${prop.construction_status}</span>`;
+
+    // Key stats
+    const keyStats = `
+      <div class="detail-stat-box">
+        <span class="detail-stat-val">${prop.bhk || 'N/A'}</span>
+        <span class="detail-stat-lbl">BHK</span>
+      </div>
+      <div class="detail-stat-box">
+        <span class="detail-stat-val">${prop.sqfeet ? prop.sqfeet.toLocaleString() : 'N/A'}</span>
+        <span class="detail-stat-lbl">Sqft</span>
+      </div>
+      <div class="detail-stat-box">
+        <span class="detail-stat-val">${prop.price_per_sft ? '₹' + prop.price_per_sft.toLocaleString() : 'N/A'}</span>
+        <span class="detail-stat-lbl">Per Sqft</span>
+      </div>
+    `;
+
+    drawer.innerHTML = `
+      <div class="detail-header">
+        <button class="detail-back-btn" id="detail-back-btn">← Back</button>
+        <button class="detail-close-btn" id="detail-close-btn">✕</button>
+      </div>
+      
+      <div class="detail-scrollable">
+        <div class="detail-gallery">${galleryHTML}</div>
+        
+        <div class="detail-hero">
+          <div class="detail-badges">${badgesHTML}</div>
+          <h2 class="detail-proj-name">${prop.projectname || 'Unnamed Project'}</h2>
+          <p class="detail-builder">${prop.buildername || 'Builder not specified'}</p>
+          <div class="detail-key-stats">${keyStats}</div>
+        </div>
+        
+        <div class="detail-sections">
+          ${buildDetailSection('🏠 Basic Info', [
+      { label: 'Project Name', value: prop.projectname },
+      { label: 'Builder', value: prop.buildername },
+      { label: 'Type', value: prop.project_type },
+      { label: 'Community', value: prop.communitytype },
+      { label: 'Status', value: prop.status },
+      { label: 'Project Status', value: prop.project_status },
+      { label: 'Availability', value: prop.isavailable }
+    ])}
+          
+          ${buildDetailSection('📍 Location', [
+      { label: 'Area', value: prop.areaname },
+      { label: 'Location', value: prop.projectlocation },
+      { label: 'Google Name', value: prop.google_place_name },
+      { label: 'Full Address', value: prop.google_place_address, span: true },
+      { label: 'Maps Link', value: prop.google_maps_location, link: true },
+      { label: 'Open in Maps', value: prop.mobile_google_map_url, link: true }
+    ])}
+          
+          ${buildDetailSection('💰 Pricing', [
+      { label: 'Base Price', value: prop.baseprojectprice ? `₹${(prop.baseprojectprice / 10000000).toFixed(2)} Cr` : null },
+      { label: 'Price / sqft', value: prop.price_per_sft ? `₹${prop.price_per_sft.toLocaleString()}` : null },
+      { label: 'Total Buildup Area', value: prop.total_buildup_area ? `${prop.total_buildup_area} sqft` : null },
+      { label: 'Price Last Updated', value: prop.price_per_sft_update_date },
+      { label: 'Floor Rise Charges', value: prop.floor_rise_charges },
+      { label: 'Floor Rise ₹/floor', value: prop.floor_rise_amount_per_floor },
+      { label: 'Applicable Above Floor No', value: prop.floor_rise_applicable_above_floor_no },
+      { label: 'Facing Charges', value: prop.facing_charges },
+      { label: 'PLC', value: prop.preferential_location_charges },
+      { label: 'PLC Conditions', value: prop.preferential_location_charges_conditions, span: true },
+      { label: 'Extra Parking Cost', value: prop.amount_for_extra_car_parking }
+    ])}
+          
+          ${buildDetailSection('🏗️ Project Details', [
+      { label: 'Launch Date', value: prop.project_launch_date },
+      { label: 'Possession Date', value: prop.possession_date },
+      { label: 'Construction Status', value: prop.construction_status },
+      { label: 'Material', value: prop.construction_material },
+      { label: 'Land Area', value: prop.total_land_area ? `${prop.total_land_area} sqft` : null },
+      { label: 'Towers', value: prop.number_of_towers },
+      { label: 'Floors', value: prop.number_of_floors },
+      { label: 'Flats/Floor', value: prop.number_of_flats_per_floor },
+      { label: 'Total Units', value: prop.total_number_of_units },
+      { label: 'Open Space %', value: prop.open_space },
+      { label: 'Carpet Area %', value: prop.carpet_area_percentage },
+      { label: 'Floor-to-Ceiling Height', value: prop.floor_to_ceiling_height }
+    ])}
+          
+          ${buildDetailSection('🛏️ Unit Configuration', [
+      { label: 'BHK Config', value: prop.bhk },
+      { label: 'Area (sqft)', value: prop.sqfeet },
+      { label: 'Area (sqyard)', value: prop.sqyard },
+      { label: 'Facing', value: prop.facing },
+      { label: 'Car Parkings', value: prop.no_of_car_parkings }
+    ])}
+          
+          ${buildDetailSection('🏊 Amenities & Specs', [
+      { label: 'External Amenities', value: prop.external_amenities, span: true },
+      { label: 'Specifications', value: prop.specification, span: true },
+      { label: 'Power Backup', value: prop.powerbackup },
+      { label: 'Passenger Lifts', value: prop.no_of_passenger_lift },
+      { label: 'Service Lifts', value: prop.no_of_service_lift },
+      { label: 'Visitor Parking', value: prop.visitor_parking },
+      { label: 'Ground Vehicle Movement', value: prop.ground_vehicle_movement },
+      { label: 'Main Door Height', value: prop.main_door_height },
+      { label: 'Home Loan', value: prop.home_loan },
+      { label: 'Banks for Loan', value: prop.available_banks_for_loan, span: true }
+    ])}
+          
+          ${buildDetailSection('👷 Builder Profile', [
+      { label: 'Years in Business', value: prop.builder_age },
+      { label: 'Completed Projects', value: prop.builder_completed_properties },
+      { label: 'Ongoing Projects', value: prop.builder_ongoing_projects },
+      { label: 'Upcoming Projects', value: prop.builder_upcoming_properties },
+      { label: 'Total Projects', value: prop.builder_total_properties },
+      { label: 'Operating Cities', value: prop.builder_operating_locations },
+      { label: 'Headquarters', value: prop.builder_origin_city }
+    ])}
+          
+          ${buildDetailSection('📞 Point of Contact', [
+      { label: 'Contact Name', value: prop.poc_name },
+      { label: 'Phone', value: prop.poc_contact },
+      { label: 'Role', value: prop.poc_role },
+      { label: 'Alt. Contact', value: prop.alternative_contact },
+      { label: 'Email', value: prop.useremail }
+    ])}
+        </div>
+      </div>
+    `;
+  }
+
+  function buildDetailSection(title, fields) {
+    // Debug logging
+    console.log(`Building section: ${title}`, fields);
+
+    const validFields = fields.filter(f => f.value && f.value !== 'null' && f.value !== 'N/A' && f.value !== 'None');
+    console.log(`Valid fields for ${title}:`, validFields);
+
+    if (validFields.length === 0) return ''; // Don't show empty sections
+
+    const rowsHTML = validFields.map(f => {
+      if (f.link && f.value) {
+        return `
+          <div class="detail-row ${f.span ? 'single' : ''}">
+            <div class="detail-row-label">${f.label}</div>
+            <div class="detail-row-value link"><a href="${f.value}" target="_blank" rel="noopener noreferrer">Open in Maps</a></div>
+          </div>
+        `;
+      }
+      return `
+        <div class="detail-row ${f.span ? 'single' : ''}">
+          <div class="detail-row-label">${f.label}</div>
+          <div class="detail-row-value">${f.value || 'Not available'}</div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="detail-section">
+        <h3 class="detail-section-title">${title}</h3>
+        <div class="detail-rows ${validFields.length === 1 || validFields.some(f => f.span) ? 'single' : ''}">${rowsHTML}</div>
+      </div>
+    `;
+  }
+
+  // Event listeners for panel controls
+  document.addEventListener('click', (e) => {
+    // Close properties panel
+    if (e.target.closest('#close-properties-panel')) {
+      document.getElementById('properties-panel').classList.remove('open');
+      document.getElementById('property-detail-drawer').classList.remove('open');
+      document.getElementById('properties-panel').classList.remove('detail-open');
+    }
+
+    // Back button in detail drawer
+    if (e.target.closest('#detail-back-btn')) {
+      document.getElementById('property-detail-drawer').classList.remove('open');
+      document.getElementById('properties-panel').classList.remove('detail-open');
+    }
+
+    // Close button in detail drawer
+    if (e.target.closest('#detail-close-btn')) {
+      document.getElementById('property-detail-drawer').classList.remove('open');
+      document.getElementById('properties-panel').classList.remove('detail-open');
+    }
   });
 
   // METRO LAYER CLICK HANDLER
@@ -1088,79 +1848,224 @@ map.on("load", async () => {
 
 
 
-  // CHART.JS HELPER
+  // CHART.JS HELPER - Enhanced Price Trends Visualization
+  let priceChartInstance = null; // Store chart instance globally
+
   function drawPriceChart(locationId) {
+    console.log('Drawing price chart for location ID:', locationId);
+
     fetch(`${BACKEND_URL}/api/v1/location/${locationId}/trends`)
       .then(res => res.json())
       .then(data => {
-        // Check if data is valid array
-        if (!Array.isArray(data) || data.length === 0) {
-          console.warn('No chart data available');
+        console.log('Price trends data received:', data);
+
+        // Handle new API response structure
+        if (data.error || !data.trends || data.trends.length === 0) {
+          console.warn('No chart data available:', data.error || 'No trends data');
           document.getElementById('cagr-stat').style.display = 'none';
+
+          // Show "No data" message in chart area
+          const chartContainer = document.querySelector('.chart-container');
+          if (chartContainer) {
+            chartContainer.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#999; font-size:11px; font-family:Outfit;">No price trend data available</div>';
+          }
           return;
         }
 
-        // Calculate CAGR: ((EndValue / StartValue) ^ (1 / Years)) - 1
-        if (data.length >= 2) {
-          const startPrice = data[0].price;
-          const endPrice = data[data.length - 1].price;
-          const years = data[data.length - 1].year - data[0].year;
-          const cagr = (Math.pow(endPrice / startPrice, 1 / years) - 1) * 100;
-          document.getElementById('cagr-stat').innerText = `${cagr.toFixed(1)}% CAGR`;
+        const trendsData = data.trends;
+        const cagr = data.cagr || 0;
+        const growthYoy = data.growth_yoy || 0;
+
+        console.log('Rendering chart with', trendsData.length, 'data points');
+
+        // Update CAGR stat with enhanced styling
+        const cagrElement = document.getElementById('cagr-stat');
+        if (cagr !== 0) {
+          const cagrColor = cagr > 10 ? '#4CAF50' : cagr > 5 ? '#FFA726' : '#A68A3D';
+          const trendIcon = cagr > 0 ? '📈' : '📉';
+          cagrElement.innerHTML = `${trendIcon} <span style="color:${cagrColor}; font-weight:800;">${cagr.toFixed(1)}%</span> CAGR`;
+          cagrElement.style.display = 'block';
         } else {
-          document.getElementById('cagr-stat').style.display = 'none';
+          cagrElement.style.display = 'none';
         }
 
-        const ctx = document.getElementById('priceChart').getContext('2d');
+        // Destroy existing chart instance if it exists
+        if (priceChartInstance) {
+          priceChartInstance.destroy();
+        }
 
+        const canvas = document.getElementById('priceChart');
+        if (!canvas) {
+          console.error('Canvas element not found!');
+          return;
+        }
+
+        const ctx = canvas.getContext('2d');
+
+        // Enhanced gradient with richer colors
         const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-        gradient.addColorStop(0, 'rgba(212, 175, 55, 0.35)');
-        gradient.addColorStop(1, 'rgba(212, 175, 55, 0)');
+        gradient.addColorStop(0, 'rgba(201, 162, 74, 0.35)');
+        gradient.addColorStop(0.5, 'rgba(166, 138, 61, 0.15)');
+        gradient.addColorStop(1, 'rgba(166, 138, 61, 0)');
 
-        new Chart(ctx, {
+        // Create glow effect gradient for line
+        const glowGradient = ctx.createLinearGradient(0, 0, 0, 200);
+        glowGradient.addColorStop(0, '#FFD700');
+        glowGradient.addColorStop(0.5, '#C9A24A');
+        glowGradient.addColorStop(1, '#A68A3D');
+
+        priceChartInstance = new Chart(ctx, {
           type: 'line',
           data: {
-            labels: data.map(d => d.year),
+            labels: trendsData.map(d => d.year),
             datasets: [{
-              label: 'Avg Price (₹/sqft)',
-              data: data.map(d => d.price),
-              borderColor: '#D4AF37',
-              borderWidth: 2.5,
+              label: 'Price per SqFt',
+              data: trendsData.map(d => d.price),
+              borderColor: glowGradient,
+              borderWidth: 3,
               fill: true,
               backgroundColor: gradient,
-              tension: 0.45,
-              pointRadius: 4,
-              pointBackgroundColor: '#D4AF37',
-              pointBorderColor: '#060A18',
-              pointBorderWidth: 2
+              tension: 0.4,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              pointBackgroundColor: '#FFD700',
+              pointBorderColor: '#FFFFFF',
+              pointBorderWidth: 2,
+              pointHoverBackgroundColor: '#FFF',
+              pointHoverBorderColor: '#FFD700',
+              pointHoverBorderWidth: 3,
+              shadowOffsetX: 0,
+              shadowOffsetY: 4,
+              shadowBlur: 10,
+              shadowColor: 'rgba(201, 162, 74, 0.3)'
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
             plugins: {
-              legend: { display: false }, tooltip: {
-                backgroundColor: 'rgba(9,14,31,0.95)',
-                borderColor: 'rgba(212,175,55,0.3)',
-                borderWidth: 1,
-                titleColor: '#D4AF37',
-                bodyColor: '#F1F5F9',
-                titleFont: { family: 'Outfit', weight: '700' },
-                bodyFont: { family: 'Outfit' },
-                padding: 10
+              legend: { display: false },
+              tooltip: {
+                enabled: true,
+                backgroundColor: 'rgba(26, 28, 30, 0.95)',
+                borderColor: '#FFD700',
+                borderWidth: 2,
+                titleColor: '#FFD700',
+                bodyColor: '#FFFFFF',
+                titleFont: {
+                  family: 'Outfit',
+                  weight: '700',
+                  size: 13
+                },
+                bodyFont: {
+                  family: 'Outfit',
+                  size: 12,
+                  weight: '600'
+                },
+                padding: 14,
+                cornerRadius: 8,
+                displayColors: false,
+                callbacks: {
+                  title: (context) => {
+                    return `Year ${context[0].label}`;
+                  },
+                  label: (context) => {
+                    const price = context.parsed.y;
+                    const index = context.dataIndex;
+
+                    // Calculate YoY change if not first point
+                    let changeText = '';
+                    if (index > 0) {
+                      const prevPrice = trendsData[index - 1].price;
+                      const change = ((price - prevPrice) / prevPrice * 100).toFixed(1);
+                      const changeIcon = change > 0 ? '↑' : '↓';
+                      const changeColor = change > 0 ? '🟢' : '🔴';
+                      changeText = `\n${changeColor} ${changeIcon} ${Math.abs(change)}% YoY`;
+                    }
+
+                    return `₹${price.toLocaleString()}/sqft${changeText}`;
+                  },
+                  afterLabel: (context) => {
+                    const index = context.dataIndex;
+                    const price = context.parsed.y;
+
+                    // Show growth from start
+                    if (index > 0) {
+                      const startPrice = trendsData[0].price;
+                      const totalGrowth = ((price - startPrice) / startPrice * 100).toFixed(1);
+                      return `\n📊 +${totalGrowth}% from ${trendsData[0].year}`;
+                    }
+                    return '';
+                  }
+                }
               }
             },
             scales: {
-              x: { grid: { display: false }, ticks: { color: '#4A5F7A', font: { family: 'Outfit', size: 10 } } },
+              x: {
+                grid: {
+                  display: true,
+                  color: 'rgba(166, 138, 61, 0.05)',
+                  lineWidth: 1
+                },
+                ticks: {
+                  color: '#9E9E9E',
+                  font: {
+                    family: 'Outfit',
+                    size: 11,
+                    weight: '600'
+                  },
+                  padding: 8
+                },
+                border: {
+                  color: 'rgba(166, 138, 61, 0.2)'
+                }
+              },
               y: {
-                grid: { color: 'rgba(255,255,255,0.04)' },
-                ticks: { color: '#4A5F7A', font: { family: 'Outfit', size: 10 }, callback: (v) => '₹' + v / 1000 + 'k' }
+                grid: {
+                  color: 'rgba(166, 138, 61, 0.08)',
+                  lineWidth: 1
+                },
+                ticks: {
+                  color: '#9E9E9E',
+                  font: {
+                    family: 'Outfit',
+                    size: 11,
+                    weight: '600'
+                  },
+                  padding: 8,
+                  callback: (v) => {
+                    if (v >= 1000) {
+                      return '₹' + (v / 1000).toFixed(1) + 'k';
+                    }
+                    return '₹' + v;
+                  }
+                },
+                border: {
+                  color: 'rgba(166, 138, 61, 0.2)'
+                }
               }
+            },
+            animation: {
+              duration: 1500,
+              easing: 'easeInOutQuart'
             }
           }
         });
+
+        console.log('Chart created successfully:', priceChartInstance);
       })
-      .catch(err => console.error("Chart Fetch Error:", err));
+      .catch(err => {
+        console.error("Chart Fetch Error:", err);
+        document.getElementById('cagr-stat').style.display = 'none';
+        const chartContainer = document.querySelector('.chart-container');
+        if (chartContainer) {
+          chartContainer.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#ff5555; font-size:11px; font-family:Outfit;">Error loading chart data</div>';
+        }
+      });
   }
 
   // FETCH PROPERTY COSTS DYNAMICALLY
@@ -1177,7 +2082,7 @@ map.on("load", async () => {
       </div>
     `;
 
-    fetch(`${BACKEND_URL}/api/v1/location-costs/${encodeURIComponent(locationName)}`)
+    fetch(`${BACKEND_URL}/api/v1/property-costs/${encodeURIComponent(locationName)}`)
       .then(res => res.json())
       .then(data => {
         if (data.error) {
@@ -1192,12 +2097,21 @@ map.on("load", async () => {
         }
 
         // Store for PDF Report
-        currentCostData = data;
+        currentCostData = {
+          location: data.area_name,
+          count: data.property_count,
+          avgBase: data.avg_base_price,
+          avgSqft: data.avg_price_per_sft,
+          minBase: data.min_base_price || data.avg_base_price,
+          maxBase: data.max_base_price || data.avg_base_price,
+          minSqft: data.min_price_per_sft,
+          maxSqft: data.max_price_per_sft
+        };
 
         // NEW: Update the Investment Fact Placeholder text immediately
         const invFactSpan = document.getElementById("invest-fact-price");
         if (invFactSpan) {
-          invFactSpan.innerText = ` (~₹${data.avgSqft.toLocaleString()}/sqft)`;
+          invFactSpan.innerText = ` (~₹${data.avg_price_per_sft.toLocaleString()}/sqft)`;
           invFactSpan.style.opacity = 1;
         }
 
@@ -1205,40 +2119,40 @@ map.on("load", async () => {
         // Render the property costs section
         container.innerHTML = `
           <div style="margin: 12px 12px 0; padding-top:12px; border-top:1px solid var(--border);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-              <span style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:2.5px; color:var(--navy); font-family:'Outfit',sans-serif;">&#128176; Property Costs</span>
-              <span style="font-size:9px; color:var(--t3); background:var(--bg-elevated); padding:3px 9px; border-radius:6px; border:1px solid var(--border); font-family:'Outfit',sans-serif; font-weight:600;">${data.count} Props</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:2.5px; color:var(--gold); font-family:'Outfit',sans-serif;">💰 Property Costs</span>
+              <span style="font-size:9px; color:var(--t3); background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:8px; border:1px solid var(--border-subtle); font-family:'Outfit',sans-serif; font-weight:600;">${data.property_count} Props</span>
             </div>
             
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:7px;">
-              <div style="background:var(--bg-card); padding:12px; border-radius:10px; border:1px solid var(--border); border-top:2px solid var(--gold-mid); box-shadow:0 1px 4px rgba(26,26,46,0.05);">
-                <div style="font-size:8px; color:var(--t4); margin-bottom:4px; text-transform:uppercase; font-weight:700; letter-spacing:1px; font-family:'Outfit',sans-serif;">Avg Base</div>
-                <div style="font-size:1.15rem; font-weight:800; color:var(--gold); font-family:'Outfit',sans-serif; letter-spacing:-0.3px;">&#8377;${data.avgBase} Cr</div>
+              <div style="background:rgba(255,255,255,0.03); padding:14px; border-radius:12px; border:1px solid var(--border-subtle); border-top:2px solid var(--gold); box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+                <div style="font-size:8px; color:var(--t3); margin-bottom:6px; text-transform:uppercase; font-weight:700; letter-spacing:1px; font-family:'Outfit',sans-serif;">Avg Base</div>
+                <div style="font-size:1.25rem; font-weight:800; color:var(--gold-light); font-family:'Outfit',sans-serif; letter-spacing:-0.3px;">₹${data.avg_base_price} Cr</div>
               </div>
-              <div style="background:var(--bg-card); padding:12px; border-radius:10px; border:1px solid var(--border); border-top:2px solid var(--teal); box-shadow:0 1px 4px rgba(26,26,46,0.05);">
-                <div style="font-size:8px; color:var(--t4); margin-bottom:4px; text-transform:uppercase; font-weight:700; letter-spacing:1px; font-family:'Outfit',sans-serif;">Avg / SqFt</div>
-                <div style="font-size:1.15rem; font-weight:800; color:var(--teal); font-family:'Outfit',sans-serif; letter-spacing:-0.3px;">&#8377;${data.avgSqft.toLocaleString()}</div>
+              <div style="background:rgba(255,255,255,0.03); padding:14px; border-radius:12px; border:1px solid var(--border-subtle); border-top:2px solid var(--teal); box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+                <div style="font-size:8px; color:var(--t3); margin-bottom:6px; text-transform:uppercase; font-weight:700; letter-spacing:1px; font-family:'Outfit',sans-serif;">Avg / SqFt</div>
+                <div style="font-size:1.25rem; font-weight:800; color:var(--teal); font-family:'Outfit',sans-serif; letter-spacing:-0.3px;">₹${data.avg_price_per_sft.toLocaleString()}</div>
               </div>
             </div>
             
-            <div style="padding:10px 12px; background:var(--bg-card); border:1px solid var(--border); border-radius:10px; margin-bottom:6px; box-shadow:0 1px 4px rgba(26,26,46,0.04);">
-              <div style="font-size:8px; color:var(--t4); margin-bottom:6px; text-transform:uppercase; font-weight:700; letter-spacing:1px; font-family:'Outfit',sans-serif;">Base Price Range</div>
-              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">&#8377;${data.minBase} Cr</span>
-                <div style="flex:1; height:3px; background:var(--border); border-radius:2px; position:relative;">
-                  <div style="position:absolute; inset:0; background:linear-gradient(90deg, var(--gold), var(--gold-bright)); border-radius:2px;"></div>
+            <div style="padding:12px 14px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:12px; margin-bottom:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+              <div style="font-size:8px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700; letter-spacing:1.5px; font-family:'Outfit',sans-serif;">Base Price Range</div>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">₹${data.min_base_price || data.avg_base_price} Cr</span>
+                <div style="flex:1; height:4px; background:rgba(255,255,255,0.08); border-radius:4px; position:relative;">
+                  <div style="position:absolute; inset:0; background:linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius:4px;"></div>
                 </div>
-                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">&#8377;${data.maxBase} Cr</span>
+                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">₹${data.max_base_price || data.avg_base_price} Cr</span>
               </div>
             </div>
             <div style="padding:10px 12px; background:var(--bg-card); border:1px solid var(--border); border-radius:10px; box-shadow:0 1px 4px rgba(26,26,46,0.04);">
               <div style="font-size:8px; color:var(--t4); margin-bottom:6px; text-transform:uppercase; font-weight:700; letter-spacing:1px; font-family:'Outfit',sans-serif;">Price / SqFt Range</div>
               <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">&#8377;${data.minSqft.toLocaleString()}</span>
+                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">&#8377;${data.min_price_per_sft.toLocaleString()}</span>
                 <div style="flex:1; height:3px; background:var(--border); border-radius:2px; position:relative;">
                   <div style="position:absolute; inset:0; background:linear-gradient(90deg, var(--teal), #0A8A8E); border-radius:2px;"></div>
                 </div>
-                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">&#8377;${data.maxSqft.toLocaleString()}</span>
+                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">&#8377;${data.max_price_per_sft.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -1262,6 +2176,12 @@ map.on("load", async () => {
   function displayAmenitiesOnMap(locationId, amenityType) {
     // Remove existing amenity layers
     clearAmenities();
+
+    // Hide properties panel when showing amenities
+    const propertiesPanel = document.getElementById('properties-panel');
+    if (propertiesPanel) {
+      propertiesPanel.style.display = 'none';
+    }
 
     // Show loading state
     const buttons = document.querySelectorAll('.amenity-btn');
@@ -1307,87 +2227,32 @@ map.on("load", async () => {
           }))
         };
 
-        // Add source and layer with native MapLibre clustering enabled
+        // Add source WITHOUT clustering - show all amenities individually
         map.addSource('amenity-data', {
           type: 'geojson',
           data: geojson,
-          cluster: true,
-          clusterMaxZoom: 14,
-          clusterRadius: 50
+          cluster: false  // Disable clustering to show all amenities at any zoom level
         });
 
-        // 1. Add thick cluster circles
-        map.addLayer({
-          id: 'amenity-clusters',
-          type: 'circle',
-          source: 'amenity-data',
-          filter: ['has', 'point_count'],
-          paint: {
-            // Colors: Hydrology style
-            'circle-color': ['step', ['get', 'point_count'], '#A7C7E7', 5, '#4F8FBF', 15, '#1F5A8A'],
-            'circle-radius': ['step', ['get', 'point_count'], 18, 5, 22, 15, 26],
-            'circle-stroke-width': 3,
-            'circle-stroke-color': '#ffffff'
-          }
-        });
-
-        // 2. Add text count labels inside the clusters
-        map.addLayer({
-          id: 'amenity-cluster-counts',
-          type: 'symbol',
-          source: 'amenity-data',
-          filter: ['has', 'point_count'],
-          layout: {
-            'text-field': '{point_count_abbreviated}',
-            'text-size': 12
-          },
-          paint: {
-            'text-color': '#ffffff'
-          }
-        });
-
-        // Add pin markers using custom images
+        // Add individual amenity markers without clustering
         const customIconId = `icon-${amenityType}`;
-        const fallbackIcon = 'pin-gray';
 
         map.addLayer({
           id: 'amenity-markers',
           type: 'symbol',
           source: 'amenity-data',
-          filter: ['!', ['has', 'point_count']], // ONLY show images for unclustered points
           layout: {
-            'icon-image': map.hasImage(customIconId) ? customIconId : fallbackIcon,
-            'icon-size': map.hasImage(customIconId) ? 0.04 : 0.55,  // Scaled down custom PNGs
+            'icon-image': customIconId,
+            'icon-size': 0.08,  // Adjust size for custom PNG icons
             'icon-anchor': 'bottom',
             'icon-allow-overlap': true,
-            'icon-ignore-placement': true
+            'icon-ignore-placement': false
           },
-          paint: {
-            'icon-color': '#000000' // Ensure it renders dark if it's an sdf icon, otherwise does nothing
-          }
+          minzoom: 0,  // Visible at all zoom levels
+          maxzoom: 24  // Visible at all zoom levels
         });
 
         currentAmenityLayer = 'amenity-markers';
-
-        // Add click handler for clusters to zoom in
-        map.on('click', 'amenity-clusters', (e) => {
-          const features = map.queryRenderedFeatures(e.point, { layers: ['amenity-clusters'] });
-          const clusterId = features[0].properties.cluster_id;
-          map.getSource('amenity-data').getClusterExpansionZoom(clusterId, (err, zoom) => {
-            if (err) return;
-            map.flyTo({
-              center: features[0].geometry.coordinates,
-              zoom: zoom + 0.5,
-              speed: 1.2,
-              curve: 1.4,
-              essential: true
-            });
-          });
-        });
-
-        // Change cursor on hover for clusters
-        map.on('mouseenter', 'amenity-clusters', () => map.getCanvas().style.cursor = 'pointer');
-        map.on('mouseleave', 'amenity-clusters', () => map.getCanvas().style.cursor = '');
 
 
 
@@ -1523,6 +2388,12 @@ map.on("load", async () => {
   }
 
   function clearAmenities() {
+    // Show properties panel again when amenities are cleared
+    const propertiesPanel = document.getElementById('properties-panel');
+    if (propertiesPanel) {
+      propertiesPanel.style.display = 'flex';
+    }
+
     // Hide the clear button
     const clearBtn = document.getElementById('clear-amenities-btn');
     if (clearBtn) clearBtn.style.display = 'none';
@@ -1551,8 +2422,8 @@ map.on("load", async () => {
         btn.style.transform = 'scale(1)';
         btn.disabled = false;
         const type = btn.dataset.amenity;
-        const icons = { hospitals: '🏥', schools: '🏫', malls: '🏪', restaurants: '🍽️', banks: '🏦', parks: '🏞️', metro_stations: '🚇' };
-        const labels = { hospitals: 'Hospitals', schools: 'Schools', malls: 'Malls', restaurants: 'Food', banks: 'Banks', parks: 'Parks', metro_stations: 'Metro' };
+        const icons = { hospitals: '🏥', schools: '🏫', malls: '🏪', restaurants: '🍽️', banks: '🏦', parks: '🏞️', metro: '🚇' };
+        const labels = { hospitals: 'Hospitals', schools: 'Schools', malls: 'Malls', restaurants: 'Food', banks: 'Banks', parks: 'Parks', metro: 'Metro' };
         btn.innerHTML = `<span class="btn-icon">${icons[type] || '📍'}</span><span class="btn-label">${labels[type] || type}</span>`;
       });
     }
@@ -1566,23 +2437,42 @@ map.on("load", async () => {
       restaurants: '🍽️',
       banks: '🏦',
       parks: '🏞️',
-      metro_stations: '🚇'
+      metro: '🚇'
+    };
+
+    const amenityLabels = {
+      hospitals: 'Hospitals',
+      schools: 'Schools',
+      malls: 'Malls',
+      restaurants: 'Food',
+      banks: 'Banks',
+      parks: 'Parks',
+      metro: 'Metro'
     };
 
     const buttons = document.querySelectorAll('.amenity-btn');
     buttons.forEach(btn => {
       const type = btn.dataset.amenity;
       const icon = amenityIcons[type] || '📍';
+      const label = amenityLabels[type] || type;
 
-      if (type === activeType && count !== null) {
-        btn.innerHTML = `${icon} ${type.charAt(0).toUpperCase() + type.slice(1)} (${count})`;
-        btn.style.opacity = '1';
-        btn.style.transform = 'scale(1.05)';
+      // Always show clean button without count
+      btn.innerHTML = `
+        <span class="btn-icon">${icon}</span>
+        <span class="btn-label">${label}</span>
+      `;
+
+      // Highlight active button
+      if (type === activeType) {
+        btn.style.background = 'var(--gold-pale)';
+        btn.style.borderColor = 'var(--gold-light)';
+        btn.style.color = 'var(--gold-mid)';
       } else {
-        btn.innerHTML = `${icon} ${type.charAt(0).toUpperCase() + type.slice(1)}`;
-        btn.style.opacity = type === activeType ? '1' : '0.7';
-        btn.style.transform = 'scale(1)';
+        btn.style.background = 'rgba(255, 255, 255, 0.03)';
+        btn.style.borderColor = 'var(--border-subtle)';
+        btn.style.color = 'var(--t2)';
       }
+
       btn.disabled = false;
     });
   }
@@ -1632,6 +2522,12 @@ map.on("load", async () => {
     });
 
     if (features.length > 0) {
+      // Check if floods checkbox is checked
+      const floodsCheckbox = document.querySelector('input[type="checkbox"][id*="flood"]');
+      if (!floodsCheckbox || !floodsCheckbox.checked) {
+        return; // Don't show intel card if floods are not enabled
+      }
+
       const feature = features[0];
       const props = feature.properties;
       const card = document.getElementById("intel-card");
@@ -1642,7 +2538,7 @@ map.on("load", async () => {
       if (feature.layer.id === 'rainfall-layer') {
         insightHtml = `
           <div style="padding: 18px;">
-            <p style="color: var(--text-400); font-size: 10px; text-transform: uppercase; margin: 0 0 8px 0; letter-spacing: 1.5px; font-weight: 700;">18 September 2025 &nbsp;·&nbsp; Rainfall</p>
+            <p style="color: var(--text-400); font-size: 10px; text-transform: uppercase; margin: 0 0 8px 0; letter-spacing: 1.5px; font-weight: 700;">Rainfall</p>
             <h3 style="font-size: 2.8rem; font-weight: 800; margin: 0 0 6px 0; color: var(--text-100); letter-spacing: -2px;">${props.rainfall_mm}<span style="font-size:1rem;font-weight:600;color:var(--text-300);margin-left:6px;">mm</span></h3>
             
             <div style="display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--border-subtle); padding-top: 16px; margin-top: 16px;">
@@ -1672,8 +2568,8 @@ map.on("load", async () => {
               <div style="color: var(--text-100); font-size: 13px; font-weight: 500; line-height: 1.5;">${props.address}</div>
             </div>
 
-            <div style="margin-top: 16px; padding: 12px; background: rgba(239, 68, 68, 0.07); border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.18);">
-              <p style="margin: 0; font-size: 11px; color: #F87171; line-height: 1.5; font-weight: 500;">Historical area of concern. Vigilance advised during heavy rains.</p>
+            <div style="margin-top: 16px; padding: 12px; background: rgba(185, 28, 28, 0.05); border-radius: 10px; border: 1px solid rgba(185, 28, 28, 0.12);">
+              <p style="margin: 0; font-size: 11px; color: var(--negative); line-height: 1.5; font-weight: 500;">Historical area of concern. Vigilance advised during heavy rains.</p>
             </div>
           </div>
         `;
@@ -1701,20 +2597,9 @@ map.on("load", async () => {
       }
 
       if (!clickedLocation && !clickedAmenity) {
-        // Drop / move a simple point marker at the clicked coordinate
+        // Drop / move logic removed as requested by USER
         const lngLat = e.lngLat;
-        if (clickMarker) {
-          clickMarker.setLngLat(lngLat);
-        } else {
-          const el = document.createElement("div");
-          el.style.width = "10px";
-          el.style.height = "10px";
-          el.style.borderRadius = "50%";
-          el.style.background = "#2F2F2F";
-          el.style.border = "2px solid #FFFFFF";
-          el.style.boxShadow = "0 0 0 6px rgba(0,0,0,0.18)";
-          clickMarker = new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
-        }
+        // Marker creation suppressed
 
         // Close Popup if clicking elsewhere
         if (currentPopup) {
@@ -1746,3 +2631,480 @@ map.on("load", async () => {
   });
 });
 
+// NEW STRUCTURED PROJECT FUNCTIONS
+function createProjectGroupCard(project) {
+  const card = document.createElement('div');
+  card.className = 'prop-card';
+
+  // Parse images for thumbnail
+  let imageUrl = null;
+  if (project.images) {
+    try {
+      const images = JSON.parse(project.images);
+      if (Array.isArray(images) && images.length > 0) {
+        imageUrl = images[0];
+      }
+    } catch (e) {
+      console.warn('Failed to parse images:', e);
+    }
+  }
+
+  // Get unique BHK types and price range
+  const bhkTypes = [...new Set(project.properties.map(p => p.bhk).filter(Boolean))]
+    .map(bhk => parseFloat(bhk) % 1 === 0 ? parseInt(bhk) : parseFloat(bhk))
+    .sort((a, b) => a - b);
+  const prices = project.properties
+    .map(p => p.price_per_sft)
+    .filter(p => p && p > 0)
+    .sort((a, b) => a - b);
+
+  const priceText = prices.length > 0
+    ? prices.length === 1
+      ? `₹${Math.round(prices[0]).toLocaleString()}/sqft`
+      : `₹${Math.round(prices[0]).toLocaleString()} - ${Math.round(prices[prices.length - 1]).toLocaleString()}/sqft`
+    : 'Price on request';
+
+  // Status badge color
+  let statusClass = 'prop-tag-status';
+  if (project.construction_status) {
+    const status = project.construction_status.toLowerCase();
+    if (status.includes('rtm') || status.includes('ready')) {
+      statusClass = 'prop-tag-status';
+    } else if (status.includes('under') || status.includes('construction')) {
+      statusClass = 'prop-tag-avail';
+    }
+  }
+
+  // Create BHK badges HTML with variations
+  const bhkBadgesHtml = bhkTypes.map(bhk => {
+    // Get all properties of this BHK type
+    const bhkProperties = project.properties.filter(p => {
+      const propBhk = parseFloat(p.bhk) % 1 === 0 ? parseInt(p.bhk) : parseFloat(p.bhk);
+      return propBhk === bhk;
+    });
+    
+    // Get unique facings for this BHK type
+    const facings = [...new Set(bhkProperties.map(p => p.full_details?.facing).filter(Boolean))];
+    
+    // Create the badge text
+    let badgeText = `${bhk} BHK`;
+    if (facings.length > 0) {
+      badgeText += ` (${facings.join(', ')})`;
+    }
+    
+    return `<span class="bhk-badge">${badgeText}</span>`;
+  }).join('');
+
+  card.innerHTML = `
+      ${imageUrl
+      ? `<img src="${imageUrl}" alt="${project.projectname}" class="prop-card-thumb" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />`
+      : ''
+    }
+      <div class="prop-card-thumb-placeholder" style="${imageUrl ? 'display:none;' : ''}">🏢</div>
+      
+      <div class="prop-card-body">
+        <h3 class="prop-card-name">${project.projectname}</h3>
+        <p class="prop-card-builder">by ${project.buildername || 'Builder not specified'}</p>
+        
+        <!-- BHK Configuration Badges -->
+        <div class="bhk-badges-container">
+          ${bhkBadgesHtml}
+        </div>
+        
+        <div class="prop-card-details">
+          <div class="prop-detail-row">
+            <span class="prop-detail-label">Type:</span>
+            <span class="prop-detail-value">${project.project_type || 'N/A'}</span>
+          </div>
+          <div class="prop-detail-row">
+            <span class="prop-detail-label">Units:</span>
+            <span class="prop-detail-value">${project.properties.length} available</span>
+          </div>
+          <div class="prop-detail-row">
+            <span class="prop-detail-label">₹/sqft:</span>
+            <span class="prop-detail-value prop-price">${priceText}</span>
+          </div>
+          ${project.construction_status ? `
+          <div class="prop-detail-row">
+            <span class="prop-detail-label">Status:</span>
+            <span class="prop-detail-value">
+              <span class="prop-tag ${statusClass}">${project.construction_status}</span>
+            </span>
+          </div>
+          ` : ''}
+          <div class="prop-detail-row">
+            <span class="prop-detail-label">Area:</span>
+            <span class="prop-detail-value">
+              <span class="prop-tag prop-tag-area">${project.areaname || 'N/A'}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    `;
+
+  // Click handler to show all configurations
+  card.onclick = () => showProjectConfigurations(project);
+
+  return card;
+}
+
+function createPropertyCard(property) {
+  const card = document.createElement('div');
+  card.className = 'prop-card';
+
+  // Parse images for thumbnail
+  let imageUrl = null;
+  if (property.images) {
+    try {
+      const images = JSON.parse(property.images);
+      if (Array.isArray(images) && images.length > 0) {
+        imageUrl = images[0];
+      }
+    } catch (e) {
+      console.warn('Failed to parse images:', e);
+    }
+  }
+
+  // Format all the required fields
+  const projectName = property.projectname || 'Unnamed Project';
+  const builderName = property.buildername || 'Builder not specified';
+  const projectType = property.project_type || 'N/A';
+  const bhk = property.bhk ? (parseFloat(property.bhk) % 1 === 0 ? parseInt(property.bhk) : parseFloat(property.bhk)) : 'N/A';
+  const sqfeet = property.sqfeet || 'N/A';
+  const pricePerSqft = property.price_per_sft
+    ? `₹${Math.round(property.price_per_sft).toLocaleString()}/sqft`
+    : 'Price on request';
+  const constructionStatus = property.construction_status || 'N/A';
+  const areaName = property.areaname || 'N/A';
+
+  // Status badge color
+  let statusClass = 'prop-tag-status';
+  if (property.construction_status) {
+    const status = property.construction_status.toLowerCase();
+    if (status.includes('rtm') || status.includes('ready')) {
+      statusClass = 'prop-tag-status'; // Green
+    } else if (status.includes('under') || status.includes('construction')) {
+      statusClass = 'prop-tag-avail'; // Orange-ish
+    }
+  }
+
+  card.innerHTML = `
+      ${imageUrl
+      ? `<img src="${imageUrl}" alt="${projectName}" class="prop-card-thumb" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />`
+      : ''
+    }
+      <div class="prop-card-thumb-placeholder" style="${imageUrl ? 'display:none;' : ''}">🏢</div>
+      
+      <div class="prop-card-body">
+        <h3 class="prop-card-name">${projectName}</h3>
+        <p class="prop-card-builder">by ${builderName}</p>
+        
+        <div class="prop-card-details">
+          <div class="prop-detail-row">
+            <span class="prop-detail-label">Type:</span>
+            <span class="prop-detail-value">${projectType}</span>
+          </div>
+          <div class="prop-detail-row">
+            <span class="prop-detail-label">BHK:</span>
+            <span class="prop-detail-value">${bhk}</span>
+          </div>
+          <div class="prop-detail-row">
+            <span class="prop-detail-label">Area:</span>
+            <span class="prop-detail-value">${sqfeet} sqft</span>
+          </div>
+          <div class="prop-detail-row">
+            <span class="prop-detail-label">₹/sqft:</span>
+            <span class="prop-detail-value prop-price">${pricePerSqft}</span>
+          </div>
+          <div class="prop-detail-row">
+            <span class="prop-detail-label">Status:</span>
+            <span class="prop-detail-value">
+              <span class="prop-tag ${statusClass}">${constructionStatus}</span>
+            </span>
+          </div>
+          <div class="prop-detail-row">
+            <span class="prop-detail-label">Area:</span>
+            <span class="prop-detail-value">
+              <span class="prop-tag prop-tag-area">${areaName}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    `;
+
+  // Click handler to show full property details
+  card.onclick = () => showPropertyDetails(property);
+
+  return card;
+}
+
+function showProjectConfigurations(project) {
+  const listContainer = document.getElementById('prop-list');
+  
+  // Store the current projects list for back navigation
+  if (!window.currentProjectsList) {
+    window.currentProjectsList = Array.from(listContainer.children);
+  }
+  
+  // Store project data for fallback
+  window.currentProject = project;
+
+  // Skip the intermediate BHK selection — go directly to full property details
+  showPropertyDetails(project.properties[0]);
+}
+
+// Helper function to show property details by ID - make it globally accessible
+window.showPropertyDetailsFromTable = function (propertyId) {
+  fetch(`${BACKEND_URL}/api/v1/properties/${propertyId}`)
+    .then(res => res.json())
+    .then(property => {
+      showPropertyDetails(property);
+    })
+    .catch(err => {
+      console.error('Failed to load property:', err);
+      alert('Failed to load property details. Please try again.');
+    });
+};
+
+function showPropertyDetails(property) {
+  const listContainer = document.getElementById('prop-list');
+  const countEl = document.getElementById('prop-panel-count');
+
+  // Store the current configurations list for back navigation
+  if (!window.currentConfigsList) {
+    window.currentConfigsList = {
+      html: listContainer.innerHTML,
+      count: countEl.innerHTML
+    };
+  }
+
+  const details = property.full_details;
+
+  // Update header with back button — goes straight to projects list
+  countEl.innerHTML = `<button onclick="window.goBackToProjects()" style="background:none;border:none;color:var(--gold-mid);cursor:pointer;font-size:0.9rem;font-weight:600;">← Back to Projects</button>`;
+
+  // Parse images for gallery
+  let images = [];
+  if (details.images) {
+    try {
+      images = JSON.parse(details.images);
+      if (!Array.isArray(images)) images = [];
+    } catch (e) {
+      images = [];
+    }
+  }
+
+  // Build gallery HTML — horizontal scroll strip to avoid vertical gap
+  let galleryHTML = '';
+  if (images.length > 0) {
+    galleryHTML = `
+          <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;scrollbar-width:thin;">
+            ${images.map(img => `
+              <img src="${img}" alt="${details.projectname}"
+                style="height:160px;min-width:220px;max-width:260px;object-fit:cover;border-radius:10px;flex-shrink:0;border:1px solid rgba(201,162,74,0.2);"
+                onerror="this.style.display='none'" />
+            `).join('')}
+          </div>
+        `;
+  }
+
+
+  // Helper function to format field value
+  const formatField = (value, type = 'text') => {
+    if (!value || value === 'null' || value === 'None' || value === '' || value === 'N/A' || value === 0) return null;
+    if (type === 'price' && typeof value === 'number') {
+      return `₹${(value / 10000000).toFixed(2)} Cr`;
+    }
+    if (type === 'sqft-price' && typeof value === 'number') {
+      return `₹${Math.round(value).toLocaleString()}/sqft`;
+    }
+    if (type === 'bhk' && typeof value === 'number') {
+      return `${Math.floor(value)} BHK`;
+    }
+    return value;
+  };
+
+  // Helper function to render a field
+  const renderField = (label, value, type = 'text') => {
+    const formatted = formatField(value, type);
+    if (!formatted) return '';
+    return `<div class="detail-field-inline"><label>${label}</label><span>${formatted}</span></div>`;
+  };
+
+  // Helper to render a section only if it has content
+  const renderSection = (title, fields) => {
+    const content = fields.filter(f => f).join('');
+    if (!content) return '';
+    return `<div class="detail-section-inline"><h3>${title}</h3>${content}</div>`;
+  };
+
+  // Get available BHK types for this project
+  // First try to get from stored project, otherwise derive from current location properties
+  let availableBhks = [];
+  
+  if (window._bhkProject) {
+    availableBhks = [...new Set(window._bhkProject.properties.map(p => p.bhk).filter(Boolean))]
+      .map(bhk => parseFloat(bhk) % 1 === 0 ? parseInt(bhk) : parseFloat(bhk))
+      .sort((a, b) => a - b);
+  } else if (window.allLocationProperties) {
+    // Get BHKs from all properties in current location that match this project
+    const projectProperties = window.allLocationProperties.filter(p => 
+      p.projectname === property.projectname && p.buildername === property.buildername
+    );
+    availableBhks = [...new Set(projectProperties.map(p => p.bhk).filter(Boolean))]
+      .map(bhk => parseFloat(bhk) % 1 === 0 ? parseInt(bhk) : parseFloat(bhk))
+      .sort((a, b) => a - b);
+  }
+  
+  // Create BHK clarification note
+  const bhkNote = availableBhks.length > 1 ? 
+    `<div style="background:rgba(201,162,74,0.08);border:1px solid rgba(201,162,74,0.2);border-radius:8px;padding:10px;margin-bottom:16px;font-size:12px;color:var(--t2);">
+      <strong>Note:</strong> The data below represents information for all available configurations: ${availableBhks.join(', ')} BHK
+    </div>` : '';
+
+  // Build the complete property details HTML with ALL 64+ fields
+  const detailsHTML = `
+        <div class="property-detail-inline">
+          <h2>${details.projectname || 'Unnamed Project'}</h2>
+          <p style="color:var(--t2);margin:0 0 16px 0;">by ${details.buildername || 'Builder not specified'}</p>
+          ${bhkNote}
+          ${galleryHTML}
+          
+          ${renderSection('🏠 Basic Info', [
+    renderField('Project Name', details.projectname),
+    renderField('Builder', details.buildername),
+    renderField('Type', details.project_type),
+    renderField('Community', details.communitytype),
+    renderField('Status', details.status),
+    renderField('Project Status', details.project_status),
+    renderField('Availability', details.isavailable === 'No' ? 'Sold Out' : (details.isavailable === 'Yes' ? 'Available' : details.isavailable))
+  ])}
+          
+          ${renderSection('📍 Location', [
+    renderField('Area', details.areaname),
+    renderField('Location', details.projectlocation),
+    renderField('Google Name', details.google_place_name),
+    renderField('Full Address', details.google_place_address),
+    renderField('Maps Link', details.google_maps_location ? `<a href="${details.google_maps_location}" target="_blank" style="color:var(--gold-mid);">View on Maps</a>` : null),
+    renderField('Open in Maps', details.mobile_google_map_url ? `<a href="${details.mobile_google_map_url}" target="_blank" style="color:var(--gold-mid);">Open</a>` : null)
+  ])}
+          
+          ${renderSection('💰 Pricing', [
+    renderField('Base Price', details.baseprojectprice, 'price'),
+    renderField('Price / sqft', details.price_per_sft, 'sqft-price'),
+    renderField('Total Buildup Area', details.total_buildup_area),
+    renderField('Price Last Updated', details.price_per_sft_update_date),
+    renderField('Floor Rise Charges', details.floor_rise_charges),
+    renderField('Floor Rise ₹/floor', details.floor_rise_amount_per_floor),
+    renderField('Applicable Above Floor', details.floor_rise_applicable_above_floor_no),
+    renderField('Facing Charges', details.facing_charges),
+    renderField('PLC', details.preferential_location_charges),
+    renderField('PLC Conditions', details.preferential_location_charges_conditions),
+    renderField('Extra Parking Cost', details.amount_for_extra_car_parking)
+  ])}
+          
+          ${renderSection('🏗️ Project Details', [
+    renderField('Launch Date', details.project_launch_date),
+    renderField('Possession Date', details.possession_date),
+    renderField('Construction Status', details.construction_status),
+    renderField('Material', details.construction_material),
+    renderField('Land Area', details.total_land_area),
+    renderField('Towers', details.number_of_towers),
+    renderField('Floors', details.number_of_floors),
+    renderField('Flats/Floor', details.number_of_flats_per_floor),
+    renderField('Total Units', details.total_number_of_units),
+    renderField('Open Space %', details.open_space),
+    renderField('Carpet Area %', details.carpet_area_percentage),
+    renderField('Floor-to-Ceiling Height', details.floor_to_ceiling_height)
+  ])}
+          
+          ${renderSection('🛏️ Unit Configuration', [
+    renderField('BHK Config', details.bhk, 'bhk'),
+    renderField('Area (sqft)', details.sqfeet),
+    renderField('Area (sqyard)', details.sqyard),
+    renderField('Facing', details.facing),
+    renderField('Car Parkings', details.no_of_car_parkings)
+  ])}
+          
+          ${renderSection('🏊 Amenities & Specs', [
+    renderField('External Amenities', details.external_amenities),
+    renderField('Specification', details.specification),
+    renderField('Power Backup', details.powerbackup),
+    renderField('Passenger Lifts', details.no_of_passenger_lift),
+    renderField('Service Lifts', details.no_of_service_lift),
+    renderField('Visitor Parking', details.visitor_parking),
+    renderField('Ground Vehicle Movement', details.ground_vehicle_movement),
+    renderField('Main Door Height', details.main_door_height),
+    renderField('Home Loan', details.home_loan),
+    renderField('Banks for Loan', details.available_banks_for_loan)
+  ])}
+          
+          ${renderSection('👷 Builder Profile', [
+    renderField('Years in Business', details.builder_age),
+    renderField('Completed Projects', details.builder_completed_properties),
+    renderField('Ongoing Projects', details.builder_ongoing_projects),
+    renderField('Upcoming Projects', details.builder_upcoming_properties),
+    renderField('Total Projects', details.builder_total_properties),
+    renderField('Operating Cities', details.builder_operating_locations),
+    renderField('Headquarters', details.builder_origin_city)
+  ])}
+          
+          ${renderSection('📞 Point of Contact', [
+    renderField('Contact Name', details.poc_name),
+    renderField('Phone', details.poc_contact),
+    renderField('Role', details.poc_role),
+    renderField('Alt. Contact', details.alternative_contact),
+    renderField('Email', details.useremail)
+  ])}
+        </div>
+      `;
+
+  listContainer.innerHTML = detailsHTML;
+}
+
+// Function to go back to configurations
+window.goBackToConfigurations = function () {
+  const listContainer = document.getElementById('prop-list');
+  const countEl = document.getElementById('prop-panel-count');
+
+  if (window.currentConfigsList) {
+    // Re-render the configurations instead of restoring HTML
+    // This ensures click handlers are properly attached
+    if (window.currentProject) {
+      showProjectConfigurations(window.currentProject);
+    } else {
+      // Fallback to stored HTML if project data not available
+      listContainer.innerHTML = window.currentConfigsList.html;
+      countEl.innerHTML = window.currentConfigsList.count;
+    }
+    window.currentConfigsList = null;
+  }
+};
+
+function closePropertyDetail() {
+  document.getElementById('property-detail-drawer').classList.remove('open');
+  document.getElementById('properties-panel').classList.remove('detail-open');
+}
+
+// Global function for back navigation
+window.goBackToProjects = function() {
+  const listContainer = document.getElementById('prop-list');
+  const countEl = document.getElementById('prop-panel-count');
+  
+  if (window.currentProjectsList) {
+    // Restore the original projects list
+    listContainer.innerHTML = '';
+    window.currentProjectsList.forEach(child => {
+      listContainer.appendChild(child);
+    });
+    
+    // Restore the count
+    const projectCount = window.currentProjectsList.length;
+    const totalUnits = window.allLocationProperties ? window.allLocationProperties.length : 0;
+    countEl.textContent = `${projectCount} project${projectCount !== 1 ? 's' : ''} (${totalUnits} units)`;
+    
+    // Clear navigation state
+    window.currentProjectsList = null;
+    window.currentProject = null;
+  }
+};

@@ -1,0 +1,21 @@
+{
+  "district": "RANGAREDDY",
+  "mandal": "Serilingampally",
+  "date_range": {
+    "start_year": 2019,
+    "end_year": 2026
+  },
+  "scraping": {
+    "checkpoint_interval": 100,
+    "captcha_timeout": 120,
+    "page_wait_time": 3
+  },
+  "notes": {
+    "district_options": ["RANGAREDDY", "HYDERABAD", "MEDCHAL MALKAJGIRI"],
+    "mandal_options": {
+      "RANGAREDDY": ["Serilingampally", "Rajendranagar", "Shamshabad"],
+      "HYDERABAD": ["Khairatabad", "Secunderabad", "Charminar"],
+      "MEDCHAL MALKAJGIRI": ["Medchal", "Malkajgiri", "Keesara"]
+    }
+  }
+}
