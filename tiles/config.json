@@ -1,0 +1,28 @@
+{
+  "options": {
+    "listen": "127.0.0.1",
+    "paths": {
+      "root": "",
+      "fonts": "fonts",
+      "styles": "styles"
+    },
+    "serveAllFonts": true
+  },
+  "data": {
+    "schools": {
+      "mbtiles": "schools.mbtiles"
+    },
+    "highways": {
+      "mbtiles": "highways.mbtiles"
+    },
+    "metro": {
+      "mbtiles": "metro.mbtiles"
+    },
+    "orr": {
+      "mbtiles": "orr.mbtiles"
+    },
+    "lakes": {
+      "mbtiles": "lakes.mbtiles"
+    }
+  }
+}

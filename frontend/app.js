@@ -75,7 +75,8 @@ map.on('load', () => {
 
 // 🚀 EARLY FETCH: Start getting data immediately while map initializes
 const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-const BACKEND_URL = isLocal ? "http://127.0.0.1:8000" : "https://west-hyderabad-intelliweb.onrender.com";
+// Use Netlify proxy in production (automatically routes to API)
+const BACKEND_URL = isLocal ? "http://127.0.0.1:8000" : window.location.origin;
 const insightsPromise = fetch(`${BACKEND_URL}/api/v1/insights`).then(res => res.json());
 
 map.addControl(new maplibregl.NavigationControl(), 'top-right');
@@ -2682,16 +2683,16 @@ function createProjectGroupCard(project) {
       const propBhk = parseFloat(p.bhk) % 1 === 0 ? parseInt(p.bhk) : parseFloat(p.bhk);
       return propBhk === bhk;
     });
-    
+
     // Get unique facings for this BHK type
     const facings = [...new Set(bhkProperties.map(p => p.full_details?.facing).filter(Boolean))];
-    
+
     // Create the badge text
     let badgeText = `${bhk} BHK`;
     if (facings.length > 0) {
       badgeText += ` (${facings.join(', ')})`;
     }
-    
+
     return `<span class="bhk-badge">${badgeText}</span>`;
   }).join('');
 
@@ -2840,12 +2841,12 @@ function createPropertyCard(property) {
 
 function showProjectConfigurations(project) {
   const listContainer = document.getElementById('prop-list');
-  
+
   // Store the current projects list for back navigation
   if (!window.currentProjectsList) {
     window.currentProjectsList = Array.from(listContainer.children);
   }
-  
+
   // Store project data for fallback
   window.currentProject = project;
 
@@ -2941,23 +2942,23 @@ function showPropertyDetails(property) {
   // Get available BHK types for this project
   // First try to get from stored project, otherwise derive from current location properties
   let availableBhks = [];
-  
+
   if (window._bhkProject) {
     availableBhks = [...new Set(window._bhkProject.properties.map(p => p.bhk).filter(Boolean))]
       .map(bhk => parseFloat(bhk) % 1 === 0 ? parseInt(bhk) : parseFloat(bhk))
       .sort((a, b) => a - b);
   } else if (window.allLocationProperties) {
     // Get BHKs from all properties in current location that match this project
-    const projectProperties = window.allLocationProperties.filter(p => 
+    const projectProperties = window.allLocationProperties.filter(p =>
       p.projectname === property.projectname && p.buildername === property.buildername
     );
     availableBhks = [...new Set(projectProperties.map(p => p.bhk).filter(Boolean))]
       .map(bhk => parseFloat(bhk) % 1 === 0 ? parseInt(bhk) : parseFloat(bhk))
       .sort((a, b) => a - b);
   }
-  
+
   // Create BHK clarification note
-  const bhkNote = availableBhks.length > 1 ? 
+  const bhkNote = availableBhks.length > 1 ?
     `<div style="background:rgba(201,162,74,0.08);border:1px solid rgba(201,162,74,0.2);border-radius:8px;padding:10px;margin-bottom:16px;font-size:12px;color:var(--t2);">
       <strong>Note:</strong> The data below represents information for all available configurations: ${availableBhks.join(', ')} BHK
     </div>` : '';
@@ -3087,22 +3088,22 @@ function closePropertyDetail() {
 }
 
 // Global function for back navigation
-window.goBackToProjects = function() {
+window.goBackToProjects = function () {
   const listContainer = document.getElementById('prop-list');
   const countEl = document.getElementById('prop-panel-count');
-  
+
   if (window.currentProjectsList) {
     // Restore the original projects list
     listContainer.innerHTML = '';
     window.currentProjectsList.forEach(child => {
       listContainer.appendChild(child);
     });
-    
+
     // Restore the count
     const projectCount = window.currentProjectsList.length;
     const totalUnits = window.allLocationProperties ? window.allLocationProperties.length : 0;
     countEl.textContent = `${projectCount} project${projectCount !== 1 ? 's' : ''} (${totalUnits} units)`;
-    
+
     // Clear navigation state
     window.currentProjectsList = null;
     window.currentProject = null;

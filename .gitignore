@@ -1,38 +1,115 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
+.Python
 venv/
-
-# Node / frontend
-node_modules/
-.dist/
+env/
+ENV/
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# OS
-.DS_Store
-Thumbs.db
+# Environment Variables (IMPORTANT!)
+.env
+.env.local
+.env.production
+*.env
 
-# Map tiles (VERY IMPORTANT)
-tiles/
-*.mbtiles
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+hyderabad_real_estate.db
 
 # Logs
 *.log
+logs/
+*.log.*
 
-# Env
-.env
-# NEVER upload these
-venv/
-tiles/
-*.mbtiles
-streamlit_app/
-
-# Python junk
-__pycache__/
-*.pyc
-
-# OS junk
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
-.env
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+
+# Backup files
+*.bak
+*.backup
+*_backup_*.sql
+*_backup_*.json
+
+# Large data files
+unified_data_DataType_Raghu_rows.csv
+news_balanced_corpus.csv
+news_dataset.csv
+*.xlsx
+*.xls
+
+# Map tiles and large assets
+tiles/*.mbtiles
+zurich_switzerland.mbtiles
+
+# Scraped data
+scraped_data/*.csv
+scraped_data/*.json
+scraper/*.json
+scraper/*.log
+
+# Progress tracking
+scraping_progress.json
+igrs_progress.json
+locations_result.txt
+map_check_result.txt
+
+# Analysis outputs
+location_verification_dryrun_*.json
+location_verification_changes.csv
+location_insights_*.csv
+*_analysis.py
+analyze_*.py
+
+# Test files
+test_*.html
+test_*.py
+
+# Documentation generated during development
+*_report.docx
+*_summary.md
+LOCATION_UPDATE_COMPLETE.md
+LOCATION_VERIFICATION_RESULTS_SUMMARY.md
+QUICK_REFERENCE_LOCATIONS.md
+
+# Secrets and credentials
+*.key
+*.pem
+*.crt
+secrets/
+credentials/
+
+# Node modules (for Netlify CLI)
+node_modules/
