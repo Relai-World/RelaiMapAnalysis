@@ -7,6 +7,8 @@
 
 ---
 
+
+
 ## 1. Executive Summary
 This document details the technical lifecycle of the Real Estate Intelligence Platform, a geospatial analytics system designed to interpret and visualize micro-market data across Hyderabad and Bangalore. The project workflow encompasses the entire data journey, from multi-source scraping and FinBERT-powered sentiment analysis to high-performance API delivery and interactive frontend visualization.
 
