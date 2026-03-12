@@ -473,8 +473,8 @@ def get_all_location_costs():
                 "count": row[1],
                 "avgBase": round(float(row[5]) / 10000000, 2) if row[5] else 0,  # Convert to Crores
                 "avgSqft": round(float(row[2]), 0),
-                "minBase": round(float(row[5]) / 10000000, 2) if row[5] else 0,  # Using avg as min/max
-                "maxBase": round(float(row[5]) / 10000000, 2) if row[5] else 0,
+                "minBase": round(float(row[3]) / 10000000, 2) if row[3] else 0,  # Actual MIN base price
+                "maxBase": round(float(row[4]) / 10000000, 2) if row[4] else 0,  # Actual MAX base price
                 "minSqft": round(float(row[3]), 0),
                 "maxSqft": round(float(row[4]), 0)
             })
@@ -501,11 +501,13 @@ def get_location_cost(location_name: str):
                 AVG(CAST(price_per_sft AS NUMERIC)) as avg_price_per_sft,
                 MIN(CAST(price_per_sft AS NUMERIC)) as min_price_per_sft,
                 MAX(CAST(price_per_sft AS NUMERIC)) as max_price_per_sft,
-                AVG(CAST(baseprojectprice AS NUMERIC)) as avg_base_price
+                AVG(CAST(baseprojectprice AS NUMERIC)) as avg_base_price,
+                MIN(CAST(baseprojectprice AS NUMERIC)) as min_base_price,
+                MAX(CAST(baseprojectprice AS NUMERIC)) as max_base_price
             FROM properties_final 
             WHERE (LOWER(areaname) = LOWER(%s)
                    OR LOWER(REPLACE(areaname, ' ', '')) = LOWER(REPLACE(%s, ' ', ''))
-                   OR areaname ILIKE %s
+                   OR areaname ILIKE %s || ', %%'
                    OR %s ILIKE areaname)
                 AND price_per_sft IS NOT NULL 
                 AND price_per_sft != 'None' 
@@ -520,10 +522,10 @@ def get_location_cost(location_name: str):
             return {
                 "location": row[0],
                 "count": row[2],
-                "avgBase": round(float(row[6]) / 10000000, 2) if row[6] else 0,  # Convert to Crores
+                "avgBase": round(float(row[6]) / 10000000, 2) if row[6] else 0,  # avg in Crores
                 "avgSqft": round(float(row[3]), 0),
-                "minBase": round(float(row[6]) / 10000000, 2) if row[6] else 0,  # Using avg as min/max
-                "maxBase": round(float(row[6]) / 10000000, 2) if row[6] else 0,
+                "minBase": round(float(row[7]) / 10000000, 2) if row[7] else 0,  # actual min
+                "maxBase": round(float(row[8]) / 10000000, 2) if row[8] else 0,  # actual max
                 "minSqft": round(float(row[4]), 0),
                 "maxSqft": round(float(row[5]), 0)
             }
@@ -1222,8 +1224,9 @@ def get_properties_by_area(area: str, bhk_filter: str = None):
                 LOWER(areaname) = LOWER(%s)
                 -- Exact match without spaces
                 OR LOWER(REPLACE(areaname, ' ', '')) = LOWER(REPLACE(%s, ' ', ''))
-                -- areaname starts with search term
-                OR LOWER(areaname) LIKE LOWER(%s) || '%%'
+                -- areaname starts with search term BUT must end there or be followed by ', '
+                -- This prevents 'Appa Junction' matching 'Appa Junction Peerancheru'
+                OR LOWER(areaname) LIKE LOWER(%s) || ', %%'
                 -- areaname contains search term as whole word (with comma or space boundaries)
                 OR LOWER(areaname) LIKE '%%' || LOWER(%s) || ', %%'
                 OR LOWER(areaname) LIKE '%%,' || LOWER(%s)
