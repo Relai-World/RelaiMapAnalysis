@@ -45,7 +45,7 @@ class RedditScraper:
     def _ensure_schema(self):
         # We use the same table but will mark Source='Reddit'
         self.cur.execute("""
-            CREATE TABLE IF NOT EXISTS news_balanced_corpus (
+            CREATE TABLE IF NOT EXISTS news_balanced_corpus_1 (
                 id SERIAL PRIMARY KEY,
                 location_id INTEGER,
                 location_name VARCHAR(100),
@@ -111,7 +111,7 @@ class RedditScraper:
                             title = post['title']
                             
                             # Check DB
-                            self.cur.execute("SELECT 1 FROM news_balanced_corpus WHERE url = %s", (url,))
+                            self.cur.execute("SELECT 1 FROM news_balanced_corpus_1 WHERE url = %s", (url,))
                             if self.cur.fetchone():
                                 continue
                                 
@@ -141,7 +141,7 @@ class RedditScraper:
                                 
                                 # Insert
                                 self.cur.execute("""
-                                    INSERT INTO news_balanced_corpus 
+                                    INSERT INTO news_balanced_corpus_1 
                                     (location_id, location_name, source, url, content, published_at, category)
                                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                                 """, (loc_id, location, 'Reddit', url, full_content, pub_date, 'Community Review'))

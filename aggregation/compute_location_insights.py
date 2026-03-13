@@ -81,7 +81,7 @@ def run():
                 COUNT(id) AS article_count,
                 AVG(sentiment_score) AS avg_sentiment,
                 AVG(confidence) AS avg_confidence
-            FROM news_balanced_corpus
+            FROM news_balanced_corpus_1
             WHERE location_id = %s
               AND sentiment_score IS NOT NULL
         """, (location_id,))

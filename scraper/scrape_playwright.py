@@ -58,7 +58,7 @@ class HighEndScraper:
         
     def _ensure_schema(self):
         self.cur.execute("""
-            CREATE TABLE IF NOT EXISTS news_balanced_corpus (
+            CREATE TABLE IF NOT EXISTS news_balanced_corpus_1 (
                 id SERIAL PRIMARY KEY,
                 location_id INTEGER,
                 location_name VARCHAR(100),
@@ -72,7 +72,7 @@ class HighEndScraper:
         """)
         # Add category column if missing
         try:
-            self.cur.execute("ALTER TABLE news_balanced_corpus ADD COLUMN category VARCHAR(50);")
+            self.cur.execute("ALTER TABLE news_balanced_corpus_1 ADD COLUMN category VARCHAR(50);")
             self.conn.commit()
         except:
             self.conn.rollback()
@@ -114,7 +114,7 @@ class HighEndScraper:
         
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
-            context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+            context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, Gecko) Chrome/119.0.0.0 Safari/537.36")
             page = await context.new_page()
 
             for year in YEARS:
@@ -143,7 +143,7 @@ class HighEndScraper:
                             try:
                                 # Dedupe Check (Fast)
                                 # We check if URL exists. If yes, we *could* update the category, but let's just skip for speed.
-                                # self.cur.execute("SELECT 1 FROM news_balanced_corpus WHERE url = %s", (url,))
+                                # self.cur.execute("SELECT 1 FROM news_balanced_corpus_1 WHERE url = %s", (url,))
                                 # But we can't check URL before resolving Google redirect 100% of time.
                                 # However, Google RSS links are unique per article usually.
                                 # Let's Resolve First.
@@ -157,7 +157,7 @@ class HighEndScraper:
                                 if "google.com" in final_url: continue
 
                                 # DB Check
-                                self.cur.execute("SELECT 1 FROM news_balanced_corpus WHERE url = %s", (final_url,))
+                                self.cur.execute("SELECT 1 FROM news_balanced_corpus_1 WHERE url = %s", (final_url,))
                                 if self.cur.fetchone():
                                     continue
 
@@ -172,10 +172,11 @@ class HighEndScraper:
                                 source = entry.source.title if hasattr(entry, 'source') else 'News'
                                 
                                 self.cur.execute("""
-                                    INSERT INTO news_balanced_corpus 
+                                    INSERT INTO news_balanced_corpus_1 
                                     (location_id, location_name, source, url, content, published_at, category)
                                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                                 """, (loc_id, location, source, final_url, text, pub_date, theme_name))
+
                                 self.conn.commit()
                                 
                                 success_count += 1

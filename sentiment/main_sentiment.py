@@ -39,12 +39,12 @@ class SentimentProcessor:
         print("[OK] Model Loaded.")
 
     def run(self):
-        print("[RUN] Starting Sentiment Analysis on 'news_balanced_corpus'...")
+        print("[RUN] Starting Sentiment Analysis on 'news_balanced_corpus_1'...")
         
         # 1. Fetch unprocessed rows
         self.cur.execute("""
             SELECT id, content 
-            FROM news_balanced_corpus 
+            FROM news_balanced_corpus_1 
             WHERE sentiment_score IS NULL
         """)
         rows = self.cur.fetchall()
@@ -96,7 +96,7 @@ class SentimentProcessor:
 
                 # Bulk Update (using executemany for this batch)
                 self.cur.executemany("""
-                    UPDATE news_balanced_corpus
+                    UPDATE news_balanced_corpus_1
                     SET sentiment_score = %s, sentiment_label = %s, confidence = %s
                     WHERE id = %s
                 """, updates)

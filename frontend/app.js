@@ -56,7 +56,7 @@ map.on('load', () => {
     'malls': 'images/mall.png',
     'restaurants': 'images/dinner.png',
     'banks': 'images/bank.png',
-    'metro': 'images/train-station.png'
+    'metro': 'images/metro.png'
   };
 
   // Load each icon
@@ -583,9 +583,10 @@ map.on("load", async () => {
         // but we should ensure the UI state is consistent.
       });
 
-      // Input Event
+      // Input Event (searches news_balanced_corpus_1 via API)
+      let searchDebounceTimer = null;
       searchInput.addEventListener("input", (e) => {
-        const val = e.target.value.toLowerCase();
+        const val = e.target.value;
         searchResults.innerHTML = "";
 
         const card = document.getElementById("intel-card");
@@ -596,71 +597,91 @@ map.on("load", async () => {
           if (card.style.display === "none") {
             if (emptyState) emptyState.style.display = "flex";
           }
+          clearTimeout(searchDebounceTimer);
           return;
         }
 
-        // Hide empty state if results appear
         if (emptyState) emptyState.style.display = "none";
 
-        // Filter: Strictly starts with the search term
-        const matches = data
-          .filter(d => d.location.toLowerCase().startsWith(val))
-          .sort((a, b) => a.location.localeCompare(b.location));
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(async () => {
+          try {
+            const res = await fetch(`${BACKEND_URL}/api/v1/search?q=${encodeURIComponent(val)}`);
+            const matches = await res.json();
+            searchResults.innerHTML = "";
 
-        if (matches.length > 0) {
-          matches.slice(0, 8).forEach(loc => { // Limit to top 8 suggestions
-            const div = document.createElement("div");
-            div.className = "search-result-item";
-            div.textContent = loc.location;
-            // Highlight exact match if typed fully
-            if (loc.location.toLowerCase() === val) {
-              div.style.background = "rgba(59, 130, 246, 0.2)";
+            if (Array.isArray(matches) && matches.length > 0) {
+              matches.forEach(match => {
+                const div = document.createElement("div");
+                div.className = "search-result-item";
+                div.textContent = match.location_name;
+                if (match.location_name.toLowerCase() === val.toLowerCase()) {
+                  div.style.background = "rgba(59, 130, 246, 0.2)";
+                }
+                div.onclick = () => {
+                  searchInput.value = match.location_name;
+                  searchResults.style.display = "none";
+                  // Try to match in insights data for full location details
+                  const insightMatch = Array.isArray(data)
+                    ? data.find(d => d.location.toLowerCase() === match.location_name.toLowerCase())
+                    : null;
+                  if (insightMatch) {
+                    handleLocationSelect(insightMatch);
+                    loadPropertiesForLocation(insightMatch.location);
+                  } else {
+                    loadPropertiesForLocation(match.location_name);
+                  }
+                };
+                searchResults.appendChild(div);
+              });
+              searchResults.style.display = "block";
+            } else {
+              const div = document.createElement("div");
+              div.className = "search-result-item";
+              div.style.cursor = "default";
+              div.style.fontStyle = "italic";
+              div.style.color = "#94a3b8";
+              div.textContent = "No result found";
+              searchResults.appendChild(div);
+              searchResults.style.display = "block";
             }
-            div.onclick = () => {
-              searchInput.value = loc.location;
-              handleLocationSelect(loc);
-              searchResults.style.display = "none";
-              // Load properties for the selected location
-              loadPropertiesForLocation(loc.location);
-            };
-            searchResults.appendChild(div);
-          });
-          searchResults.style.display = "block";
-        } else {
-          // Show "No Result Found"
-          const div = document.createElement("div");
-          div.className = "search-result-item";
-          div.style.cursor = "default";
-          div.style.fontStyle = "italic";
-          div.style.color = "#94a3b8";
-          div.textContent = "No result found";
-          searchResults.appendChild(div);
-          searchResults.style.display = "block";
-        }
+          } catch (err) {
+            console.error("Search error:", err);
+          }
+        }, 250);
       });
 
       // Enter Key Navigation
-      searchInput.addEventListener("keydown", (e) => {
+      searchInput.addEventListener("keydown", async (e) => {
         if (e.key === "Enter") {
-          const val = searchInput.value.toLowerCase();
+          const val = searchInput.value;
+          if (!val.trim()) return;
 
-          // Find exact match or first 'starts with' match
-          const bestMatch = data.find(d => d.location.toLowerCase() === val) ||
-            data.find(d => d.location.toLowerCase().startsWith(val));
+          try {
+            const res = await fetch(`${BACKEND_URL}/api/v1/search?q=${encodeURIComponent(val)}`);
+            const matches = await res.json();
+            const bestMatch = Array.isArray(matches) && matches.length > 0 ? matches[0] : null;
 
-          if (bestMatch) {
-            searchInput.value = bestMatch.location;
-            handleLocationSelect(bestMatch);
-            searchResults.style.display = "none";
-            searchInput.blur();
-            // Load properties for the selected location
-            loadPropertiesForLocation(bestMatch.location);
-          } else {
-            // Keep "No result found" visible if already there, or ensure it shows
-            if (searchResults.style.display === "none") {
-              // Force trigger input event logic to show "no result" if not open
-              searchInput.dispatchEvent(new Event('input'));
+            if (bestMatch) {
+              searchInput.value = bestMatch.location_name;
+              searchResults.style.display = "none";
+              searchInput.blur();
+              const insightMatch = Array.isArray(data)
+                ? data.find(d => d.location.toLowerCase() === bestMatch.location_name.toLowerCase())
+                : null;
+              if (insightMatch) {
+                handleLocationSelect(insightMatch);
+                loadPropertiesForLocation(insightMatch.location);
+              } else {
+                loadPropertiesForLocation(bestMatch.location_name);
+              }
+            } else {
+              if (searchResults.style.display === "none") {
+                searchInput.dispatchEvent(new Event('input'));
+              }
             }
+          } catch (err) {
+            console.error("Search error:", err);
           }
         }
       });
@@ -671,6 +692,11 @@ map.on("load", async () => {
           searchResults.style.display = "none";
         }
       });
+    }
+
+    if (!Array.isArray(data)) {
+      console.error("Invalid data format received from API:", data);
+      return;
     }
 
     map.addSource("locations", {

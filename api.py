@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles   
+from fastapi.staticfiles import StaticFiles
 import psycopg2
 import requests
 import time
@@ -8,8 +8,20 @@ import time
 import os
 import random
 from dotenv import load_dotenv
+from supabase import create_client, Client
 
 load_dotenv()
+
+# Supabase REST client (no DB password needed)
+_supabase: Client = None
+def get_supabase() -> Client:
+    global _supabase
+    if _supabase is None:
+        url = os.getenv("SUPABASE_URL")
+        key = os.getenv("SUPABASE_KEY")
+        if url and key and key != "your_service_role_key_here":
+            _supabase = create_client(url, key)
+    return _supabase
 
 app = FastAPI(title="Real Estate Intelligence API")
 
@@ -41,7 +53,8 @@ def get_db():
         password=password,
         dbname=dbname,
         port=port,
-        sslmode='require' if host != 'localhost' else 'prefer'
+        sslmode='require' if host != 'localhost' else 'prefer',
+        connect_timeout=10
     )
 
 # Helper: Fetch Dynamic Facts (Original Marketing Style)
@@ -148,7 +161,7 @@ def insights():
                 SELECT 
                     location_id,
                     COUNT(*) as article_count
-                FROM news_balanced_corpus 
+                FROM news_balanced_corpus_1 
                 GROUP BY location_id
             )
             SELECT
@@ -156,16 +169,16 @@ def insights():
                 l.name,
                 ST_X(l.geom) AS longitude,
                 ST_Y(l.geom) AS latitude,
-                li.avg_sentiment_score,
-                li.growth_score,
-                li.investment_score,
+                COALESCE(li.avg_sentiment_score, 0) as avg_sentiment_score,
+                COALESCE(li.growth_score, 0) as growth_score,
+                COALESCE(li.investment_score, 0) as investment_score,
                 COALESCE(a.article_count, 0) as article_count,
                 COALESCE(lpm.avg_price_per_sft, 0) as avg_property_price,
                 COALESCE(lpm.total_property_count, 0) as property_count,
                 COALESCE(lpm.min_price_per_sft, 0) as min_property_price,
                 COALESCE(lpm.max_price_per_sft, 0) as max_property_price
             FROM locations l
-            JOIN location_insights li ON li.location_id = l.id
+            LEFT JOIN location_insights li ON li.location_id = l.id
             LEFT JOIN location_property_matches lpm ON lpm.location_id = l.id
             LEFT JOIN article_stats a ON a.location_id = l.id
             ORDER BY l.name;
@@ -227,6 +240,60 @@ def insights():
     except Exception as e:
         print(f"🔥 DATABASE ERROR: {e}")
         return {"error": str(e), "message": "Failed to connect to database or fetch insights"}
+
+# ===============================
+# LOCATION SEARCH (from news corpus)
+# ===============================
+@app.get("/api/v1/search")
+def search_locations(q: str = ""):
+    if not q or len(q.strip()) < 1:
+        return []
+
+    # Use psycopg2 to get distinct locations and avoid Supabase REST deduplication/RLS issues
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Use a subquery to get distinct locations matching the query
+        # Using %q% to match substrings, not just prefixes
+        search_term = f"%{q.strip()}%"
+        
+        cur.execute("""
+            SELECT location_name, MIN(location_id) as location_id
+            FROM news_balanced_corpus_1
+            WHERE location_name ILIKE %s
+            GROUP BY location_name
+            ORDER BY location_name
+            LIMIT 10
+        """, (search_term,))
+        
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return [{"location_name": r[0], "location_id": r[1]} for r in rows]
+    except Exception as e:
+        print(f"🔥 SEARCH FALLBACK ERROR: {e}")
+        return []
+
+@app.get("/api/v1/search/debug")
+def search_debug():
+    sb = get_supabase()
+    if sb:
+        try:
+            # Check table counts across known tables
+            tables = ["news_balanced_corpus_1", "news_balanced_corpus", "locations"]
+            info = {}
+            for t in tables:
+                try:
+                    res = sb.table(t).select("*", count="exact").limit(1).execute()
+                    info[t] = res.count
+                except Exception as te:
+                    info[t] = f"error: {te}"
+            return {"tables": info, "source": "supabase_rest"}
+        except Exception as e:
+            return {"error": str(e), "source": "supabase_rest"}
+    return {"error": "Supabase client not configured — add SUPABASE_KEY to .env"}
 
 # ===============================
 # SAFE OVERPASS COUNT
