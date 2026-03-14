@@ -73,11 +73,50 @@ map.on('load', () => {
   });
 });
 
-// 🚀 EARLY FETCH: Start getting data immediately while map initializes
-const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-// Use Netlify proxy in production (automatically routes to API)
-const BACKEND_URL = isLocal ? "http://127.0.0.1:8000" : window.location.origin;
-const insightsPromise = fetch(`${BACKEND_URL}/api/v1/insights`).then(res => res.json());
+// 🚀 SUPABASE DIRECT CONNECTION - No more API server needed!
+const SUPABASE_URL = "https://ihraowxbduhlichzszgk.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocmFvd3hiZHVobGljaHpzemdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5MDU5OTEsImV4cCI6MjA2NTQ4MTk5MX0.9SGeXWpk4_OI2qMPyfCfVtUqar6q62-ZFifaA3lc3BE";
+
+// Google Places API Key is handled by the backend API
+// No API key needed in frontend - all requests go through Python API
+
+// Supabase RPC call helper
+async function callSupabaseRPC(functionName, params = {}) {
+  console.log(`🔍 Calling Supabase RPC: ${functionName}`, params);
+  
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${functionName}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(params)
+    });
+    
+    console.log(`🔍 Response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ Supabase RPC error: ${response.statusText}`, errorText);
+      throw new Error(`Supabase RPC error: ${response.statusText} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log(`✅ RPC ${functionName} success:`, data);
+    return data;
+  } catch (error) {
+    console.error(`❌ RPC ${functionName} failed:`, error);
+    throw error;
+  }
+}
+
+  // 🚀 EARLY FETCH: Start getting data immediately while map initializes
+const insightsPromise = callSupabaseRPC('get_all_insights');
+
+// Store insights data globally for amenities
+window.insightsData = null;
 
 map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
@@ -136,6 +175,61 @@ function getGrowthFact(p) {
 function getInvestFact(p) {
   return p.invest_summary || "Calculating returns...";
 }
+
+// 2. MARKDOWN FORMATTER - Convert markdown to HTML for better display
+function formatMarkdownText(text) {
+  if (!text) return text;
+  
+  return text
+    // Convert **bold** to <strong>
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Convert *italic* to <em>
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    // Convert bullet points - • to proper bullets with spacing
+    .replace(/^- /gm, '• ')
+    .replace(/\n- /g, '<br>• ')
+    // Add line breaks for better readability after periods followed by bullets
+    .replace(/\. - /g, '.<br><br>• ')
+    // Add line breaks after sentences for better flow
+    .replace(/\. ([A-Z])/g, '.<br>$1')
+    // Clean up multiple spaces
+    .replace(/\s+/g, ' ')
+    // Clean up multiple line breaks
+    .replace(/<br>\s*<br>\s*<br>/g, '<br><br>')
+    .trim();
+}
+
+// 3. METRIC EXPAND FUNCTION
+function expandMetric(clickedBox) {
+  const allBoxes = document.querySelectorAll('.metric-card');
+  const isCurrentlyExpanded = clickedBox.classList.contains('expanded');
+  
+  console.log('Expand metric clicked:', clickedBox.dataset.metric, 'Currently expanded:', isCurrentlyExpanded);
+  
+  // If clicking the same expanded box, collapse all
+  if (isCurrentlyExpanded) {
+    allBoxes.forEach(box => {
+      box.classList.remove('expanded', 'collapsed');
+    });
+    return;
+  }
+  
+  // Expand clicked box and collapse others
+  allBoxes.forEach(box => {
+    if (box === clickedBox) {
+      box.classList.add('expanded');
+      box.classList.remove('collapsed');
+      console.log('Expanded:', box.dataset.metric);
+    } else {
+      box.classList.add('collapsed');
+      box.classList.remove('expanded');
+      console.log('Collapsed:', box.dataset.metric);
+    }
+  });
+}
+
+// Make function globally available
+window.expandMetric = expandMetric;
 
 // 2. THE INTELLIGENCE ENGINE (Fetches Deep Data)
 // 2. THE INTELLIGENCE ENGINE (Moved to Backend: aggregation/generate_smart_facts.py)
@@ -574,6 +668,18 @@ map.on("load", async () => {
 
   try {
     const data = await insightsPromise;
+    
+    // Store globally for amenities
+    window.insightsData = data;
+    
+    console.log("🔍 DEBUG: Raw insights data:", data);
+    console.log("🔍 DEBUG: Data type:", typeof data, "Is array:", Array.isArray(data));
+    
+    if (Array.isArray(data) && data.length > 0) {
+      console.log("🔍 DEBUG: First location:", data[0]);
+      console.log("🔍 DEBUG: Coordinates:", data[0].longitude, data[0].latitude);
+    }
+    
     const searchInput = document.getElementById("location-search");
     const searchResults = document.getElementById("search-results");
 
@@ -606,8 +712,7 @@ map.on("load", async () => {
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = setTimeout(async () => {
           try {
-            const res = await fetch(`${BACKEND_URL}/api/v1/search?q=${encodeURIComponent(val)}`);
-            const matches = await res.json();
+            const matches = await callSupabaseRPC('search_locations_func', { search_query: val });
             searchResults.innerHTML = "";
 
             if (Array.isArray(matches) && matches.length > 0) {
@@ -658,8 +763,7 @@ map.on("load", async () => {
           if (!val.trim()) return;
 
           try {
-            const res = await fetch(`${BACKEND_URL}/api/v1/search?q=${encodeURIComponent(val)}`);
-            const matches = await res.json();
+            const matches = await callSupabaseRPC('search_locations_func', { search_query: val });
             const bestMatch = Array.isArray(matches) && matches.length > 0 ? matches[0] : null;
 
             if (bestMatch) {
@@ -1048,24 +1152,74 @@ map.on("load", async () => {
       </div>
 
       <!-- METRICS (3 col) -->
-      <div class="metrics">
-        <div class="metric-box ${p.avg_sentiment >= 0.2 ? 'positive' : p.avg_sentiment >= -0.2 ? 'neutral' : 'negative'}">
-          <span>SENTIMENT</span>
-          <strong>${sentimentScore}%</strong>
-          <div class="metric-label">${sentimentScore >= 60 ? '😊 Positive' : sentimentScore >= 35 ? '😐 Neutral' : '😟 Negative'}</div>
-          <div class="metric-fact">${p.sentiment_summary || 'Community sentiment analysis'}</div>
+      <!-- MARKET INTELLIGENCE - World-Class Design -->
+      <div class="market-intelligence">
+        <div class="intelligence-header">
+          <h3 class="intelligence-title">Market Intelligence</h3>
+          <p class="intelligence-subtitle">AI-powered insights for ${p.location}</p>
         </div>
-        <div class="metric-box ${p.growth_score >= 0.6 ? 'positive' : p.growth_score >= 0.35 ? 'neutral' : 'negative'}">
-          <span>GROWTH</span>
-          <strong>${growthVal}%</strong>
-          <div class="metric-label">${parseFloat(growthVal) >= 70 ? '🚀 Strong' : parseFloat(growthVal) >= 45 ? '📈 Moderate' : '📉 Low'}</div>
-          <div class="metric-fact">${p.growth_summary || 'Infrastructure development analysis'}</div>
-        </div>
-        <div class="metric-box ${p.investment_score >= 0.7 ? 'positive' : p.investment_score >= 0.4 ? 'neutral' : 'negative'}">
-          <span>INVEST</span>
-          <strong>${investVal}%</strong>
-          <div class="metric-label">${parseFloat(investVal) >= 70 ? '💎 High' : parseFloat(investVal) >= 45 ? '✅ Medium' : '⚠️ Risky'}</div>
-          <div class="metric-fact">${p.invest_summary || 'Investment potential analysis'}</div>
+        
+        <div class="metrics-container">
+          <!-- Sentiment Metric -->
+          <div class="metric-card sentiment-metric" data-metric="sentiment" onclick="expandMetric(this)">
+            <div class="metric-compact">
+              <div class="metric-icon-wrapper">
+                <svg class="metric-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                  <line x1="9" y1="9" x2="9.01" y2="9"/>
+                  <line x1="15" y1="9" x2="15.01" y2="9"/>
+                </svg>
+              </div>
+              <div class="metric-data">
+                <span class="metric-name">SENTIMENT</span>
+                <span class="metric-score">${sentimentScore}</span>
+                <span class="metric-badge">${sentimentScore >= 60 ? 'Optimistic' : sentimentScore >= 35 ? 'Stable' : 'Cautious'}</span>
+              </div>
+            </div>
+            <div class="metric-expanded">
+              <div class="expanded-content">${formatMarkdownText(p.sentiment_summary) || 'Analyzing community sentiment and market perception...'}</div>
+            </div>
+          </div>
+
+          <!-- Growth Metric -->
+          <div class="metric-card growth-metric" data-metric="growth" onclick="expandMetric(this)">
+            <div class="metric-compact">
+              <div class="metric-icon-wrapper">
+                <svg class="metric-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+                </svg>
+              </div>
+              <div class="metric-data">
+                <span class="metric-name">GROWTH</span>
+                <span class="metric-score">${growthVal}</span>
+                <span class="metric-badge">${parseFloat(growthVal) >= 70 ? 'Accelerating' : parseFloat(growthVal) >= 45 ? 'Developing' : 'Emerging'}</span>
+              </div>
+            </div>
+            <div class="metric-expanded">
+              <div class="expanded-content">${formatMarkdownText(p.growth_summary) || 'Evaluating infrastructure development and expansion potential...'}</div>
+            </div>
+          </div>
+
+          <!-- Investment Metric -->
+          <div class="metric-card investment-metric" data-metric="investment" onclick="expandMetric(this)">
+            <div class="metric-compact">
+              <div class="metric-icon-wrapper">
+                <svg class="metric-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <line x1="12" y1="1" x2="12" y2="23"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <div class="metric-data">
+                <span class="metric-name">INVESTMENT</span>
+                <span class="metric-score">${investVal}</span>
+                <span class="metric-badge">${parseFloat(investVal) >= 70 ? 'Premium' : parseFloat(investVal) >= 45 ? 'Solid' : 'Speculative'}</span>
+              </div>
+            </div>
+            <div class="metric-expanded">
+              <div class="expanded-content">${formatMarkdownText(p.invest_summary) || 'Calculating investment potential and return projections...'}</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1144,6 +1298,11 @@ map.on("load", async () => {
     activeMarker = new maplibregl.Marker({ element: markerEl, anchor: 'center' })
       .setLngLat([p.longitude, p.latitude])
       .addTo(map);
+    
+    // Initialize metric grid - no auto-expand needed
+    setTimeout(() => {
+      console.log('Metric grid initialized');
+    }, 100);
   }
 
   map.on("click", "location-core", async e => {
@@ -1176,8 +1335,7 @@ map.on("load", async () => {
     listContainer.innerHTML = '';
     countEl.textContent = 'Loading...';
 
-    fetch(`${BACKEND_URL}/api/v1/properties?area=${encodeURIComponent(locationName)}`)
-      .then(res => res.json())
+    callSupabaseRPC('get_properties_func', { area_name: locationName, bhk_filter: null })
       .then(properties => {
         loadingEl.style.display = 'none';
 
@@ -1374,9 +1532,10 @@ map.on("load", async () => {
     `;
 
     // Fetch full property details
-    fetch(`${BACKEND_URL}/api/v1/properties/${proj.id}`)
-      .then(res => res.json())
-      .then(fullProp => {
+    callSupabaseRPC('get_property_by_id_func', { prop_id: proj.id })
+      .then(data => {
+        // Handle Supabase RPC response format (returns array)
+        const fullProp = Array.isArray(data) && data.length > 0 ? data[0] : data;
         // Merge full details with the grouped configs
         const enrichedProj = {
           ...fullProp,
@@ -1611,9 +1770,10 @@ map.on("load", async () => {
     `;
 
     // Fetch full property details
-    fetch(`${BACKEND_URL}/api/v1/properties/${propertyId}`)
-      .then(res => res.json())
-      .then(prop => {
+    callSupabaseRPC('get_property_by_id_func', { prop_id: propertyId })
+      .then(data => {
+        // Handle Supabase RPC response format (returns array)
+        const prop = Array.isArray(data) && data.length > 0 ? data[0] : data;
         renderPropertyDetail(prop);
       })
       .catch(err => {
@@ -1881,14 +2041,15 @@ map.on("load", async () => {
   function drawPriceChart(locationId) {
     console.log('Drawing price chart for location ID:', locationId);
 
-    fetch(`${BACKEND_URL}/api/v1/location/${locationId}/trends`)
-      .then(res => res.json())
+    callSupabaseRPC('get_location_trends_func', { loc_id: locationId })
       .then(data => {
-        console.log('Price trends data received:', data);
+        // Handle the different response format from Supabase RPC
+        const result = Array.isArray(data) && data.length > 0 ? data[0] : data;
+        console.log('Price trends data received:', result);
 
         // Handle new API response structure
-        if (data.error || !data.trends || data.trends.length === 0) {
-          console.warn('No chart data available:', data.error || 'No trends data');
+        if (!result || result.error || !result.trends || result.trends.length === 0) {
+          console.warn('No chart data available:', result?.error || 'No trends data');
           document.getElementById('cagr-stat').style.display = 'none';
 
           // Show "No data" message in chart area
@@ -1899,9 +2060,9 @@ map.on("load", async () => {
           return;
         }
 
-        const trendsData = data.trends;
-        const cagr = data.cagr || 0;
-        const growthYoy = data.growth_yoy || 0;
+        const trendsData = result.trends;
+        const cagr = result.cagr || 0;
+        const growthYoy = result.growth_yoy || 0;
 
         console.log('Rendering chart with', trendsData.length, 'data points');
 
@@ -2109,10 +2270,11 @@ map.on("load", async () => {
       </div>
     `;
 
-    fetch(`${BACKEND_URL}/api/v1/property-costs/${encodeURIComponent(locationName)}`)
-      .then(res => res.json())
+    callSupabaseRPC('get_property_costs_func', { area_name: locationName })
       .then(data => {
-        if (data.error) {
+        // Handle the different response format from Supabase RPC
+        const result = Array.isArray(data) && data.length > 0 ? data[0] : data;
+        if (!result || result.error) {
           currentCostData = null;
           // No data available
           container.innerHTML = `
@@ -2125,61 +2287,60 @@ map.on("load", async () => {
 
         // Store for PDF Report
         currentCostData = {
-          location: data.area_name,
-          count: data.property_count,
-          avgBase: data.avg_base_price,
-          avgSqft: data.avg_price_per_sft,
-          minBase: data.min_base_price || data.avg_base_price,
-          maxBase: data.max_base_price || data.avg_base_price,
-          minSqft: data.min_price_per_sft,
-          maxSqft: data.max_price_per_sft
+          location: result.location,
+          count: result.count,
+          avgBase: result.avgbase,
+          avgSqft: result.avgsqft,
+          minBase: result.minbase || result.avgbase,
+          maxBase: result.maxbase || result.avgbase,
+          minSqft: result.minsqft,
+          maxSqft: result.maxsqft
         };
 
         // NEW: Update the Investment Fact Placeholder text immediately
         const invFactSpan = document.getElementById("invest-fact-price");
         if (invFactSpan) {
-          invFactSpan.innerText = ` (~₹${data.avg_price_per_sft.toLocaleString()}/sqft)`;
+          invFactSpan.innerText = ` (~₹${result.avgsqft.toLocaleString()}/sqft)`;
           invFactSpan.style.opacity = 1;
         }
 
-        // Render the property costs section
         // Render the property costs section
         container.innerHTML = `
           <div style="margin: 12px 12px 0; padding-top:12px; border-top:1px solid var(--border);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
               <span style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:2.5px; color:var(--gold); font-family:'Outfit',sans-serif;">💰 Property Costs</span>
-              <span style="font-size:9px; color:var(--t3); background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:8px; border:1px solid var(--border-subtle); font-family:'Outfit',sans-serif; font-weight:600;">${data.property_count} Props</span>
+              <span style="font-size:9px; color:var(--t3); background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:8px; border:1px solid var(--border-subtle); font-family:'Outfit',sans-serif; font-weight:600;">${result.count} Props</span>
             </div>
             
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:7px;">
               <div style="background:rgba(255,255,255,0.03); padding:14px; border-radius:12px; border:1px solid var(--border-subtle); border-top:2px solid var(--gold); box-shadow:0 4px 12px rgba(0,0,0,0.2);">
                 <div style="font-size:8px; color:var(--t3); margin-bottom:6px; text-transform:uppercase; font-weight:700; letter-spacing:1px; font-family:'Outfit',sans-serif;">Avg Base</div>
-                <div style="font-size:1.25rem; font-weight:800; color:var(--gold-light); font-family:'Outfit',sans-serif; letter-spacing:-0.3px;">₹${data.avg_base_price} Cr</div>
+                <div style="font-size:1.25rem; font-weight:800; color:var(--gold-light); font-family:'Outfit',sans-serif; letter-spacing:-0.3px;">₹${result.avgbase} Cr</div>
               </div>
               <div style="background:rgba(255,255,255,0.03); padding:14px; border-radius:12px; border:1px solid var(--border-subtle); border-top:2px solid var(--teal); box-shadow:0 4px 12px rgba(0,0,0,0.2);">
                 <div style="font-size:8px; color:var(--t3); margin-bottom:6px; text-transform:uppercase; font-weight:700; letter-spacing:1px; font-family:'Outfit',sans-serif;">Avg / SqFt</div>
-                <div style="font-size:1.25rem; font-weight:800; color:var(--teal); font-family:'Outfit',sans-serif; letter-spacing:-0.3px;">₹${data.avg_price_per_sft.toLocaleString()}</div>
+                <div style="font-size:1.25rem; font-weight:800; color:var(--teal); font-family:'Outfit',sans-serif; letter-spacing:-0.3px;">₹${result.avgsqft.toLocaleString()}</div>
               </div>
             </div>
             
             <div style="padding:12px 14px; background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:12px; margin-bottom:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
               <div style="font-size:8px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700; letter-spacing:1.5px; font-family:'Outfit',sans-serif;">Base Price Range</div>
               <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">₹${data.min_base_price || data.avg_base_price} Cr</span>
+                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">₹${result.minbase || result.avgbase} Cr</span>
                 <div style="flex:1; height:4px; background:rgba(255,255,255,0.08); border-radius:4px; position:relative;">
                   <div style="position:absolute; inset:0; background:linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius:4px;"></div>
                 </div>
-                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">₹${data.max_base_price || data.avg_base_price} Cr</span>
+                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">₹${result.maxbase || result.avgbase} Cr</span>
               </div>
             </div>
             <div style="padding:10px 12px; background:var(--bg-card); border:1px solid var(--border); border-radius:10px; box-shadow:0 1px 4px rgba(26,26,46,0.04);">
               <div style="font-size:8px; color:var(--t4); margin-bottom:6px; text-transform:uppercase; font-weight:700; letter-spacing:1px; font-family:'Outfit',sans-serif;">Price / SqFt Range</div>
               <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">&#8377;${data.min_price_per_sft.toLocaleString()}</span>
+                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">&#8377;${result.minsqft.toLocaleString()}</span>
                 <div style="flex:1; height:3px; background:var(--border); border-radius:2px; position:relative;">
                   <div style="position:absolute; inset:0; background:linear-gradient(90deg, var(--teal), #0A8A8E); border-radius:2px;"></div>
                 </div>
-                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">&#8377;${data.max_price_per_sft.toLocaleString()}</span>
+                <span style="font-size:11px; font-weight:600; color:var(--t2); font-family:'Outfit',sans-serif;">&#8377;${result.maxsqft.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -2219,15 +2380,55 @@ map.on("load", async () => {
       }
     });
 
-    // Fetch amenity data
-    fetch(`${BACKEND_URL}/api/v1/location/${locationId}/amenities/${amenityType}`)
-      .then(res => res.json())
+    // Get location coordinates from the insights data
+    const locationData = Array.isArray(window.insightsData) 
+      ? window.insightsData.find(d => d.location_id === locationId)
+      : null;
+    
+    if (!locationData) {
+      alert('Location data not found');
+      resetAmenityButtons(amenityType);
+      return;
+    }
+
+    const lat = locationData.latitude;
+    const lng = locationData.longitude;
+
+    // Fetch amenity data from Google Places API via Python backend
+    const PYTHON_API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
+      ? "http://127.0.0.1:8000" 
+      : window.location.origin;
+    
+    const amenityUrl = `${PYTHON_API_URL}/api/v1/amenities/${amenityType}?lat=${lat}&lng=${lng}`;
+    console.log('🔍 Fetching amenities from:', amenityUrl);
+    console.log('📍 Location coordinates:', { lat, lng, locationId });
+    
+    fetch(amenityUrl)
+      .then(res => {
+        console.log('📊 Response status:', res.status);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+      })
       .then(data => {
-        if (data.error || !data.amenities || data.amenities.length === 0) {
+        console.log('📋 API Response:', data);
+        
+        if (data.error) {
+          console.error('❌ API Error:', data.error);
+          alert(`Failed to load ${amenityType}: ${data.error}`);
+          resetAmenityButtons(amenityType);
+          return;
+        }
+        
+        if (!data.amenities || data.amenities.length === 0) {
+          console.log('⚠️ No amenities found');
           alert(`No ${amenityType} found within 5km radius`);
           resetAmenityButtons(amenityType);
           return;
         }
+
+        console.log(`✅ Found ${data.amenities.length} ${amenityType}`);
 
         // Hide layers card if open
         const layersCard = document.getElementById("layers-card");
@@ -2408,8 +2609,15 @@ map.on("load", async () => {
 
       })
       .catch(err => {
-        console.error('Amenity fetch error:', err);
-        alert('Failed to load amenities. Please try again.');
+        console.error('❌ Amenity fetch error:', err);
+        console.error('🔍 Error details:', {
+          message: err.message,
+          stack: err.stack,
+          amenityType,
+          coordinates: { lat, lng },
+          url: amenityUrl
+        });
+        alert(`Failed to load ${amenityType}. Error: ${err.message}`);
         resetAmenityButtons(amenityType);
       });
   }
@@ -2882,9 +3090,10 @@ function showProjectConfigurations(project) {
 
 // Helper function to show property details by ID - make it globally accessible
 window.showPropertyDetailsFromTable = function (propertyId) {
-  fetch(`${BACKEND_URL}/api/v1/properties/${propertyId}`)
-    .then(res => res.json())
-    .then(property => {
+  callSupabaseRPC('get_property_by_id_func', { prop_id: propertyId })
+    .then(data => {
+      // Handle Supabase RPC response format (returns array)
+      const property = Array.isArray(data) && data.length > 0 ? data[0] : data;
       showPropertyDetails(property);
     })
     .catch(err => {

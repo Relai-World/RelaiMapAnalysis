@@ -44,7 +44,7 @@ def get_db():
     host = os.getenv("DB_HOST", "localhost")
     user = os.getenv("DB_USER", "postgres")
     password = os.getenv("DB_PASSWORD", "post@123")
-    dbname = os.getenv("DB_NAME", "real_estate_intelligence")
+    dbname = os.getenv("DB_NAME", "postgres")
     port = os.getenv("DB_PORT", "5432")
 
     return psycopg2.connect(
@@ -73,25 +73,9 @@ def fetch_dynamic_facts(cur, loc_id, s_score, g_score, i_score, default_s, defau
         s_fact = default_s
 
     # 2. Growth: "The Driver"
-    try:
-        cur.execute("SELECT hospitals, schools, metro, airports FROM location_infrastructure WHERE location_id = %s", (loc_id,))
-        row = cur.fetchone()
-        if row:
-            h, s, m, a = row
-            if m > 0:
-                g_fact = "🚇 <b>Super Connected:</b> Direct Metro access ensures unbeatable commute."
-            elif a > 0:
-                g_fact = "✈️ <b>Global Gateway:</b> Strategic proximity to International Airport."
-            elif s > 5:
-                g_fact = f"🏫 <b>Family Prime:</b> Surrounded by {s}+ top-tier international schools."
-            elif h > 3:
-                g_fact = "🏥 <b>Medical Hub:</b> World-class healthcare access within minutes."
-            else:
-                g_fact = "🏗️ <b>Developing Fast:</b> New roads and civic infra coming up."
-        else:
-            g_fact = default_g
-    except Exception:
-        g_fact = default_g
+    # Note: location_infrastructure table not available in new schema
+    # Using default growth fact
+    g_fact = default_g
 
     # 3. Investment: "The Returns"
     try:
@@ -133,7 +117,7 @@ def insights():
                     AVG(CAST(price_per_sft AS NUMERIC)) as avg_price_per_sft,
                     MIN(CAST(price_per_sft AS NUMERIC)) as min_price_per_sft,
                     MAX(CAST(price_per_sft AS NUMERIC)) as max_price_per_sft
-                FROM properties_final 
+                FROM unified_data_DataType_Raghu 
                 WHERE price_per_sft IS NOT NULL 
                     AND price_per_sft != 'None' 
                     AND price_per_sft != ''
@@ -478,7 +462,7 @@ def get_market_trends():
 # ===============================
 @app.get("/api/v1/location-costs")
 def get_all_location_costs():
-    """Get property cost statistics for all locations - USES properties_final with optimized fuzzy matching"""
+    """Get property cost statistics for all locations - USES unified_data_DataType_Raghu with optimized fuzzy matching"""
     try:
         conn = get_db()
         cur = conn.cursor()
@@ -494,7 +478,7 @@ def get_all_location_costs():
                     MIN(CAST(price_per_sft AS NUMERIC)) as min_price_per_sft,
                     MAX(CAST(price_per_sft AS NUMERIC)) as max_price_per_sft,
                     AVG(CAST(baseprojectprice AS NUMERIC)) as avg_base_price
-                FROM properties_final 
+                FROM unified_data_DataType_Raghu 
                 WHERE price_per_sft IS NOT NULL 
                     AND price_per_sft != 'None' 
                     AND price_per_sft != ''
@@ -556,7 +540,7 @@ def get_all_location_costs():
 
 @app.get("/api/v1/location-costs/{location_name}")
 def get_location_cost(location_name: str):
-    """Get property cost statistics for a specific location - USES properties_final data"""
+    """Get property cost statistics for a specific location - USES unified_data_DataType_Raghu data"""
     try:
         conn = get_db()
         cur = conn.cursor()
@@ -571,7 +555,7 @@ def get_location_cost(location_name: str):
                 AVG(CAST(baseprojectprice AS NUMERIC)) as avg_base_price,
                 MIN(CAST(baseprojectprice AS NUMERIC)) as min_base_price,
                 MAX(CAST(baseprojectprice AS NUMERIC)) as max_base_price
-            FROM properties_final 
+            FROM unified_data_DataType_Raghu 
             WHERE (LOWER(areaname) = LOWER(%s)
                    OR LOWER(REPLACE(areaname, ' ', '')) = LOWER(REPLACE(%s, ' ', ''))
                    OR areaname ILIKE %s || ', %%'
@@ -603,11 +587,11 @@ def get_location_cost(location_name: str):
         return {"error": str(e)}
 
 # ===============================
-# PROPERTY COSTS FROM PROPERTIES_FINAL
+# PROPERTY COSTS FROM unified_data_DataType_Raghu
 # ===============================
 @app.get("/api/v1/property-costs")
 def get_all_property_costs():
-    """Get property cost statistics from properties_final table for all locations with optimized fuzzy matching"""
+    """Get property cost statistics from unified_data_DataType_Raghu table for all locations with optimized fuzzy matching"""
     try:
         conn = get_db()
         cur = conn.cursor()
@@ -624,7 +608,7 @@ def get_all_property_costs():
                     MAX(CAST(price_per_sft AS NUMERIC)) as max_price_per_sft,
                     AVG(CAST(baseprojectprice AS NUMERIC)) as avg_base_price,
                     COUNT(DISTINCT buildername) as builder_count
-                FROM properties_final 
+                FROM unified_data_DataType_Raghu 
                 WHERE price_per_sft IS NOT NULL 
                     AND price_per_sft != 'None' 
                     AND price_per_sft != ''
@@ -690,7 +674,7 @@ def get_all_property_costs():
 
 @app.get("/api/v1/property-costs/{area_name}")
 def get_area_property_costs(area_name: str):
-    """Get detailed property cost statistics for a specific area from properties_final table"""
+    """Get detailed property cost statistics for a specific area from unified_data_DataType_Raghu table"""
     try:
         conn = get_db()
         cur = conn.cursor()
@@ -709,7 +693,7 @@ def get_area_property_costs(area_name: str):
                 COUNT(DISTINCT projectname) as project_count,
                 -- Get top builders in this area
                 STRING_AGG(DISTINCT buildername, ', ') as builders
-            FROM properties_final 
+            FROM unified_data_DataType_Raghu 
             WHERE (LOWER(areaname) = LOWER(%s)
                    OR LOWER(REPLACE(areaname, ' ', '')) = LOWER(REPLACE(%s, ' ', ''))
                    OR areaname ILIKE %s
@@ -726,7 +710,7 @@ def get_area_property_costs(area_name: str):
             # Get sample properties
             cur.execute("""
                 SELECT projectname, buildername, price_per_sft, baseprojectprice, bhk
-                FROM properties_final 
+                FROM unified_data_DataType_Raghu 
                 WHERE (LOWER(areaname) = LOWER(%s)
                        OR LOWER(REPLACE(areaname, ' ', '')) = LOWER(REPLACE(%s, ' ', ''))
                        OR areaname ILIKE %s
@@ -778,28 +762,17 @@ def get_area_property_costs(area_name: str):
 # ===============================
 # AMENITY LOCATIONS (WITH COORDINATES)
 # ===============================
-@app.get("/api/v1/location/{location_id}/amenities/{amenity_type}")
-def get_amenity_locations(location_id: int, amenity_type: str):
+# AMENITY LOCATIONS - GOOGLE PLACES API ONLY
+# ===============================
+@app.get("/api/v1/amenities/{amenity_type}")
+def get_amenities(amenity_type: str, lat: float, lng: float):
     """
-    Get detailed amenity locations with coordinates for mapping
-    amenity_type: 'hospitals', 'schools', 'malls', 'restaurants', 'banks', 'atms', 'parks', 'gyms'
-    Returns amenities within 4km with distance-based color coding
+    Get amenities from Google Places API
+    Query params: lat, lng
+    amenity_type: 'hospitals', 'schools', 'malls', 'restaurants', 'banks', 'parks', 'metro'
     """
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT ST_Y(geom), ST_X(geom), name FROM locations WHERE id = %s",
-        (location_id,)
-    )
-    row = cur.fetchone()
-    cur.close()
-    conn.close()
-
-    if not row:
-        return {"error": "Location not found", "amenities": []}
-
-    lat, lng, location_name = row
-
+    print(f"🔍 Amenities Request: type={amenity_type}, lat={lat}, lng={lng}")
+    
     # Map amenity types to Google Places types
     google_type_mapping = {
         'hospitals': 'hospital',
@@ -807,466 +780,119 @@ def get_amenity_locations(location_id: int, amenity_type: str):
         'malls': 'shopping_mall',
         'restaurants': 'restaurant',
         'banks': 'bank',
-        'atms': 'atm',
         'parks': 'park',
-        'gyms': 'gym',
-        'cafes': 'cafe',
-        'metro': 'subway_station',
-        'metro_stations': 'subway_station',
-        'pharmacies': 'pharmacy',
-        'supermarkets': 'supermarket'
+        'metro': 'subway_station'
     }
 
     if amenity_type not in google_type_mapping:
+        print(f"❌ Invalid amenity type: {amenity_type}")
         return {"error": "Invalid amenity type", "amenities": []}
 
     g_type = google_type_mapping[amenity_type]
-    api_key = "AIzaSyBi0vpchEjZNY3WL8fja0488QlXzhD6s-0"
+    api_key = os.getenv("GOOGLE_PLACES_API_KEY")
+    
+    if not api_key:
+        print("❌ Google Places API key not found in environment")
+        return {"error": "Google Places API key not configured", "amenities": []}
+    
+    print(f"✅ API Key loaded: {api_key[:10]}...")
+    
     url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={lat},{lng}&radius=5000&type={g_type}&key={api_key}"
+    print(f"🌐 Google API URL: {url.replace(api_key, 'API_KEY_HIDDEN')}")
 
     try:
+        print("📡 Making request to Google Places API...")
         r = requests.get(url, timeout=30)
+        print(f"📊 Response Status: {r.status_code}")
+        
         if r.status_code != 200:
-            return {"error": "Google API error", "amenities": []}
+            print(f"❌ HTTP Error: {r.status_code} - {r.text}")
+            return {"error": f"Google API HTTP {r.status_code}", "amenities": []}
 
         data = r.json()
+        print(f"📋 API Response Status: {data.get('status')}")
+        
+        if data.get("status") == "REQUEST_DENIED":
+            print(f"❌ REQUEST_DENIED - Error: {data.get('error_message', 'No error message')}")
+            return {"error": f"Google Places API: {data.get('status')} - {data.get('error_message', 'Check API key and billing')}", "amenities": []}
+        
+        if data.get("status") != "OK":
+            print(f"❌ API Status Error: {data.get('status')} - {data.get('error_message', '')}")
+            return {"error": f"Google Places API: {data.get('status')}", "amenities": []}
+
+        results = data.get("results", [])
+        print(f"📍 Found {len(results)} raw results from Google")
+        
         amenities = []
 
-        # Limit the number of results processed to save bandwidth and UI clutter
-        for element in data.get("results", [])[:15]:
+        # Process results (limit to 15)
+        for i, element in enumerate(results[:15]):
             geometry = element.get("geometry", {}).get("location", {})
             amenity_lat = geometry.get("lat")
             amenity_lng = geometry.get("lng")
             
             if not amenity_lat or not amenity_lng:
+                print(f"⚠️ Skipping result {i}: missing coordinates")
                 continue
 
             name = element.get("name", f"Unnamed {amenity_type[:-1]}")
 
-            # Calculate distance (simple Euclidean for small distances)
+            # Calculate distance using Haversine formula (more accurate)
             import math
-            distance_km = math.sqrt(
-                ((amenity_lat - lat) * 111) ** 2 + 
-                ((amenity_lng - lng) * 111 * math.cos(math.radians(lat))) ** 2
-            )
+            R = 6371  # Earth's radius in km
+            lat1, lng1 = math.radians(lat), math.radians(lng)
+            lat2, lng2 = math.radians(amenity_lat), math.radians(amenity_lng)
+            
+            dlat = lat2 - lat1
+            dlng = lng2 - lng1
+            
+            a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng/2)**2
+            c = 2 * math.asin(math.sqrt(a))
+            distance_km = R * c
 
-            # Color coding based on distance (5km total)
+            # Color coding based on distance
             if distance_km <= 2.0:
-                color = "green"  # Close (0-2 km)
+                color = "green"
             elif distance_km <= 3.5:
-                color = "orange"  # Medium (2-3.5 km)
+                color = "orange"
             else:
-                color = "red"  # Far (3.5-5 km)
+                color = "red"
 
             amenities.append({
                 "name": name,
                 "latitude": amenity_lat,
                 "longitude": amenity_lng,
                 "distance_km": round(distance_km, 2),
-                "color": color,
-                "osm_id": element.get("place_id")
+                "color": color
             })
 
         # Sort by distance
         amenities.sort(key=lambda x: x["distance_km"])
-
+        
+        print(f"✅ Processed {len(amenities)} amenities successfully")
+        
         return {
-            "location": location_name,
-            "location_lat": lat,
-            "location_lng": lng,
             "amenity_type": amenity_type,
             "total_count": len(amenities),
-            "amenities": amenities,
-            "color_legend": {
-                "green": "0-2 km (Close)",
-                "orange": "2-3.5 km (Medium)",
-                "red": "3.5-5 km (Far)"
-            }
+            "amenities": amenities
         }
 
+    except requests.exceptions.Timeout:
+        print("❌ Request timeout to Google Places API")
+        return {"error": "Request timeout", "amenities": []}
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Request error: {e}")
+        return {"error": f"Request error: {str(e)}", "amenities": []}
     except Exception as e:
-        print(f"🔥 Amenity Fetch Error: {e}")
+        print(f"🔥 Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
         return {"error": str(e), "amenities": []}
 
 # ===============================
-# TELANGANA PROPERTY DATA APIs
+# TELANGANA ENDPOINTS REMOVED
+# All Telangana registration data endpoints have been removed as they are not used by the frontend.
 # ===============================
-
-@app.get("/api/v1/telangana/districts")
-def get_telangana_districts():
-    """Get all 33 Telangana districts with stats"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT d.name, d.code, d.region,
-                   (SELECT COUNT(*) FROM telangana_mandals WHERE district_code = d.code) as mandals,
-                   (SELECT COUNT(*) FROM telangana_villages WHERE district_code = d.code) as villages,
-                   (SELECT COUNT(*) FROM telangana_market_values WHERE district_code = d.code) as price_records
-            FROM telangana_districts d
-            ORDER BY d.name;
-        """)
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        return [{
-            "name": r[0], "code": r[1], "region": r[2],
-            "mandals": r[3], "villages": r[4], "price_records": r[5]
-        } for r in rows]
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/api/v1/telangana/districts/{district_code}/mandals")
-def get_district_mandals(district_code: str):
-    """Get all mandals for a district"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT m.name, m.code, m.district_name,
-                   (SELECT COUNT(*) FROM telangana_villages WHERE mandal_code = m.code AND district_code = m.district_code) as villages
-            FROM telangana_mandals m
-            WHERE m.district_code = %s
-            ORDER BY m.name;
-        """, (district_code,))
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        return [{"name": r[0], "code": r[1], "district": r[2], "villages": r[3]} for r in rows]
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/api/v1/telangana/mandals/{district_code}/{mandal_code}/villages")
-def get_mandal_villages(district_code: str, mandal_code: str):
-    """Get all villages for a mandal"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT v.name, v.code, v.mandal_name, v.district_name
-            FROM telangana_villages v
-            WHERE v.district_code = %s AND v.mandal_code = %s
-            ORDER BY v.name;
-        """, (district_code, mandal_code))
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        return [{"name": r[0], "code": r[1], "mandal": r[2], "district": r[3]} for r in rows]
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/api/v1/telangana/market-values")
-def get_telangana_market_values(district: str = None, mandal: str = None, min_price: float = None, max_price: float = None, limit: int = 100):
-    """Get market values with optional filters"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        
-        query = "SELECT district, mandal, village, classification, price_per_sqyd, rate_type FROM telangana_market_values WHERE 1=1"
-        params = []
-        
-        if district:
-            query += " AND district ILIKE %s"
-            params.append(f"%{district}%")
-        if mandal:
-            query += " AND mandal ILIKE %s"
-            params.append(f"%{mandal}%")
-        if min_price:
-            query += " AND price_per_sqyd >= %s"
-            params.append(min_price)
-        if max_price:
-            query += " AND price_per_sqyd <= %s"
-            params.append(max_price)
-        
-        query += " ORDER BY price_per_sqyd DESC LIMIT %s"
-        params.append(limit)
-        
-        cur.execute(query, params)
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        return [{
-            "district": r[0], "mandal": r[1], "village": r[2],
-            "classification": r[3], "price_per_sqyd": float(r[4]), "rate_type": r[5]
-        } for r in rows]
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/api/v1/telangana/top-locations")
-def get_telangana_top_locations(limit: int = 20):
-    """Get top priced locations in Telangana"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT village, mandal, district, 
-                   MAX(price_per_sqyd) as max_price,
-                   MIN(price_per_sqyd) as min_price,
-                   AVG(price_per_sqyd) as avg_price,
-                   COUNT(*) as records
-            FROM telangana_market_values
-            WHERE price_per_sqyd > 0
-            GROUP BY village, mandal, district
-            ORDER BY max_price DESC
-            LIMIT %s;
-        """, (limit,))
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        return [{
-            "village": r[0], "mandal": r[1], "district": r[2],
-            "max_price": float(r[3]), "min_price": float(r[4]),
-            "avg_price": round(float(r[5]), 2), "records": r[6]
-        } for r in rows]
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/api/v1/telangana/price-stats")
-def get_telangana_price_stats():
-    """Get price statistics by district"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT district,
-                   COUNT(*) as records,
-                   MIN(price_per_sqyd) as min_price,
-                   MAX(price_per_sqyd) as max_price,
-                   AVG(price_per_sqyd) as avg_price,
-                   COUNT(DISTINCT mandal) as mandals,
-                   COUNT(DISTINCT village) as villages
-            FROM telangana_market_values
-            WHERE price_per_sqyd > 0
-            GROUP BY district
-            ORDER BY max_price DESC;
-        """)
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        return [{
-            "district": r[0], "records": r[1],
-            "min_price": float(r[2]), "max_price": float(r[3]),
-            "avg_price": round(float(r[4]), 2),
-            "mandals": r[5], "villages": r[6]
-        } for r in rows]
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/api/v1/telangana/search")
-def search_telangana_locations(q: str, limit: int = 50):
-    """Search villages by name"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT DISTINCT v.name, v.mandal_name, v.district_name,
-                   (SELECT MAX(price_per_sqyd) FROM telangana_market_values 
-                    WHERE village = v.name AND mandal = v.mandal_name) as max_price
-            FROM telangana_villages v
-            WHERE v.name ILIKE %s
-            ORDER BY v.name
-            LIMIT %s;
-        """, (f"%{q}%", limit))
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        return [{
-            "village": r[0], "mandal": r[1], "district": r[2],
-            "max_price": float(r[3]) if r[3] else None
-        } for r in rows]
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/api/v1/telangana/stats")
-def get_telangana_overall_stats():
-    """Get overall Telangana property data statistics"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        
-        stats = {}
-        
-        cur.execute("SELECT COUNT(*) FROM telangana_districts")
-        stats["districts"] = cur.fetchone()[0]
-        
-        cur.execute("SELECT COUNT(*) FROM telangana_mandals")
-        stats["mandals"] = cur.fetchone()[0]
-        
-        cur.execute("SELECT COUNT(*) FROM telangana_villages")
-        stats["villages"] = cur.fetchone()[0]
-        
-        cur.execute("SELECT COUNT(*) FROM telangana_market_values")
-        stats["market_values"] = cur.fetchone()[0]
-        
-        cur.execute("""
-            SELECT MIN(price_per_sqyd), MAX(price_per_sqyd), AVG(price_per_sqyd)
-            FROM telangana_market_values WHERE price_per_sqyd > 0
-        """)
-        price_row = cur.fetchone()
-        if price_row and price_row[0]:
-            stats["price_range"] = {
-                "min": float(price_row[0]),
-                "max": float(price_row[1]),
-                "avg": round(float(price_row[2]), 2)
-            }
-        
-        cur.close()
-        conn.close()
-        
-        return stats
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/api/v1/telangana/village/{village_id}/boundary")
-def get_telangana_village_boundary(village_id: int):
-    """Get boundary for a specific village"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT name, mandal_name, district_name,
-                   ST_AsGeoJSON(COALESCE(boundary, ST_Buffer(centroid::geography, 1000)::geometry)) as geom,
-                   ST_Y(centroid) as lat, ST_X(centroid) as lng
-            FROM telangana_villages
-            WHERE id = %s
-        """, (village_id,))
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
-        
-        if not row:
-            return {"error": "Village not found"}
-        
-        result = {
-            "village": row[0],
-            "mandal": row[1],
-            "district": row[2],
-            "latitude": row[4],
-            "longitude": row[5]
-        }
-        
-        if row[3]:
-            import json
-            result["boundary"] = json.loads(row[3])
-        
-        return result
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/api/v1/locations/{location_id}/boundary")
-def get_location_boundary(location_id: int):
-    """Get boundary for a specific location (accurate polygons)"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute(
-            "SELECT id, name, ST_AsGeoJSON(boundary) as boundary_geojson FROM locations WHERE id = %s AND boundary IS NOT NULL",
-            (location_id,)
-        )
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
-        
-        if not row:
-            return {"error": "Location not found or no boundary available"}
-        
-        import json
-        return {
-            "id": row[0],
-            "name": row[1],
-            "boundary": json.loads(row[2])
-        }
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/api/v1/locations/boundaries")
-def get_all_boundaries():
-    """Get all location boundaries as GeoJSON FeatureCollection"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute(
-            "SELECT id, name, ST_AsGeoJSON(boundary) as boundary_geojson FROM locations WHERE boundary IS NOT NULL ORDER BY name"
-        )
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        features = []
-        import json
-        for row in rows:
-            features.append({
-                "type": "Feature",
-                "properties": {
-                    "id": row[0],
-                    "name": row[1]
-                },
-                "geometry": json.loads(row[2])
-            })
-        
-        return {
-            "type": "FeatureCollection",
-            "features": features,
-            "count": len(features)
-        }
-    except Exception as e:
-        return {"error": str(e)}
-
-
-    """Get all village boundaries as GeoJSON FeatureCollection"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        
-        query = """
-            SELECT id, name, mandal_name, district_name,
-                   ST_AsGeoJSON(COALESCE(boundary, ST_Buffer(centroid::geography, 500)::geometry)) as geom
-            FROM telangana_villages
-            WHERE centroid IS NOT NULL
-        """
-        params = []
-        
-        if district:
-            query += " AND district_name ILIKE %s"
-            params.append(f"%{district}%")
-        
-        query += " LIMIT %s"
-        params.append(limit)
-        
-        cur.execute(query, params)
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        features = []
-        for row in rows:
-            if row[4]:
-                import json
-                features.append({
-                    "type": "Feature",
-                    "properties": {
-                        "id": row[0],
-                        "village": row[1],
-                        "mandal": row[2],
-                        "district": row[3]
-                    },
-                    "geometry": json.loads(row[4])
-                })
-        
-        return {
-            "type": "FeatureCollection",
-            "features": features,
-            "count": len(features)
-        }
-    except Exception as e:
-        return {"error": str(e)}
 
 
 # ===============================
@@ -1279,7 +905,7 @@ def get_properties_endpoint(area: str, bhk: str = None):
     return get_properties_by_area(area, bhk)
 
 def get_properties_by_area(area: str, bhk_filter: str = None):
-    """Get real estate projects for a given area name (fuzzy match) from properties_final table - GROUPED BY PROJECT."""
+    """Get real estate projects for a given area name (fuzzy match) from unified_data_DataType_Raghu table - GROUPED BY PROJECT."""
     try:
         conn = get_db()
         cur = conn.cursor()
@@ -1344,7 +970,7 @@ def get_properties_by_area(area: str, bhk_filter: str = None):
                 alternative_contact, useremail,
                 images, google_place_rating, google_place_user_ratings_total,
                 rera_number
-            FROM properties_final
+            FROM unified_data_DataType_Raghu
             WHERE {where_clause}
             ORDER BY
                 CASE
@@ -1540,7 +1166,7 @@ def get_properties_endpoint(area: str, bhk: str = None):
 
 @app.get("/api/v1/properties/{property_id}")
 def get_property_detail(property_id: int):
-    """Get full detail for a single property from properties_final table."""
+    """Get full detail for a single property from unified_data_DataType_Raghu table."""
     try:
         conn = get_db()
         cur = conn.cursor()
@@ -1576,7 +1202,7 @@ def get_property_detail(property_id: int):
                 alternative_contact, useremail,
                 images, google_place_rating, google_place_user_ratings_total,
                 rera_number, projectbrochure
-            FROM properties_final
+            FROM unified_data_DataType_Raghu
             WHERE id = %s;
         """, (property_id,))
         r = cur.fetchone()
@@ -1622,7 +1248,7 @@ def get_property_detail(property_id: int):
         result = {}
         for i, col in enumerate(cols):
             val = r[i]
-            # Handle numeric conversions safely for properties_final data
+            # Handle numeric conversions safely for unified_data_DataType_Raghu data
             if val and col in ["baseprojectprice", "price_per_sft", "google_place_rating"] and isinstance(val, str):
                 try:
                     val = float(val) if val != 'None' and val != '' and val is not None else None
