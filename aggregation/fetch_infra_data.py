@@ -1,7 +1,11 @@
 import psycopg2
 import requests
 import time
+import os
 from tqdm import tqdm
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ===============================
 # CONFIG
@@ -10,11 +14,12 @@ OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
 def get_db_connection():
     return psycopg2.connect(
-        dbname="real_estate_intelligence",
-        user="postgres",
-        password="post@123",
-        host="localhost",
-        port=5432
+        host=os.getenv("DB_HOST"),
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        port=os.getenv("DB_PORT"),
+        sslmode='require'
     )
 
 def safe_count(query: str) -> int:

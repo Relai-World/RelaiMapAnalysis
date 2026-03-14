@@ -1,4 +1,3 @@
-
 import psycopg2
 import os
 import math
@@ -8,17 +7,25 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- CONFIG ---
-DB_NAME = os.getenv("DB_NAME", "real_estate_intelligence")
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "post@123")
-DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
 
 # KEYWORDS TO TRACK
 POSITIVE_KEYWORDS = ["metro", "flyover", "launch", "expansion", "growth", "new", "hiked", "demand", "tech", "park"]
 NEGATIVE_KEYWORDS = ["traffic", "pollution", "water", "shortage", "delay", "protest", "crime", "dust", "congestion"]
 
 def get_db():
-    return psycopg2.connect(dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST)
+    return psycopg2.connect(
+        host=DB_HOST,
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        port=DB_PORT,
+        sslmode='require'
+    )
 
 def generate_sentiment_summary(location_id, cur):
     # 1. Fetch recent news headlines

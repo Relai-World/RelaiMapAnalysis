@@ -1,15 +1,20 @@
 import psycopg2
 import math
+import os
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ---------------- DB CONNECTION ----------------
 def get_db_connection():
     return psycopg2.connect(
-        dbname="real_estate_intelligence",
-        user="postgres",
-        password="post@123",
-        host="localhost",
-        port=5432
+        host=os.getenv("DB_HOST"),
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        port=os.getenv("DB_PORT"),
+        sslmode='require'
     )
 
 # ---------------- HELPERS ----------------
