@@ -1110,6 +1110,9 @@ map.on("load", async () => {
 
     if (emptyState) emptyState.style.display = "none";
     card.style.display = "flex";
+    
+    // Reset scroll position to top when new location is selected
+    card.scrollTop = 0;
 
     map.flyTo({
       center: [p.longitude, p.latitude],
