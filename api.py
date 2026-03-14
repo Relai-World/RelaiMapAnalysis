@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import psycopg2
 import requests
 import time
 
@@ -38,24 +37,8 @@ app.add_middleware(
 )
 
 # ===============================
-# DB CONNECTION
+# SUPABASE CLIENT ONLY - NO LOCAL DATABASE
 # ===============================
-def get_db():
-    host = os.getenv("DB_HOST", "localhost")
-    user = os.getenv("DB_USER", "postgres")
-    password = os.getenv("DB_PASSWORD", "post@123")
-    dbname = os.getenv("DB_NAME", "postgres")
-    port = os.getenv("DB_PORT", "5432")
-
-    return psycopg2.connect(
-        host=host,
-        user=user,
-        password=password,
-        dbname=dbname,
-        port=port,
-        sslmode='require' if host != 'localhost' else 'prefer',
-        connect_timeout=10
-    )
 
 # Helper: Fetch Dynamic Facts (Original Marketing Style)
 def fetch_dynamic_facts(cur, loc_id, s_score, g_score, i_score, default_s, default_g, default_i):
@@ -101,163 +84,50 @@ def fetch_dynamic_facts(cur, loc_id, s_score, g_score, i_score, default_s, defau
     return s_fact, g_fact, i_fact
 
 # ===============================
-# CORE INSIGHTS
+# CORE INSIGHTS - USING SUPABASE RPC
 # ===============================
 @app.get("/api/v1/insights")
 def insights():
     try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            WITH property_stats AS (
-                SELECT 
-                    LOWER(areaname) as area_lower,
-                    areaname as original_area,
-                    COUNT(*) as property_count,
-                    AVG(CAST(price_per_sft AS NUMERIC)) as avg_price_per_sft,
-                    MIN(CAST(price_per_sft AS NUMERIC)) as min_price_per_sft,
-                    MAX(CAST(price_per_sft AS NUMERIC)) as max_price_per_sft
-                FROM unified_data_DataType_Raghu 
-                WHERE price_per_sft IS NOT NULL 
-                    AND price_per_sft != 'None' 
-                    AND price_per_sft != ''
-                    AND CAST(price_per_sft AS NUMERIC) > 0
-                GROUP BY LOWER(areaname), areaname
-            ),
-            location_property_matches AS (
-                SELECT 
-                    l.id as location_id,
-                    l.name as location_name,
-                    SUM(ps.property_count) as total_property_count,
-                    AVG(ps.avg_price_per_sft) as avg_price_per_sft,
-                    MIN(ps.min_price_per_sft) as min_price_per_sft,
-                    MAX(ps.max_price_per_sft) as max_price_per_sft
-                FROM locations l
-                LEFT JOIN property_stats ps ON (
-                    LOWER(ps.original_area) = LOWER(l.name)
-                    OR LOWER(REPLACE(ps.original_area, ' ', '')) = LOWER(REPLACE(l.name, ' ', ''))
-                    OR ps.original_area ILIKE l.name
-                    OR l.name ILIKE ps.original_area
-                )
-                GROUP BY l.id, l.name
-            ),
-            article_stats AS (
-                SELECT 
-                    location_id,
-                    COUNT(*) as article_count
-                FROM news_balanced_corpus_1 
-                GROUP BY location_id
-            )
-            SELECT
-                l.id,
-                l.name,
-                ST_X(l.geom) AS longitude,
-                ST_Y(l.geom) AS latitude,
-                COALESCE(li.avg_sentiment_score, 0) as avg_sentiment_score,
-                COALESCE(li.growth_score, 0) as growth_score,
-                COALESCE(li.investment_score, 0) as investment_score,
-                COALESCE(a.article_count, 0) as article_count,
-                COALESCE(lpm.avg_price_per_sft, 0) as avg_property_price,
-                COALESCE(lpm.total_property_count, 0) as property_count,
-                COALESCE(lpm.min_price_per_sft, 0) as min_property_price,
-                COALESCE(lpm.max_price_per_sft, 0) as max_property_price
-            FROM locations l
-            LEFT JOIN location_insights li ON li.location_id = l.id
-            LEFT JOIN location_property_matches lpm ON lpm.location_id = l.id
-            LEFT JOIN article_stats a ON a.location_id = l.id
-            ORDER BY l.name;
-        """)
-        rows = cur.fetchall()
+        sb = get_supabase()
+        if not sb:
+            return {"error": "Supabase client not configured", "message": "Add SUPABASE_KEY to .env"}
         
-        results = []
-        for r in rows:
-            # Generate dynamic facts (Punchy Marketing Copy)
-            # r[4] = sentiment, r[5] = growth, r[6] = investment
-            s_fact, g_fact, i_fact = fetch_dynamic_facts(
-                cur, 
-                r[0], # id
-                r[4], # s_score
-                r[5], # g_score
-                r[6], # i_score
-                "Sentiment is stable across major news outlets.",
-                "Infrastructure is developing steadily.",
-                "Prices show consistent long-term appreciation."
-            )
-
-            # Generate property cost summary
-            avg_price = float(r[8]) if r[8] else 0
-            property_count = int(r[9]) if r[9] else 0
-            min_price = float(r[10]) if r[10] else 0
-            max_price = float(r[11]) if r[11] else 0
+        # Call Supabase RPC function
+        result = sb.rpc('get_all_insights').execute()
+        
+        if result.data:
+            return result.data
+        else:
+            return {"error": "No data returned from Supabase", "message": "Check RPC function"}
             
-            if property_count > 0:
-                if min_price == max_price:
-                    price_summary = f"Properties priced at ₹{avg_price:,.0f}/sqft ({property_count} properties available)"
-                else:
-                    price_summary = f"Properties range from ₹{min_price:,.0f} to ₹{max_price:,.0f}/sqft (avg ₹{avg_price:,.0f}/sqft, {property_count} properties)"
-            else:
-                price_summary = "No property pricing data available"
-
-            results.append({
-                "location_id": r[0],
-                "location": r[1],
-                "longitude": float(r[2]),
-                "latitude": float(r[3]),
-                "avg_sentiment": float(r[4]),
-                "growth_score": float(r[5]),
-                "investment_score": float(r[6]),
-                "article_count": int(r[7]),
-                "avg_property_price": avg_price,
-                "property_count": property_count,
-                "min_property_price": min_price,
-                "max_property_price": max_price,
-                "price_summary": price_summary,
-                "sentiment_summary": s_fact,
-                "growth_summary": g_fact,
-                "invest_summary": i_fact
-            })
-
-        cur.close()
-        conn.close()
-
-        return results
     except Exception as e:
-        print(f"🔥 DATABASE ERROR: {e}")
-        return {"error": str(e), "message": "Failed to connect to database or fetch insights"}
+        print(f"🔥 SUPABASE RPC ERROR: {e}")
+        return {"error": str(e), "message": "Failed to fetch insights from Supabase"}
 
 # ===============================
-# LOCATION SEARCH (from news corpus)
+# LOCATION SEARCH - USING SUPABASE RPC
 # ===============================
 @app.get("/api/v1/search")
 def search_locations(q: str = ""):
     if not q or len(q.strip()) < 1:
         return []
 
-    # Use psycopg2 to get distinct locations and avoid Supabase REST deduplication/RLS issues
     try:
-        conn = get_db()
-        cur = conn.cursor()
+        sb = get_supabase()
+        if not sb:
+            return []
         
-        # Use a subquery to get distinct locations matching the query
-        # Using %q% to match substrings, not just prefixes
-        search_term = f"%{q.strip()}%"
+        # Call Supabase RPC function
+        result = sb.rpc('search_locations_func', {'search_query': q.strip()}).execute()
         
-        cur.execute("""
-            SELECT location_name, MIN(location_id) as location_id
-            FROM news_balanced_corpus_1
-            WHERE location_name ILIKE %s
-            GROUP BY location_name
-            ORDER BY location_name
-            LIMIT 10
-        """, (search_term,))
-        
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        
-        return [{"location_name": r[0], "location_id": r[1]} for r in rows]
+        if result.data:
+            return result.data
+        else:
+            return []
+            
     except Exception as e:
-        print(f"🔥 SEARCH FALLBACK ERROR: {e}")
+        print(f"🔥 SEARCH ERROR: {e}")
         return []
 
 @app.get("/api/v1/search/debug")
@@ -339,80 +209,25 @@ def location_infra(location_id: int):
     }
 
 # ===============================
-# PRICE TRENDS
+# PRICE TRENDS - USING SUPABASE RPC
 # ===============================
 @app.get("/api/v1/location/{location_id}/trends")
 def get_location_trends(location_id: int):
     try:
-        conn = get_db()
-        cur = conn.cursor()
+        sb = get_supabase()
+        if not sb:
+            return {"error": "Supabase client not configured"}
         
-        # Fetch location name from locations table (column is 'name', not 'location')
-        cur.execute("SELECT name FROM locations WHERE id = %s", (location_id,))
-        name_row = cur.fetchone()
-        if not name_row:
-            return {"error": "Location not found"}
+        # Call Supabase RPC function
+        result = sb.rpc('get_location_trends_func', {'loc_id': location_id}).execute()
         
-        location_name = name_row[0]
-        
-        # Fetch price trends from new schema (location name + year columns)
-        cur.execute("""
-            SELECT location, year_2020, year_2021, year_2022, year_2023, year_2024, year_2025, year_2026
-            FROM price_trends 
-            WHERE LOWER(location) = LOWER(%s)
-        """, (location_name,))
-        
-        row = cur.fetchone()
-        
-        if not row:
-            cur.close()
-            conn.close()
+        if result.data and len(result.data) > 0:
+            return result.data[0]  # RPC returns array, we want the single object
+        else:
             return {"error": "No price trends data available for this location"}
-        
-        # Build trends array from year columns
-        trends_data = []
-        years = [2020, 2021, 2022, 2023, 2024, 2025, 2026]
-        prices = [row[1], row[2], row[3], row[4], row[5], row[6], row[7]]
-        
-        for i, year in enumerate(years):
-            if prices[i]:  # Only include if price exists
-                trends_data.append({
-                    "year": year,
-                    "price": int(prices[i])
-                })
-        
-        # Calculate growth metrics
-        growth_yoy = 0.0
-        cagr = 0.0
-        
-        if len(trends_data) >= 2:
-            current_price = trends_data[-1]["price"]
-            start_price = trends_data[0]["price"]
-            years_span = trends_data[-1]["year"] - trends_data[0]["year"]
             
-            # YoY growth (last year vs previous year)
-            if len(trends_data) >= 2:
-                prev_price = trends_data[-2]["price"]
-                if prev_price > 0:
-                    growth_yoy = round(((current_price - prev_price) / prev_price) * 100, 1)
-            
-            # CAGR calculation
-            if start_price > 0 and years_span > 0:
-                cagr = round((pow(current_price / start_price, 1/years_span) - 1) * 100, 1)
-
-        cur.close()
-        conn.close()
-        
-        return {
-            "location_id": location_id,
-            "location": location_name,
-            "growth_yoy": growth_yoy,
-            "cagr": cagr,
-            "trends": trends_data
-        }
-        
     except Exception as e:
-        print(f"Error fetching trends: {e}")
+        print(f"🔥 TRENDS ERROR: {e}")
         return {"error": str(e)}
 
 @app.get("/api/v1/market-trends")
