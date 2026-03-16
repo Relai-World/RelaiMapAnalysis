@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check ORR PMTiles Metadata</title>
+    <script src="https://unpkg.com/pmtiles@3.0.7/dist/pmtiles.js"></script>
+</head>
+<body>
+    <h1>ORR PMTiles Metadata Check</h1>
+    <pre id="output">Loading...</pre>
+
+    <script>
+        async function checkORR() {
+            const output = document.getElementById('output');
+            try {
+                const p = new pmtiles.PMTiles('frontend/maptiles/orr.pmtiles');
+                const header = await p.getHeader();
+                const metadata = await p.getMetadata();
+                
+                output.textContent = 'ORR PMTiles Metadata:\n\n';
+                output.textContent += 'Header:\n' + JSON.stringify(header, null, 2) + '\n\n';
+                output.textContent += 'Metadata:\n' + JSON.stringify(metadata, null, 2);
+                
+                if (metadata && metadata.vector_layers) {
+                    output.textContent += '\n\n=== VECTOR LAYERS ===\n';
+                    metadata.vector_layers.forEach(layer => {
+                        output.textContent += `\nLayer ID: ${layer.id}\n`;
+                        output.textContent += `Fields: ${JSON.stringify(layer.fields || {})}\n`;
+                    });
+                }
+            } catch (e) {
+                output.textContent = 'Error: ' + e.message + '\n\n' + e.stack;
+            }
+        }
+        
+        checkORR();
+    </script>
+</body>
+</html>

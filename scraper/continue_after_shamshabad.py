@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import asyncio
 from playwright.async_api import async_playwright
 import feedparser
@@ -37,7 +39,7 @@ FUTURE_DEV_QUERIES = [
     "smart city project OR GHMC development OR municipal infrastructure"
 ]
 
-class FutureDevelopmentScraperDB:
+class ContinueFutureDevelopmentScraper:
     def __init__(self):
         # Initialize Supabase client
         url = os.getenv("SUPABASE_URL")
@@ -47,20 +49,10 @@ class FutureDevelopmentScraperDB:
             raise ValueError("❌ SUPABASE_URL and SUPABASE_KEY must be set in .env file")
         
         self.supabase: Client = create_client(url, key)
-        self._ensure_schema()
-        logger.info("📁 Connected to Supabase and verified future_development_scrap table")
-
-    def _ensure_schema(self):
-        """Verify table exists in Supabase"""
-        try:
-            result = self.supabase.table('future_development_scrap').select('id').limit(1).execute()
-            logger.info("✅ future_development_scrap table verified")
-        except Exception as e:
-            logger.error(f"⚠️  Table verification failed: {e}")
-            logger.info("📝 Please run create_future_development_table.sql in Supabase SQL Editor")
+        logger.info("📁 Connected to Supabase")
 
     def extract_year_from_content(self, content):
-        """Extract year mentions from 2023-2030 range (both mentioned and expected completion)"""
+        """Extract year mentions from 2023-2030 range"""
         years = []
         # Look for years 2023-2030
         for year in range(2023, 2031):
@@ -68,7 +60,6 @@ class FutureDevelopmentScraperDB:
                 years.append(year)
         
         # Also look for phrases like "expected by 2025", "completion in 2026", etc.
-        import re
         completion_patterns = [
             r'expected (?:by|in) (\d{4})',
             r'completion (?:by|in) (\d{4})',
@@ -85,7 +76,6 @@ class FutureDevelopmentScraperDB:
                 if 2023 <= year <= 2030 and year not in years:
                     years.append(year)
         
-        # Return the latest year found (likely the completion year)
         return max(years) if years else None
 
     def insert_article(self, loc_id, location, source, url, content, pub_at, year_mentioned):
@@ -120,19 +110,14 @@ class FutureDevelopmentScraperDB:
         except:
             return 0
 
-    def close(self):
-        logger.info("Scraper session completed")
-    
-    def fetch_locations_from_supabase(self):
-        """Fetch only Hyderabad locations from Supabase using coordinate-based filtering"""
+    def get_locations_after_shamshabad(self):
+        """Get all locations and return only those that come after Shamshabad alphabetically"""
         try:
-            # Use RPC function instead of direct table query (RLS issue)
+            # Get all locations from RPC
             result = self.supabase.rpc('get_all_insights').execute()
             if result.data:
                 # Filter by coordinates - Hyderabad is at ~17°N, 78°E
-                # Bangalore is at ~12.9°N, 77.6°E
                 hyderabad_locations = []
-                bangalore_count = 0
                 
                 for loc in result.data:
                     lat = loc.get('latitude')
@@ -141,14 +126,35 @@ class FutureDevelopmentScraperDB:
                     # Check if coordinates are in Hyderabad range
                     if lat and lng and (17.0 <= lat <= 18.0) and (78.0 <= lng <= 79.0):
                         hyderabad_locations.append((loc['location_id'], loc['location']))
-                    else:
-                        bangalore_count += 1
                 
-                logger.info(f"✅ Fetched {len(hyderabad_locations)} Hyderabad locations from Supabase (coordinate-based)")
-                logger.info(f"   Filtered out {bangalore_count} non-Hyderabad locations")
-                return hyderabad_locations
+                # Sort alphabetically
+                hyderabad_locations.sort(key=lambda x: x[1].lower())
+                
+                # Find Shamshabad index
+                shamshabad_index = -1
+                for i, (loc_id, location) in enumerate(hyderabad_locations):
+                    if 'shamshabad' in location.lower():
+                        shamshabad_index = i
+                        print(f"📍 Found Shamshabad at index {i}: {location}")
+                        break
+                
+                if shamshabad_index == -1:
+                    print("⚠️ Shamshabad not found, starting from beginning")
+                    return hyderabad_locations
+                
+                # Return locations after Shamshabad
+                remaining_locations = hyderabad_locations[shamshabad_index + 1:]
+                
+                print(f"✅ Found {len(remaining_locations)} locations after Shamshabad")
+                print(f"📋 Next locations to scrape:")
+                for i, (loc_id, location) in enumerate(remaining_locations[:10]):
+                    print(f"   {i+1}. {location}")
+                if len(remaining_locations) > 10:
+                    print(f"   ... and {len(remaining_locations) - 10} more")
+                
+                return remaining_locations
             else:
-                logger.warning("⚠️  No locations found in Supabase")
+                logger.warning("⚠️ No locations found in Supabase")
                 return []
         except Exception as e:
             logger.error(f"❌ Error fetching locations: {e}")
@@ -226,9 +232,10 @@ class FutureDevelopmentScraperDB:
         return added, skipped
 
     async def run(self, locations_data):
-        print("STARTING FUTURE DEVELOPMENT SCRAPER")
+        print("🚀 CONTINUING FUTURE DEVELOPMENT SCRAPER AFTER SHAMSHABAD")
         print(f"Target: Articles about future developments (2023-2030)")
-        print(f"Goal: {ARTICLES_PER_LOCATION} articles per location\n")
+        print(f"Goal: {ARTICLES_PER_LOCATION} articles per location")
+        print(f"Locations to process: {len(locations_data)}\n")
         
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
@@ -285,25 +292,22 @@ class FutureDevelopmentScraperDB:
 
             await browser.close()
         
-        self.close()
         print(f"\n{'='*70}")
         print(f"SCRAPING COMPLETE!")
         print(f"{'='*70}")
 
 if __name__ == "__main__":
-    scraper = FutureDevelopmentScraperDB()
+    scraper = ContinueFutureDevelopmentScraper()
     try:
-        # Fetch locations dynamically from Supabase
-        locations = scraper.fetch_locations_from_supabase()
+        # Get locations after Shamshabad
+        locations = scraper.get_locations_after_shamshabad()
         
         if not locations:
-            logger.error("❌ No locations found. Exiting...")
+            logger.error("❌ No locations found after Shamshabad. Exiting...")
         else:
-            logger.info(f"🎯 Starting scraper for {len(locations)} locations from Supabase")
+            logger.info(f"🎯 Starting scraper for {len(locations)} locations after Shamshabad")
             asyncio.run(scraper.run(locations))
     except KeyboardInterrupt:
         logger.info("Scraper interrupted by user")
-        scraper.close()
     except Exception as e:
         logger.error(f"Scraper error: {e}")
-        scraper.close()

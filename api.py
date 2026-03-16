@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import requests
 import time
+import psycopg2
 
 import os
 import random
@@ -21,6 +22,16 @@ def get_supabase() -> Client:
         if url and key and key != "your_service_role_key_here":
             _supabase = create_client(url, key)
     return _supabase
+
+# PostgreSQL direct connection for properties
+def get_db():
+    return psycopg2.connect(
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT", 6543),
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD")
+    )
 
 app = FastAPI(title="Real Estate Intelligence API")
 
@@ -582,16 +593,16 @@ def get_area_property_costs(area_name: str):
 @app.get("/api/v1/amenities/{amenity_type}")
 def get_amenities(amenity_type: str, lat: float, lng: float):
     """
-    Get amenities from Google Places API
+    Get amenities from Google Places API (Legacy)
     Query params: lat, lng
     amenity_type: 'hospitals', 'schools', 'malls', 'restaurants', 'banks', 'parks', 'metro'
     """
     print(f"🔍 Amenities Request: type={amenity_type}, lat={lat}, lng={lng}")
     
-    # Map amenity types to Google Places types
+    # Map amenity types to Google Places API types
     google_type_mapping = {
         'hospitals': 'hospital',
-        'schools': 'school',
+        'schools': 'school', 
         'malls': 'shopping_mall',
         'restaurants': 'restaurant',
         'banks': 'bank',
@@ -612,12 +623,22 @@ def get_amenities(amenity_type: str, lat: float, lng: float):
     
     print(f"✅ API Key loaded: {api_key[:10]}...")
     
-    url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={lat},{lng}&radius=5000&type={g_type}&key={api_key}"
-    print(f"🌐 Google API URL: {url.replace(api_key, 'API_KEY_HIDDEN')}")
+    # Use Legacy Places API only
+    url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+    
+    params = {
+        'location': f'{lat},{lng}',
+        'radius': 5000,
+        'type': g_type,
+        'key': api_key
+    }
+    
+    print(f"🌐 Legacy Places API URL: {url}")
+    print(f"📋 Request params: {params}")
 
     try:
-        print("📡 Making request to Google Places API...")
-        r = requests.get(url, timeout=30)
+        print("📡 Making request to Legacy Places API...")
+        r = requests.get(url, params=params, timeout=30)
         print(f"📊 Response Status: {r.status_code}")
         
         if r.status_code != 200:
@@ -625,38 +646,36 @@ def get_amenities(amenity_type: str, lat: float, lng: float):
             return {"error": f"Google API HTTP {r.status_code}", "amenities": []}
 
         data = r.json()
-        print(f"📋 API Response Status: {data.get('status')}")
+        print(f"📋 API Response status: {data.get('status')}")
         
-        if data.get("status") == "REQUEST_DENIED":
-            print(f"❌ REQUEST_DENIED - Error: {data.get('error_message', 'No error message')}")
-            return {"error": f"Google Places API: {data.get('status')} - {data.get('error_message', 'Check API key and billing')}", "amenities": []}
+        if data.get('status') != 'OK':
+            error_msg = data.get('error_message', f"Status: {data.get('status')}")
+            print(f"❌ API Error: {error_msg}")
+            return {"error": f"Google Places API: {error_msg}", "amenities": []}
         
-        if data.get("status") != "OK":
-            print(f"❌ API Status Error: {data.get('status')} - {data.get('error_message', '')}")
-            return {"error": f"Google Places API: {data.get('status')}", "amenities": []}
-
         results = data.get("results", [])
         print(f"📍 Found {len(results)} raw results from Google")
         
         amenities = []
 
-        # Process results (limit to 15)
-        for i, element in enumerate(results[:15]):
-            geometry = element.get("geometry", {}).get("location", {})
-            amenity_lat = geometry.get("lat")
-            amenity_lng = geometry.get("lng")
+        # Process results
+        for i, result in enumerate(results):
+            name = result.get("name", f"Unnamed {amenity_type[:-1]}")
+            geometry = result.get("geometry", {})
+            location = geometry.get("location", {})
             
-            if not amenity_lat or not amenity_lng:
+            place_lat = location.get("lat")
+            place_lng = location.get("lng")
+            
+            if not place_lat or not place_lng:
                 print(f"⚠️ Skipping result {i}: missing coordinates")
                 continue
 
-            name = element.get("name", f"Unnamed {amenity_type[:-1]}")
-
-            # Calculate distance using Haversine formula (more accurate)
+            # Calculate distance using Haversine formula
             import math
             R = 6371  # Earth's radius in km
             lat1, lng1 = math.radians(lat), math.radians(lng)
-            lat2, lng2 = math.radians(amenity_lat), math.radians(amenity_lng)
+            lat2, lng2 = math.radians(place_lat), math.radians(place_lng)
             
             dlat = lat2 - lat1
             dlng = lng2 - lng1
@@ -675,8 +694,350 @@ def get_amenities(amenity_type: str, lat: float, lng: float):
 
             amenities.append({
                 "name": name,
-                "latitude": amenity_lat,
-                "longitude": amenity_lng,
+                "latitude": place_lat,
+                "longitude": place_lng,
+                "distance_km": round(distance_km, 2),
+                "color": color
+            })
+
+        # Sort by distance
+        amenities.sort(key=lambda x: x["distance_km"])
+        
+        print(f"✅ Processed {len(amenities)} amenities successfully")
+        
+        return {
+            "amenity_type": amenity_type,
+            "total_count": len(amenities),
+            "amenities": amenities,
+            "api_used": "Legacy Places API"
+        }
+
+    except requests.exceptions.Timeout:
+        print("❌ Request timeout to Google Places API")
+        return {"error": "Request timeout", "amenities": []}
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Request error: {e}")
+        return {"error": f"Request error: {str(e)}", "amenities": []}
+    except Exception as e:
+        print(f"🔥 Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e), "amenities": []}
+
+
+def try_places_api_new(g_type: str, lat: float, lng: float, api_key: str, amenity_type: str):
+    """Try the new Google Places API"""
+    try:
+        url = "https://places.googleapis.com/v1/places:searchNearby"
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': api_key,
+            'X-Goog-FieldMask': 'places.displayName,places.location,places.types,places.primaryType'
+        }
+        
+        request_body = {
+            "includedTypes": [g_type],
+            "maxResultCount": 15,
+            "locationRestriction": {
+                "circle": {
+                    "center": {
+                        "latitude": lat,
+                        "longitude": lng
+                    },
+                    "radius": 5000.0
+                }
+            }
+        }
+        
+        print(f"🌐 Trying Places API (New): {url}")
+        
+        r = requests.post(url, json=request_body, headers=headers, timeout=30)
+        print(f"📊 New API Response Status: {r.status_code}")
+        
+        if r.status_code != 200:
+            print(f"❌ New API HTTP Error: {r.status_code} - {r.text}")
+            return {"success": False, "error": f"HTTP {r.status_code}"}
+
+        data = r.json()
+        
+        if 'error' in data:
+            error_msg = data['error'].get('message', 'Unknown error')
+            print(f"❌ New API Error: {error_msg}")
+            return {"success": False, "error": error_msg}
+        
+        places = data.get("places", [])
+        print(f"📍 New API found {len(places)} raw results")
+        
+        amenities = process_places_new_format(places, lat, lng, amenity_type)
+        
+        return {
+            "success": True,
+            "data": {
+                "amenity_type": amenity_type,
+                "total_count": len(amenities),
+                "amenities": amenities,
+                "api_used": "Places API (New)"
+            }
+        }
+        
+    except Exception as e:
+        print(f"🔥 New API Exception: {e}")
+        return {"success": False, "error": str(e)}
+
+
+def try_legacy_places_api(g_type: str, lat: float, lng: float, api_key: str, amenity_type: str):
+    """Try the legacy Google Places API"""
+    try:
+        url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+        
+        params = {
+            'location': f'{lat},{lng}',
+            'radius': 5000,
+            'type': g_type,
+            'key': api_key
+        }
+        
+        print(f"🌐 Trying Legacy Places API: {url}")
+        
+        r = requests.get(url, params=params, timeout=30)
+        print(f"📊 Legacy API Response Status: {r.status_code}")
+        
+        if r.status_code != 200:
+            print(f"❌ Legacy API HTTP Error: {r.status_code} - {r.text}")
+            return {"success": False, "error": f"HTTP {r.status_code}"}
+
+        data = r.json()
+        
+        if data.get('status') != 'OK':
+            error_msg = data.get('error_message', f"Status: {data.get('status')}")
+            print(f"❌ Legacy API Error: {error_msg}")
+            return {"success": False, "error": error_msg}
+        
+        results = data.get("results", [])
+        print(f"📍 Legacy API found {len(results)} raw results")
+        
+        amenities = process_places_legacy_format(results, lat, lng, amenity_type)
+        
+        return {
+            "success": True,
+            "data": {
+                "amenity_type": amenity_type,
+                "total_count": len(amenities),
+                "amenities": amenities,
+                "api_used": "Legacy Places API"
+            }
+        }
+        
+    except Exception as e:
+        print(f"🔥 Legacy API Exception: {e}")
+        return {"success": False, "error": str(e)}
+
+
+def process_places_new_format(places, lat, lng, amenity_type):
+    """Process results from Places API (New)"""
+    amenities = []
+    
+    for i, place in enumerate(places):
+        display_name = place.get("displayName", {})
+        location = place.get("location", {})
+        
+        name = display_name.get("text", f"Unnamed {amenity_type[:-1]}")
+        place_lat = location.get("latitude")
+        place_lng = location.get("longitude")
+        
+        if not place_lat or not place_lng:
+            print(f"⚠️ Skipping result {i}: missing coordinates")
+            continue
+
+        distance_km = calculate_distance(lat, lng, place_lat, place_lng)
+        color = get_distance_color(distance_km)
+
+        amenities.append({
+            "name": name,
+            "latitude": place_lat,
+            "longitude": place_lng,
+            "distance_km": round(distance_km, 2),
+            "color": color
+        })
+
+    amenities.sort(key=lambda x: x["distance_km"])
+    return amenities
+
+
+def process_places_legacy_format(results, lat, lng, amenity_type):
+    """Process results from Legacy Places API"""
+    amenities = []
+    
+    for i, result in enumerate(results):
+        name = result.get("name", f"Unnamed {amenity_type[:-1]}")
+        geometry = result.get("geometry", {})
+        location = geometry.get("location", {})
+        
+        place_lat = location.get("lat")
+        place_lng = location.get("lng")
+        
+        if not place_lat or not place_lng:
+            print(f"⚠️ Skipping result {i}: missing coordinates")
+            continue
+
+        distance_km = calculate_distance(lat, lng, place_lat, place_lng)
+        color = get_distance_color(distance_km)
+
+        amenities.append({
+            "name": name,
+            "latitude": place_lat,
+            "longitude": place_lng,
+            "distance_km": round(distance_km, 2),
+            "color": color
+        })
+
+    amenities.sort(key=lambda x: x["distance_km"])
+    return amenities
+
+
+def calculate_distance(lat1, lng1, lat2, lng2):
+    """Calculate distance between two points using Haversine formula"""
+    import math
+    R = 6371  # Earth's radius in km
+    lat1, lng1 = math.radians(lat1), math.radians(lng1)
+    lat2, lng2 = math.radians(lat2), math.radians(lng2)
+    
+    dlat = lat2 - lat1
+    dlng = lng2 - lng1
+    
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng/2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    return R * c
+
+
+def get_distance_color(distance_km):
+    """Get color based on distance"""
+    if distance_km <= 2.0:
+        return "green"
+    elif distance_km <= 3.5:
+        return "orange"
+    else:
+        return "red"
+    """
+    Get amenities from Google Places API (New)
+    Query params: lat, lng
+    amenity_type: 'hospitals', 'schools', 'malls', 'restaurants', 'banks', 'parks', 'metro'
+    """
+    print(f"🔍 Amenities Request: type={amenity_type}, lat={lat}, lng={lng}")
+    
+    # Map amenity types to Google Places API (New) types
+    google_type_mapping = {
+        'hospitals': 'hospital',
+        'schools': 'school', 
+        'malls': 'shopping_mall',
+        'restaurants': 'restaurant',
+        'banks': 'bank',
+        'parks': 'park',
+        'metro': 'subway_station'
+    }
+
+    if amenity_type not in google_type_mapping:
+        print(f"❌ Invalid amenity type: {amenity_type}")
+        return {"error": "Invalid amenity type", "amenities": []}
+
+    g_type = google_type_mapping[amenity_type]
+    api_key = os.getenv("GOOGLE_PLACES_API_KEY")
+    
+    if not api_key:
+        print("❌ Google Places API key not found in environment")
+        return {"error": "Google Places API key not configured", "amenities": []}
+    
+    print(f"✅ API Key loaded: {api_key[:10]}...")
+    
+    # New Places API endpoint and request format
+    url = "https://places.googleapis.com/v1/places:searchNearby"
+    
+    headers = {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': api_key,
+        'X-Goog-FieldMask': 'places.displayName,places.location,places.types,places.primaryType'
+    }
+    
+    # New API uses JSON POST request instead of GET
+    request_body = {
+        "includedTypes": [g_type],
+        "maxResultCount": 15,
+        "locationRestriction": {
+            "circle": {
+                "center": {
+                    "latitude": lat,
+                    "longitude": lng
+                },
+                "radius": 5000.0
+            }
+        }
+    }
+    
+    print(f"🌐 New Places API URL: {url}")
+    print(f"📋 Request body: {request_body}")
+
+    try:
+        print("📡 Making request to Google Places API (New)...")
+        r = requests.post(url, json=request_body, headers=headers, timeout=30)
+        print(f"📊 Response Status: {r.status_code}")
+        
+        if r.status_code != 200:
+            print(f"❌ HTTP Error: {r.status_code} - {r.text}")
+            return {"error": f"Google API HTTP {r.status_code}", "amenities": []}
+
+        data = r.json()
+        print(f"📋 API Response: {data}")
+        
+        # Check for error in response
+        if 'error' in data:
+            error_msg = data['error'].get('message', 'Unknown error')
+            print(f"❌ API Error: {error_msg}")
+            return {"error": f"Google Places API: {error_msg}", "amenities": []}
+        
+        places = data.get("places", [])
+        print(f"📍 Found {len(places)} raw results from Google")
+        
+        amenities = []
+
+        # Process results
+        for i, place in enumerate(places):
+            display_name = place.get("displayName", {})
+            location = place.get("location", {})
+            
+            name = display_name.get("text", f"Unnamed {amenity_type[:-1]}")
+            place_lat = location.get("latitude")
+            place_lng = location.get("longitude")
+            
+            if not place_lat or not place_lng:
+                print(f"⚠️ Skipping result {i}: missing coordinates")
+                continue
+
+            # Calculate distance using Haversine formula
+            import math
+            R = 6371  # Earth's radius in km
+            lat1, lng1 = math.radians(lat), math.radians(lng)
+            lat2, lng2 = math.radians(place_lat), math.radians(place_lng)
+            
+            dlat = lat2 - lat1
+            dlng = lng2 - lng1
+            
+            a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng/2)**2
+            c = 2 * math.asin(math.sqrt(a))
+            distance_km = R * c
+
+            # Color coding based on distance
+            if distance_km <= 2.0:
+                color = "green"
+            elif distance_km <= 3.5:
+                color = "orange"
+            else:
+                color = "red"
+
+            amenities.append({
+                "name": name,
+                "latitude": place_lat,
+                "longitude": place_lng,
                 "distance_km": round(distance_km, 2),
                 "color": color
             })

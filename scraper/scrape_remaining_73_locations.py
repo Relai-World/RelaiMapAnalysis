@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import asyncio
 from playwright.async_api import async_playwright
 import feedparser
@@ -37,7 +39,7 @@ FUTURE_DEV_QUERIES = [
     "smart city project OR GHMC development OR municipal infrastructure"
 ]
 
-class FutureDevelopmentScraperDB:
+class CompleteFutureDevelopmentScraper:
     def __init__(self):
         # Initialize Supabase client
         url = os.getenv("SUPABASE_URL")
@@ -47,20 +49,10 @@ class FutureDevelopmentScraperDB:
             raise ValueError("❌ SUPABASE_URL and SUPABASE_KEY must be set in .env file")
         
         self.supabase: Client = create_client(url, key)
-        self._ensure_schema()
-        logger.info("📁 Connected to Supabase and verified future_development_scrap table")
-
-    def _ensure_schema(self):
-        """Verify table exists in Supabase"""
-        try:
-            result = self.supabase.table('future_development_scrap').select('id').limit(1).execute()
-            logger.info("✅ future_development_scrap table verified")
-        except Exception as e:
-            logger.error(f"⚠️  Table verification failed: {e}")
-            logger.info("📝 Please run create_future_development_table.sql in Supabase SQL Editor")
+        logger.info("📁 Connected to Supabase")
 
     def extract_year_from_content(self, content):
-        """Extract year mentions from 2023-2030 range (both mentioned and expected completion)"""
+        """Extract year mentions from 2023-2030 range"""
         years = []
         # Look for years 2023-2030
         for year in range(2023, 2031):
@@ -68,7 +60,6 @@ class FutureDevelopmentScraperDB:
                 years.append(year)
         
         # Also look for phrases like "expected by 2025", "completion in 2026", etc.
-        import re
         completion_patterns = [
             r'expected (?:by|in) (\d{4})',
             r'completion (?:by|in) (\d{4})',
@@ -85,7 +76,6 @@ class FutureDevelopmentScraperDB:
                 if 2023 <= year <= 2030 and year not in years:
                     years.append(year)
         
-        # Return the latest year found (likely the completion year)
         return max(years) if years else None
 
     def insert_article(self, loc_id, location, source, url, content, pub_at, year_mentioned):
@@ -120,38 +110,65 @@ class FutureDevelopmentScraperDB:
         except:
             return 0
 
-    def close(self):
-        logger.info("Scraper session completed")
-    
-    def fetch_locations_from_supabase(self):
-        """Fetch only Hyderabad locations from Supabase using coordinate-based filtering"""
+    def get_remaining_locations(self):
+        """Get all 73 remaining locations that need to be scraped"""
         try:
-            # Use RPC function instead of direct table query (RLS issue)
+            # Get all Hyderabad locations
             result = self.supabase.rpc('get_all_insights').execute()
-            if result.data:
-                # Filter by coordinates - Hyderabad is at ~17°N, 78°E
-                # Bangalore is at ~12.9°N, 77.6°E
-                hyderabad_locations = []
-                bangalore_count = 0
-                
-                for loc in result.data:
-                    lat = loc.get('latitude')
-                    lng = loc.get('longitude')
-                    
-                    # Check if coordinates are in Hyderabad range
-                    if lat and lng and (17.0 <= lat <= 18.0) and (78.0 <= lng <= 79.0):
-                        hyderabad_locations.append((loc['location_id'], loc['location']))
-                    else:
-                        bangalore_count += 1
-                
-                logger.info(f"✅ Fetched {len(hyderabad_locations)} Hyderabad locations from Supabase (coordinate-based)")
-                logger.info(f"   Filtered out {bangalore_count} non-Hyderabad locations")
-                return hyderabad_locations
-            else:
-                logger.warning("⚠️  No locations found in Supabase")
+            if not result.data:
                 return []
+                
+            # Filter Hyderabad locations (17°N, 78°E)
+            hyderabad_locations = []
+            for loc in result.data:
+                lat = loc.get('latitude')
+                lng = loc.get('longitude')
+                if lat and lng and (17.0 <= lat <= 18.0) and (78.0 <= lng <= 79.0):
+                    hyderabad_locations.append((loc['location_id'], loc['location']))
+            
+            # Get already scraped locations
+            scraped_response = self.supabase.table('future_development_scrap').select('location_name').execute()
+            scraped_locations = set([loc['location_name'] for loc in scraped_response.data])
+            
+            # Find missing locations
+            missing_locations = []
+            for loc_id, location in hyderabad_locations:
+                if location not in scraped_locations:
+                    missing_locations.append((loc_id, location))
+            
+            # Sort by location name for consistent processing
+            missing_locations.sort(key=lambda x: x[1].lower())
+            
+            print(f"🎯 FOUND {len(missing_locations)} REMAINING LOCATIONS TO SCRAPE:")
+            print(f"=" * 70)
+            
+            # Group by priority (high-property locations first)
+            # Get property counts for prioritization
+            properties_response = self.supabase.table('unified_data_DataType_Raghu').select('areaname').execute()
+            from collections import Counter
+            location_counts = Counter([prop['areaname'] for prop in properties_response.data if prop.get('areaname')])
+            
+            # Add property counts and sort by priority
+            missing_with_counts = []
+            for loc_id, location in missing_locations:
+                count = location_counts.get(location, 0)
+                missing_with_counts.append((loc_id, location, count))
+            
+            # Sort by property count (high priority first)
+            missing_with_counts.sort(key=lambda x: x[2], reverse=True)
+            
+            print(f"📊 TOP 20 HIGH-PRIORITY LOCATIONS:")
+            for i, (loc_id, location, count) in enumerate(missing_with_counts[:20], 1):
+                print(f"{i:2d}. {location}: {count} properties (ID: {loc_id})")
+            
+            if len(missing_with_counts) > 20:
+                print(f"... and {len(missing_with_counts) - 20} more locations")
+            
+            # Return just the location tuples (without counts)
+            return [(loc_id, location) for loc_id, location, count in missing_with_counts]
+            
         except Exception as e:
-            logger.error(f"❌ Error fetching locations: {e}")
+            logger.error(f"❌ Error getting remaining locations: {e}")
             return []
 
     async def fetch_google_news(self, query):
@@ -226,14 +243,18 @@ class FutureDevelopmentScraperDB:
         return added, skipped
 
     async def run(self, locations_data):
-        print("STARTING FUTURE DEVELOPMENT SCRAPER")
+        print("🚀 SCRAPING ALL 73 REMAINING LOCATIONS FOR FUTURE DEVELOPMENT")
         print(f"Target: Articles about future developments (2023-2030)")
-        print(f"Goal: {ARTICLES_PER_LOCATION} articles per location\n")
+        print(f"Goal: {ARTICLES_PER_LOCATION} articles per location")
+        print(f"Locations to process: {len(locations_data)}\n")
         
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
             page = await context.new_page()
+
+            total_processed = 0
+            total_articles_added = 0
 
             for idx, (loc_id, location) in enumerate(locations_data):
                 print(f"\n{'='*70}")
@@ -282,28 +303,31 @@ class FutureDevelopmentScraperDB:
                 print(f"\n   Location Summary: {location_total} new articles")
                 print(f"   Total in DB: {final_count}")
                 print(f"   Target: {ARTICLES_PER_LOCATION}, Progress: {final_count}/{ARTICLES_PER_LOCATION}")
+                
+                total_processed += 1
+                total_articles_added += location_total
 
             await browser.close()
         
-        self.close()
         print(f"\n{'='*70}")
-        print(f"SCRAPING COMPLETE!")
+        print(f"🎉 SCRAPING COMPLETE!")
         print(f"{'='*70}")
+        print(f"Locations processed: {total_processed}")
+        print(f"Total articles added: {total_articles_added}")
+        print(f"Average articles per location: {total_articles_added/total_processed:.1f}" if total_processed > 0 else "")
 
 if __name__ == "__main__":
-    scraper = FutureDevelopmentScraperDB()
+    scraper = CompleteFutureDevelopmentScraper()
     try:
-        # Fetch locations dynamically from Supabase
-        locations = scraper.fetch_locations_from_supabase()
+        # Get all remaining locations
+        locations = scraper.get_remaining_locations()
         
         if not locations:
-            logger.error("❌ No locations found. Exiting...")
+            logger.error("❌ No remaining locations found. Exiting...")
         else:
-            logger.info(f"🎯 Starting scraper for {len(locations)} locations from Supabase")
+            logger.info(f"🎯 Starting scraper for {len(locations)} remaining locations")
             asyncio.run(scraper.run(locations))
     except KeyboardInterrupt:
         logger.info("Scraper interrupted by user")
-        scraper.close()
     except Exception as e:
         logger.error(f"Scraper error: {e}")
-        scraper.close()

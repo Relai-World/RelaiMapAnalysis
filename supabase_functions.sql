@@ -92,10 +92,13 @@ BEGIN
             MAX(ps.max_price_per_sft) as max_price_per_sft
         FROM locations l
         LEFT JOIN property_stats ps ON (
-            LOWER(ps.original_area) = LOWER(l.name)
-            OR LOWER(REPLACE(ps.original_area, ' ', '')) = LOWER(REPLACE(l.name, ' ', ''))
-            OR ps.original_area ILIKE l.name
-            OR l.name ILIKE ps.original_area
+            -- Exact match with TRIM to handle trailing spaces
+            LOWER(TRIM(ps.original_area)) = LOWER(TRIM(l.name))
+            -- Match without spaces
+            OR LOWER(REPLACE(TRIM(ps.original_area), ' ', '')) = LOWER(REPLACE(TRIM(l.name), ' ', ''))
+            -- Pattern matching with TRIM
+            OR TRIM(ps.original_area) ILIKE TRIM(l.name)
+            OR TRIM(l.name) ILIKE TRIM(ps.original_area)
         )
         GROUP BY l.id, l.name
     ),
@@ -154,6 +157,8 @@ $$;
 -- Function 2: Search locations
 -- Endpoint: /api/v1/search?q=<query>
 -- =====================================================
+-- FIXED: Now uses locations table (authoritative source) instead of news_balanced_corpus_1
+-- news_balanced_corpus_1 should only be used for sentiment analysis, not location search
 CREATE OR REPLACE FUNCTION search_locations_func(search_query TEXT)
 RETURNS TABLE (
     location_name TEXT,
@@ -165,12 +170,11 @@ AS $$
 BEGIN
     RETURN QUERY
     SELECT 
-        nbc.location_name::TEXT,
-        MIN(nbc.location_id)::INT as location_id
-    FROM news_balanced_corpus_1 nbc
-    WHERE nbc.location_name ILIKE '%' || search_query || '%'
-    GROUP BY nbc.location_name
-    ORDER BY nbc.location_name
+        l.name::TEXT as location_name,
+        l.id::INT as location_id
+    FROM locations l
+    WHERE l.name ILIKE '%' || search_query || '%'
+    ORDER BY l.name
     LIMIT 10;
 END;
 $$;

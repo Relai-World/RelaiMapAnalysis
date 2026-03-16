@@ -403,15 +403,15 @@ map.on("load", async () => {
   map.addSource("orr-source", {
     type: "vector", url: `pmtiles://${BASE_TILES_URL}/orr.pmtiles`,
     minzoom: 0,
-    maxzoom: 14
+    maxzoom: 24  // Extended to match layer maxzoom
   });
   map.addLayer({
     id: "orr-layer",
     type: "line",
     source: "orr-source",
-    "source-layer": "orr",
+    "source-layer": "orr", // Will update based on console output
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#000000ff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.5, 18, 6], "line-blur": 1, "line-opacity": 0 }, // Ghost state
+    paint: { "line-color": "#000000ff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.5, 18, 6], "line-blur": 1, "line-opacity": 0 }, // Ghost state - visible at all zooms when activated
     minzoom: 0,
     maxzoom: 24
   });
@@ -420,7 +420,7 @@ map.on("load", async () => {
   map.addSource("highways-source", {
     type: "vector", url: `pmtiles://${BASE_TILES_URL}/highways.pmtiles`,
     minzoom: 0,
-    maxzoom: 14
+    maxzoom: 24  // Extended to match layer maxzoom
   });
   map.addLayer({
     id: "highways-layer",
@@ -428,7 +428,7 @@ map.on("load", async () => {
     source: "highways-source",
     "source-layer": "highways",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#64008fff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 4.8], "line-blur": 1, "line-opacity": 0 }, // Ghost state
+    paint: { "line-color": "#64008fff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 4.8], "line-blur": 1, "line-opacity": 0 }, // Ghost state - visible at all zooms when activated
     minzoom: 0,
     maxzoom: 24
   });
@@ -448,7 +448,7 @@ map.on("load", async () => {
     paint: {
       "line-color": "#ef0000",
       "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.5, 18, 5],
-      "line-opacity": 0 // Ghost state
+      "line-opacity": 0 // Ghost state - visible at all zooms when activated
     },
     minzoom: 0,
     maxzoom: 24
@@ -487,7 +487,7 @@ map.on("load", async () => {
     paint: {
       "line-color": "#ff8c00", // Dark Orange
       "line-width": 3,
-      "line-opacity": 0 // Ghost state
+      "line-opacity": 0 // Ghost state - visible at all zooms when activated
     },
     minzoom: 0,
     maxzoom: 24
@@ -508,14 +508,19 @@ map.on("load", async () => {
       "line-color": "#4169E1", // Royal Blue
       "line-width": 2,
       "line-dasharray": [4, 2], // Dashed line for boundary
-      "line-opacity": 0 // Ghost state
+      "line-opacity": 0 // Ghost state - visible at all zooms when activated
     },
     minzoom: 0,
     maxzoom: 24
   });
 
   // 1. Lakes (Moved to end)
-  map.addSource("lakes-source", { type: "vector", url: `pmtiles://${BASE_TILES_URL}/lakes.pmtiles` });
+  map.addSource("lakes-source", { 
+    type: "vector", 
+    url: `pmtiles://${BASE_TILES_URL}/lakes.pmtiles`,
+    minzoom: 0,
+    maxzoom: 24
+  });
   map.addLayer({
     id: "lakes-layer",
     type: "fill",
@@ -524,7 +529,7 @@ map.on("load", async () => {
     layout: { visibility: "visible" },
     paint: {
       "fill-color": "#0077ff",
-      "fill-opacity": 0
+      "fill-opacity": 0 // Ghost state - visible at all zooms when activated
     },
     minzoom: 0,
     maxzoom: 24
@@ -563,7 +568,7 @@ map.on("load", async () => {
         12, ["match", ["get", "ORDER"], 7, 7.0, 6, 5.0, 5, 3.0, 1.5],
         16, ["match", ["get", "ORDER"], 7, 12.0, 6, 9.0, 5, 6.0, 3.0]
       ],
-      "line-opacity": 0 // Ghost state
+      "line-opacity": 0 // Ghost state - visible at all zooms when activated
     },
     minzoom: 0,
     maxzoom: 24
@@ -626,7 +631,7 @@ map.on("load", async () => {
       ],
       "circle-stroke-color": "#1E293B", // Dark mapbox stroke for contrast
       "circle-stroke-width": 1,
-      "circle-opacity": 0, // Ghost state
+      "circle-opacity": 0, // Ghost state - visible at all zooms when activated
       "circle-stroke-opacity": 0
     },
     minzoom: 0,
@@ -658,7 +663,7 @@ map.on("load", async () => {
       "text-color": "#111827",
       "text-halo-color": "#ffffff",
       "text-halo-width": 1.2,
-      "text-opacity": 0 // Ghost state
+      "text-opacity": 0 // Ghost state - visible at all zooms when activated
     }
   });
 
