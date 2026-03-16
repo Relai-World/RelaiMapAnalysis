@@ -588,6 +588,51 @@ def get_area_property_costs(area_name: str):
 # ===============================
 # AMENITY LOCATIONS (WITH COORDINATES)
 # ===============================
+# FUTURE DEVELOPMENT ENDPOINT
+# ===============================
+@app.get("/api/v1/future-development/{location_id}")
+def get_future_development(location_id: int):
+    """Get future development data for a location"""
+    try:
+        supabase = get_supabase()
+        
+        # Fetch future development data for the location
+        response = supabase.table('future_development_scrap').select(
+            'id, location_name, source, content, published_at, year_mentioned, scraped_at'
+        ).eq('location_id', location_id).order('published_at', desc=True).limit(10).execute()
+        
+        developments = response.data
+        
+        # Process and format the data
+        formatted_developments = []
+        for dev in developments:
+            formatted_developments.append({
+                'id': dev['id'],
+                'source': dev['source'],
+                'content': dev['content'][:200] + '...' if len(dev['content']) > 200 else dev['content'],
+                'full_content': dev['content'],
+                'published_at': dev['published_at'],
+                'year_mentioned': dev['year_mentioned'],
+                'scraped_at': dev['scraped_at']
+            })
+        
+        return {
+            'success': True,
+            'location_id': location_id,
+            'developments': formatted_developments,
+            'total_count': len(formatted_developments)
+        }
+        
+    except Exception as e:
+        print(f"Error fetching future development: {e}")
+        return {
+            'success': False,
+            'error': str(e),
+            'developments': [],
+            'total_count': 0
+        }
+
+# ===============================
 # AMENITY LOCATIONS - GOOGLE PLACES API ONLY
 # ===============================
 @app.get("/api/v1/amenities/{amenity_type}")
@@ -1457,6 +1502,8 @@ def get_property_detail(property_id: int):
         print(f"🔥 PROPERTY DETAIL ERROR: {e}")
         return {"error": str(e)}
 
+# Mount static files to serve the frontend (must be last)
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn

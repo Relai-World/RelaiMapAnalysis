@@ -1231,6 +1231,18 @@ map.on("load", async () => {
         </div>
       </div>
 
+      <!-- FUTURE DEVELOPMENT SECTION -->
+      <div class="future-development-section">
+        <div class="section-header">
+          <h4 class="section-label">Future Development</h4>
+          <span class="section-subtitle">Upcoming projects & infrastructure</span>
+        </div>
+        <div id="future-dev-container">
+          <div style="text-align:center; padding:20px; color:var(--text-400); font-size:12px;">
+            Loading future developments…
+          </div>
+        </div>
+      </div>
 
       <!-- PROPERTY COSTS (fetched dynamically) -->
       <div id="property-costs-container">
@@ -1295,6 +1307,9 @@ map.on("load", async () => {
 
     // FETCH AND DISPLAY PROPERTY COSTS DYNAMICALLY
     fetchPropertyCosts(p.location);
+
+    // FETCH AND DISPLAY FUTURE DEVELOPMENT DATA
+    fetchFutureDevelopment(p.location_id);
 
     // DRAW THE PRICE CHART
     drawPriceChart(p.location_id);
@@ -2363,6 +2378,135 @@ map.on("load", async () => {
         `;
       });
   }
+
+  // FETCH FUTURE DEVELOPMENT DATA DYNAMICALLY
+  function fetchFutureDevelopment(locationId) {
+    console.log('fetchFutureDevelopment called with locationId:', locationId);
+    const container = document.getElementById('future-dev-container');
+    
+    if (!container) {
+      console.error('future-dev-container element not found!');
+      return;
+    }
+
+    // Show loading state
+    container.innerHTML = `
+      <div style="text-align:center; padding:20px; color:#666;">
+        <div style="font-size:12px;">Loading future developments...</div>
+      </div>
+    `;
+
+    // Use the same API URL pattern as amenities
+    const PYTHON_API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
+      ? "http://127.0.0.1:8000" 
+      : window.location.origin;
+    
+    const futureDevUrl = `${PYTHON_API_URL}/api/v1/future-development/${locationId}`;
+    console.log('🔍 Fetching future development from:', futureDevUrl);
+
+    fetch(futureDevUrl)
+      .then(response => {
+        console.log('Future Dev API Response Status:', response.status);
+        return response.json();
+      })
+      .then(data => {
+        console.log('Future Dev API Data:', data);
+        if (!data.success || !data.developments || data.developments.length === 0) {
+          container.innerHTML = `
+            <div style="text-align:center; padding:20px; color:#666;">
+              <div style="font-size:11px;">No future development data available for this location</div>
+            </div>
+          `;
+          return;
+        }
+
+        // Render future development items
+        const developmentsHtml = data.developments.map(dev => {
+          const publishedDate = dev.published_at ? new Date(dev.published_at).toLocaleDateString() : 'Date unknown';
+          const yearMentioned = dev.year_mentioned ? ` (${dev.year_mentioned})` : '';
+          
+          return `
+            <div class="future-dev-item" style="margin-bottom:12px; padding:14px; background:rgba(255,255,255,0.03); border:1px solid var(--border-subtle); border-radius:12px; border-left:3px solid var(--blue); box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                <div style="font-size:10px; font-weight:700; color:var(--blue); text-transform:uppercase; letter-spacing:1px; font-family:'Outfit',sans-serif;">
+                  ${dev.source}${yearMentioned}
+                </div>
+                <div style="font-size:9px; color:var(--t3); font-family:'Outfit',sans-serif;">
+                  ${publishedDate}
+                </div>
+              </div>
+              <div style="font-size:12px; line-height:1.5; color:var(--t2); font-family:'Inter',sans-serif;">
+                ${dev.content}
+              </div>
+              ${dev.content.length >= 200 ? `
+                <button class="expand-dev-btn" onclick="window.expandDevelopment(${dev.id})" style="margin-top:8px; font-size:10px; color:var(--blue); background:none; border:none; cursor:pointer; text-decoration:underline; font-family:'Outfit',sans-serif;">
+                  Read more...
+                </button>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+
+        container.innerHTML = `
+          <div style="margin: 12px 12px 0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:2.5px; color:var(--blue); font-family:'Outfit',sans-serif;">🏗️ Future Projects</span>
+              <span style="font-size:9px; color:var(--t3); background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:8px; border:1px solid var(--border-subtle); font-family:'Outfit',sans-serif; font-weight:600;">${data.total_count} Items</span>
+            </div>
+            ${developmentsHtml}
+          </div>
+        `;
+
+        // Store development data globally for potential use in reports
+        window.currentFutureDevelopments = data.developments;
+      })
+      .catch(err => {
+        console.error("Future Development Fetch Error:", err);
+        container.innerHTML = `
+          <div style="text-align:center; padding:20px; color:#f87171;">
+            <div style="font-size:11px;">Failed to load future development data</div>
+            <div style="font-size:10px; margin-top:4px; color:#666;">Check console for details</div>
+          </div>
+        `;
+      });
+  }
+
+  // Make expandDevelopment globally accessible
+  window.expandDevelopment = function(devId) {
+    const developments = window.currentFutureDevelopments || [];
+    const dev = developments.find(d => d.id === devId);
+    
+    if (!dev) return;
+    
+    // Create modal or expand inline
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+      background: rgba(0,0,0,0.8); z-index: 10000; 
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    `;
+    
+    modal.innerHTML = `
+      <div style="background: var(--bg-card); border-radius: 16px; padding: 24px; max-width: 600px; max-height: 80vh; overflow-y: auto; border: 1px solid var(--border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="color: var(--blue); font-family: 'Outfit', sans-serif; margin: 0;">${dev.source}</h3>
+          <button onclick="this.closest('.modal').remove()" style="background: none; border: none; font-size: 20px; color: var(--t3); cursor: pointer;">×</button>
+        </div>
+        <div style="font-size: 14px; line-height: 1.6; color: var(--t2); font-family: 'Inter', sans-serif;">
+          ${dev.full_content}
+        </div>
+      </div>
+    `;
+    
+    modal.className = 'modal';
+    document.body.appendChild(modal);
+    
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.remove();
+    });
+  };
 
   // ===============================
   // AMENITY DISPLAY FUNCTIONS

@@ -42,6 +42,7 @@
   --amber: #B45309;
   --red: #B91C1C;
   --teal: #0F766E;
+  --blue: #1E40AF;
 
   /* Aliases for app.js inline HTML */
   --text-100: var(--t1);
@@ -967,6 +968,52 @@ body {
 
 .clear-btn:hover {
   background: rgba(248, 113, 113, 0.14);
+}
+
+/* Future Development Section */
+.future-development-section {
+  margin: 12px 12px 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.future-development-section .section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.future-development-section .section-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--t3);
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+}
+
+.future-development-section .section-subtitle {
+  font-size: 8px;
+  color: var(--t4);
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+}
+
+.future-dev-item {
+  transition: all 0.2s ease;
+}
+
+.future-dev-item:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--blue) !important;
+  transform: translateY(-1px);
+}
+
+.expand-dev-btn:hover {
+  color: var(--blue) !important;
+  text-decoration: none !important;
 }
 
 /* Chart Section */
