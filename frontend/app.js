@@ -158,6 +158,7 @@ let currentAmenityType = ""; // Store current type (e.g., "Hospitals")
 let currentAmenityLayer = null; // Global tracker for active amenity layer
 let currentLocationId = null; // Global tracker for active location
 let currentPopup = null; // Global tracker for active popup
+let futureDevPopup = null; // Global tracker for future development popup
 
 /* ===============================
    DYNAMIC FACTS GENERATOR (No More Hardcoded Strings)
@@ -206,6 +207,8 @@ function expandMetric(clickedBox) {
   
   console.log('Expand metric clicked:', clickedBox.dataset.metric, 'Currently expanded:', isCurrentlyExpanded);
   
+  const intelCard = document.getElementById('intel-card');
+  
   // If clicking the same expanded box, collapse all
   if (isCurrentlyExpanded) {
     allBoxes.forEach(box => {
@@ -226,6 +229,30 @@ function expandMetric(clickedBox) {
       console.log('Collapsed:', box.dataset.metric);
     }
   });
+  
+  // Scroll to show the expanded card smoothly (after CSS transition starts)
+  if (intelCard) {
+    setTimeout(() => {
+      const cardTop = clickedBox.offsetTop;
+      const cardHeight = clickedBox.offsetHeight;
+      const containerHeight = intelCard.clientHeight;
+      const currentScroll = intelCard.scrollTop;
+      
+      // Calculate if card is fully visible
+      const cardBottom = cardTop + cardHeight;
+      const visibleTop = currentScroll;
+      const visibleBottom = currentScroll + containerHeight;
+      
+      // If card is not fully visible, scroll to show it
+      if (cardTop < visibleTop || cardBottom > visibleBottom) {
+        // Scroll to position the card at the top with some padding
+        intelCard.scrollTo({
+          top: cardTop - 20,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
+  }
 }
 
 // Make function globally available
@@ -1231,18 +1258,7 @@ map.on("load", async () => {
         </div>
       </div>
 
-      <!-- FUTURE DEVELOPMENT SECTION -->
-      <div class="future-development-section">
-        <div class="section-header">
-          <h4 class="section-label">Future Development</h4>
-          <span class="section-subtitle">Upcoming projects & infrastructure</span>
-        </div>
-        <div id="future-dev-container">
-          <div style="text-align:center; padding:20px; color:var(--text-400); font-size:12px;">
-            Loading future developments…
-          </div>
-        </div>
-      </div>
+
 
       <!-- PROPERTY COSTS (fetched dynamically) -->
       <div id="property-costs-container">
@@ -1308,9 +1324,6 @@ map.on("load", async () => {
     // FETCH AND DISPLAY PROPERTY COSTS DYNAMICALLY
     fetchPropertyCosts(p.location);
 
-    // FETCH AND DISPLAY FUTURE DEVELOPMENT DATA
-    fetchFutureDevelopment(p.location_id);
-
     // DRAW THE PRICE CHART
     drawPriceChart(p.location_id);
 
@@ -1329,7 +1342,12 @@ map.on("load", async () => {
   }
 
   map.on("click", "location-core", async e => {
+    console.log('Location clicked:', e.features[0].properties);
     const p = e.features[0].properties;
+    
+    // Show chatbot-style future development popup
+    showFutureDevChatbot(p);
+    
     handleLocationSelect(p);
     // NEW: Also load properties for this location
     loadPropertiesForLocation(p.location);
@@ -2468,6 +2486,531 @@ map.on("load", async () => {
             <div style="font-size:10px; margin-top:4px; color:#666;">Check console for details</div>
           </div>
         `;
+      });
+  }
+
+  // SHOW SMALL ROBOT ICON (COLLAPSED STATE)
+  function showFutureDevChatbot(locationData) {
+    console.log('🚀 showFutureDevChatbot called for:', locationData.location);
+    
+    // Close any existing chatbot or robot
+    const existingChatbot = document.getElementById('future-dev-chatbot');
+    if (existingChatbot) {
+      existingChatbot.remove();
+    }
+    
+    const existingRobot = document.getElementById('chatbot-robot-icon');
+    if (existingRobot) {
+      existingRobot.remove();
+    }
+    
+    // Create small robot icon (collapsed state)
+    const robotIcon = document.createElement('div');
+    robotIcon.id = 'chatbot-robot-icon';
+    robotIcon.className = 'chatbot-robot-icon';
+    robotIcon.innerHTML = `
+      <div class="robot-icon-inner">
+        <span class="robot-emoji">🤖</span>
+        <div class="robot-pulse"></div>
+      </div>
+      <div class="robot-tooltip">Future Insights</div>
+    `;
+    
+    // Store location data for when robot is clicked
+    robotIcon.dataset.location = locationData.location;
+    robotIcon.dataset.locationId = locationData.location_id;
+    
+    // Click handler to expand chatbot
+    robotIcon.onclick = function() {
+      expandChatbot(locationData);
+    };
+    
+    document.body.appendChild(robotIcon);
+    
+    // Animate in
+    setTimeout(() => {
+      robotIcon.classList.add('robot-visible');
+    }, 100);
+  }
+
+  // EXPAND CHATBOT FROM ROBOT ICON - REPLACES PROPERTIES PANEL
+  function expandChatbot(locationData) {
+    console.log('🚀 Expanding chatbot for:', locationData.location);
+    
+    // Close properties panel completely and remember its state
+    const propertiesPanel = document.getElementById('properties-panel');
+    if (propertiesPanel && propertiesPanel.classList.contains('open')) {
+      propertiesPanel.classList.remove('open');
+      window.propertiesPanelWasOpen = true;
+    } else {
+      window.propertiesPanelWasOpen = false;
+    }
+    
+    // Remove robot icon
+    const robotIcon = document.getElementById('chatbot-robot-icon');
+    if (robotIcon) {
+      robotIcon.classList.remove('robot-visible');
+      setTimeout(() => robotIcon.remove(), 300);
+    }
+    
+    // Create chatbot in properties panel position
+    const chatbot = document.createElement('div');
+    chatbot.id = 'future-dev-chatbot';
+    chatbot.className = 'future-dev-chatbot chatbot-as-panel';
+    
+    chatbot.innerHTML = `
+      <div class="chatbot-header">
+        <div class="chatbot-avatar">🏗️</div>
+        <div class="chatbot-title">
+          <div class="chatbot-name">Future Insights</div>
+          <div class="chatbot-subtitle">${locationData.location}</div>
+        </div>
+        <button class="chatbot-close" onclick="closeFutureDevChatbot()">×</button>
+      </div>
+      <div class="chatbot-messages" id="chatbot-messages">
+        <div class="message bot-message">
+          <div class="message-avatar">🏗️</div>
+          <div class="message-content">
+            <div class="message-text">
+              Hi! I can help you explore future developments in ${locationData.location}. What would you like to know?
+            </div>
+          </div>
+        </div>
+        <div class="suggested-questions">
+          <button class="question-btn" onclick="askQuestion('${locationData.location}', ${locationData.location_id})">
+            What are the future developments?
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(chatbot);
+    
+    // Animate in
+    setTimeout(() => {
+      chatbot.classList.add('chatbot-visible');
+    }, 100);
+  }
+
+  // CLOSE CHATBOT AND SHOW ROBOT ICON AGAIN
+  function closeFutureDevChatbot() {
+    const chatbot = document.getElementById('future-dev-chatbot');
+    
+    if (chatbot) {
+      chatbot.classList.remove('chatbot-visible');
+      setTimeout(() => {
+        if (chatbot) chatbot.remove();
+        
+        // Restore properties panel if it was open before chatbot
+        if (window.propertiesPanelWasOpen) {
+          const propertiesPanel = document.getElementById('properties-panel');
+          if (propertiesPanel) {
+            propertiesPanel.classList.add('open');
+          }
+          window.propertiesPanelWasOpen = false;
+        }
+        
+        // Show robot icon again
+        const robotIcon = document.getElementById('chatbot-robot-icon');
+        if (!robotIcon) {
+          // Recreate robot icon if it doesn't exist
+          const newRobot = document.createElement('div');
+          newRobot.id = 'chatbot-robot-icon';
+          newRobot.className = 'chatbot-robot-icon';
+          newRobot.innerHTML = `
+            <div class="robot-icon-inner">
+              <span class="robot-emoji">🤖</span>
+              <div class="robot-pulse"></div>
+            </div>
+            <div class="robot-tooltip">Future Insights</div>
+          `;
+          
+          // Get location data from chatbot before it's removed
+          const subtitle = chatbot.querySelector('.chatbot-subtitle');
+          if (subtitle) {
+            const locationName = subtitle.textContent;
+            newRobot.dataset.location = locationName;
+            
+            // Find location data from global insights
+            if (window.insightsData) {
+              const locationData = window.insightsData.find(d => d.location === locationName);
+              if (locationData) {
+                newRobot.dataset.locationId = locationData.location_id;
+                newRobot.onclick = function() {
+                  expandChatbot(locationData);
+                };
+              }
+            }
+          }
+          
+          document.body.appendChild(newRobot);
+          setTimeout(() => {
+            newRobot.classList.add('robot-visible');
+          }, 100);
+        }
+      }, 300);
+    }
+  }
+
+  // ASK QUESTION - User clicks on suggested question
+  window.askQuestion = function(locationName, locationId) {
+    const messagesContainer = document.getElementById('chatbot-messages');
+    if (!messagesContainer) return;
+    
+    // Remove suggested questions
+    const suggestedQuestions = messagesContainer.querySelector('.suggested-questions');
+    if (suggestedQuestions) {
+      suggestedQuestions.remove();
+    }
+    
+    // Show user message (right-aligned)
+    const userMessage = document.createElement('div');
+    userMessage.className = 'message user-message';
+    userMessage.innerHTML = `
+      <div class="message-content user-content">
+        <div class="message-text">
+          What are the future developments?
+        </div>
+      </div>
+      <div class="message-avatar user-avatar">👤</div>
+    `;
+    messagesContainer.appendChild(userMessage);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    // Show typing indicator
+    setTimeout(() => {
+      const typingMessage = document.createElement('div');
+      typingMessage.className = 'message bot-message typing-message';
+      typingMessage.innerHTML = `
+        <div class="message-avatar">🏗️</div>
+        <div class="message-content">
+          <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      `;
+      messagesContainer.appendChild(typingMessage);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      
+      // Fetch and display developments
+      setTimeout(() => {
+        fetchFutureDevForChatbot(locationId, locationName);
+      }, 1000);
+    }, 500);
+  };
+
+  // Make functions globally accessible
+  window.closeFutureDevChatbot = closeFutureDevChatbot;
+  window.loadMoreFutureDev = function() {
+    const chatbot = document.getElementById('future-dev-chatbot');
+    if (chatbot) {
+      const locationName = chatbot.querySelector('.chatbot-subtitle').textContent;
+      console.log('Load more clicked for:', locationName);
+    }
+  };
+
+  // Show full content for a specific development
+  window.showFullContent = function(devId) {
+    console.log('🔍 Expanding content for dev ID:', devId);
+    
+    const developments = window.currentChatbotDevelopments || [];
+    const dev = developments.find(d => d.id === devId);
+    
+    if (!dev) {
+      console.error('❌ Development not found:', devId);
+      return;
+    }
+    
+    console.log('✅ Found development:', dev);
+    
+    // Find the content element and message element
+    const contentEl = document.getElementById(`content-${devId}`);
+    const messageEl = document.querySelector(`[data-dev-id="${devId}"]`);
+    
+    if (!contentEl || !messageEl) {
+      console.error('❌ Could not find elements:', { 
+        contentEl: !!contentEl, 
+        messageEl: !!messageEl,
+        devId: devId 
+      });
+      return;
+    }
+    
+    console.log('✅ Found elements, expanding...');
+    
+    // Store current scroll position relative to the message element
+    const messagesContainer = document.getElementById('chatbot-messages');
+    const messageTop = messageEl.offsetTop;
+    const scrollBefore = messagesContainer.scrollTop;
+    
+    // Add expanding class for animation
+    contentEl.classList.add('expanding');
+    
+    // Replace content with full text
+    setTimeout(() => {
+      contentEl.innerHTML = dev.full_content || dev.content;
+      contentEl.classList.remove('expanding');
+      
+      // Keep scroll position at the same message (don't jump to bottom)
+      // Only adjust if content expanded below current view
+      const scrollAfter = messagesContainer.scrollTop;
+      if (scrollAfter === scrollBefore) {
+        // Content expanded, maintain view at the message
+        messagesContainer.scrollTop = messageTop - 20; // Small offset for better view
+      }
+    }, 150);
+    
+    // Remove the View More button with fade animation
+    const viewMoreBtn = messageEl.querySelector('.view-more-btn');
+    if (viewMoreBtn) {
+      viewMoreBtn.classList.add('removing');
+      setTimeout(() => {
+        viewMoreBtn.remove();
+      }, 300);
+    }
+  };
+
+  // FETCH FUTURE DEVELOPMENT FOR CHATBOT (CONVERSATIONAL RESPONSE)
+  function fetchFutureDevForChatbot(locationId, locationName) {
+    const PYTHON_API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
+      ? "http://127.0.0.1:8000" 
+      : window.location.origin;
+    
+    const futureDevUrl = `${PYTHON_API_URL}/api/v1/future-development/${locationId}`;
+    console.log('🔍 Fetching future development for chatbot:', futureDevUrl);
+
+    fetch(futureDevUrl)
+      .then(response => response.json())
+      .then(data => {
+        const messagesContainer = document.getElementById('chatbot-messages');
+        if (!messagesContainer) return; // Chatbot was closed
+        
+        // Remove typing indicator
+        const typingMessage = messagesContainer.querySelector('.typing-message');
+        if (typingMessage) typingMessage.remove();
+        
+        if (!data.success || !data.developments || data.developments.length === 0) {
+          // Show no data message
+          const noDataMessage = document.createElement('div');
+          noDataMessage.className = 'message bot-message';
+          noDataMessage.innerHTML = `
+            <div class="message-avatar">🏗️</div>
+            <div class="message-content">
+              <div class="message-text">
+                I couldn't find any future development information for ${locationName}. 
+                This area might not have any upcoming projects in our database yet.
+              </div>
+            </div>
+          `;
+          messagesContainer.appendChild(noDataMessage);
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          return;
+        }
+
+        // Show conversational summary message first
+        const summaryMessage = document.createElement('div');
+        summaryMessage.className = 'message bot-message';
+        summaryMessage.innerHTML = `
+          <div class="message-avatar">🏗️</div>
+          <div class="message-content">
+            <div class="message-text">
+              Great question! I found <strong>${data.total_count} exciting future development projects</strong> planned for ${locationName}. Let me share the key developments with you:
+            </div>
+          </div>
+        `;
+        messagesContainer.appendChild(summaryMessage);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // Show developments as separate messages with complete content and View More
+        data.developments.forEach((dev, index) => {
+          setTimeout(() => {
+            const devMessage = document.createElement('div');
+            devMessage.className = 'message bot-message';
+            devMessage.setAttribute('data-dev-id', dev.id);
+            const yearMentioned = dev.year_mentioned ? ` (Expected: ${dev.year_mentioned})` : '';
+            const publishedDate = dev.published_at ? new Date(dev.published_at).toLocaleDateString() : '';
+            
+            // Check if there's more content to show (API already truncates content field)
+            const hasMoreContent = dev.full_content && dev.full_content.length > dev.content.length;
+            
+            devMessage.innerHTML = `
+              <div class="message-avatar">📰</div>
+              <div class="message-content">
+                <div class="message-header">
+                  <strong>${dev.source}</strong>${yearMentioned}
+                  ${publishedDate ? `<span style="font-size: 10px; color: #8a9fb5; margin-left: 8px;">${publishedDate}</span>` : ''}
+                </div>
+                <div class="message-text" id="content-${dev.id}">
+                  ${dev.content}
+                </div>
+                ${hasMoreContent ? `
+                  <button onclick="showFullContent(${dev.id})" class="view-more-btn">
+                    View More
+                  </button>
+                ` : ''}
+              </div>
+            `;
+            messagesContainer.appendChild(devMessage);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          }, (index + 1) * 700);
+        });
+
+        // Store full development data globally for "View More" functionality
+        window.currentChatbotDevelopments = data.developments;
+      })
+      .catch(err => {
+        console.error("Future Development Chatbot Fetch Error:", err);
+        const messagesContainer = document.getElementById('chatbot-messages');
+        if (messagesContainer) {
+          // Remove typing indicator
+          const typingMessage = messagesContainer.querySelector('.typing-message');
+          if (typingMessage) typingMessage.remove();
+          
+          const errorMessage = document.createElement('div');
+          errorMessage.className = 'message bot-message';
+          errorMessage.innerHTML = `
+            <div class="message-avatar">⚠️</div>
+            <div class="message-content">
+              <div class="message-text">
+                Sorry, I encountered an error while fetching the development data. Please try again later.
+              </div>
+            </div>
+          `;
+          messagesContainer.appendChild(errorMessage);
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+      });
+  }
+
+
+  // OPEN FUTURE DEVELOPMENT MODAL (called from popup click)
+  function openFutureDevelopmentModal(locationName, locationId) {
+    console.log('🚀 openFutureDevelopmentModal called for:', locationName);
+    
+    // Close the small popup
+    if (futureDevPopup) futureDevPopup.remove();
+    
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('future-dev-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'future-dev-modal';
+      modal.className = 'future-dev-modal';
+      document.body.appendChild(modal);
+    }
+    
+    // Show modal with loading state
+    modal.innerHTML = `
+      <div class="modal-overlay" onclick="closeFutureDevelopmentModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+          <div class="modal-header">
+            <h2>🏗️ Future Development - ${locationName}</h2>
+            <button class="modal-close" onclick="closeFutureDevelopmentModal()">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="loading-state">
+              <div class="loading-spinner"></div>
+              <p>Loading future developments...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    modal.style.display = 'flex';
+    
+    // Fetch and display future development data
+    fetchFutureDevelopmentForModal(locationId, locationName);
+  }
+
+  // Make openFutureDevelopmentModal globally accessible
+  window.openFutureDevelopmentModal = openFutureDevelopmentModal;
+
+  // CLOSE FUTURE DEVELOPMENT MODAL
+  function closeFutureDevelopmentModal() {
+    const modal = document.getElementById('future-dev-modal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+
+  // Make close function globally accessible
+  window.closeFutureDevelopmentModal = closeFutureDevelopmentModal;
+
+  // FETCH FUTURE DEVELOPMENT DATA FOR MODAL
+  function fetchFutureDevelopmentForModal(locationId, locationName) {
+    const PYTHON_API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
+      ? "http://127.0.0.1:8000" 
+      : window.location.origin;
+    
+    const futureDevUrl = `${PYTHON_API_URL}/api/v1/future-development/${locationId}`;
+    console.log('🔍 Fetching future development for modal:', futureDevUrl);
+
+    fetch(futureDevUrl)
+      .then(response => response.json())
+      .then(data => {
+        const modal = document.getElementById('future-dev-modal');
+        if (!modal) return; // Modal was closed
+        
+        const modalBody = modal.querySelector('.modal-body');
+        
+        if (!data.success || !data.developments || data.developments.length === 0) {
+          modalBody.innerHTML = `
+            <div class="no-data-state">
+              <div class="no-data-icon">📋</div>
+              <h3>No Future Development Data</h3>
+              <p>No upcoming projects or infrastructure developments found for ${locationName}.</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Render future development items for modal
+        const developmentsHtml = data.developments.map(dev => {
+          const publishedDate = dev.published_at ? new Date(dev.published_at).toLocaleDateString() : 'Date unknown';
+          const yearMentioned = dev.year_mentioned ? ` (${dev.year_mentioned})` : '';
+          
+          return `
+            <div class="dev-item">
+              <div class="dev-header">
+                <div class="dev-source">${dev.source}${yearMentioned}</div>
+                <div class="dev-date">${publishedDate}</div>
+              </div>
+              <div class="dev-content">
+                ${dev.content}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        modalBody.innerHTML = `
+          <div class="dev-summary">
+            <div class="dev-count">${data.total_count} Future Development Projects</div>
+            <div class="dev-subtitle">Upcoming projects & infrastructure developments</div>
+          </div>
+          <div class="dev-list">
+            ${developmentsHtml}
+          </div>
+        `;
+      })
+      .catch(err => {
+        console.error("Future Development Modal Fetch Error:", err);
+        const modal = document.getElementById('future-dev-modal');
+        if (modal) {
+          const modalBody = modal.querySelector('.modal-body');
+          modalBody.innerHTML = `
+            <div class="error-state">
+              <div class="error-icon">⚠️</div>
+              <h3>Failed to Load Data</h3>
+              <p>Unable to fetch future development information for ${locationName}.</p>
+              <button onclick="fetchFutureDevelopmentForModal(${locationId}, '${locationName}')" class="retry-btn">
+                Try Again
+              </button>
+            </div>
+          `;
+        }
       });
   }
 
