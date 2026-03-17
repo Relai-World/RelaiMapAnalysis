@@ -642,9 +642,6 @@ def get_future_development(location_id: int):
             'developments': [],
             'total_count': 0
         }
-            'developments': [],
-            'total_count': 0
-        }
 
 # ===============================
 # AMENITY LOCATIONS - GOOGLE PLACES API ONLY
