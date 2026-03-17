@@ -596,6 +596,15 @@ def get_future_development(location_id: int):
     try:
         supabase = get_supabase()
         
+        if not supabase:
+            print("❌ Supabase client not initialized - check SUPABASE_URL and SUPABASE_KEY")
+            return {
+                'success': False,
+                'error': 'Supabase configuration missing',
+                'developments': [],
+                'total_count': 0
+            }
+        
         # Fetch future development data for the location
         response = supabase.table('future_development_scrap').select(
             'id, location_name, source, content, published_at, year_mentioned, scraped_at'
@@ -624,10 +633,15 @@ def get_future_development(location_id: int):
         }
         
     except Exception as e:
-        print(f"Error fetching future development: {e}")
+        print(f"❌ Error fetching future development: {e}")
+        import traceback
+        traceback.print_exc()
         return {
             'success': False,
             'error': str(e),
+            'developments': [],
+            'total_count': 0
+        }
             'developments': [],
             'total_count': 0
         }
