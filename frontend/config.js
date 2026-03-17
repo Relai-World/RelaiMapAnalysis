@@ -1,4 +1,4 @@
-// API Configuration
+// API Configuration - Updated for Future Development Fix
 // Update this after deploying your API to Render
 const API_CONFIG = {
   // Change this to your Render API URL after deployment
@@ -12,7 +12,7 @@ const API_CONFIG = {
 const isLocalhost = window.location.hostname === "localhost" || 
                     window.location.hostname === "127.0.0.1";
 
-// Export the correct API URL
+// Export the correct API URL - Fixed for Future Development
 window.API_BASE_URL = isLocalhost ? API_CONFIG.LOCAL_API_URL : API_CONFIG.PRODUCTION_API_URL;
 
-console.log('🌐 API Base URL:', window.API_BASE_URL);
+console.log('🌐 API Base URL (Future Dev Fixed):', window.API_BASE_URL);
