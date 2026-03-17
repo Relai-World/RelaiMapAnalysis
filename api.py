@@ -590,6 +590,7 @@ def get_area_property_costs(area_name: str):
 # ===============================
 # FUTURE DEVELOPMENT ENDPOINT
 # ===============================
+# FUTURE DEVELOPMENT ENDPOINT - Fixed encoding issue
 @app.get("/api/v1/future-development/{location_id}")
 def get_future_development(location_id: int):
     """Get future development data for a location"""
