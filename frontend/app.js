@@ -3052,15 +3052,54 @@ map.on("load", async () => {
   // ===============================
   // Amenities state is now global (see top of file)
 
+  function showNotification(message, type = 'info') {
+    // Remove existing notification
+    const existing = document.getElementById('notification-toast');
+    if (existing) existing.remove();
+    
+    // Create notification
+    const notification = document.createElement('div');
+    notification.id = 'notification-toast';
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      color: white;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      z-index: 10000;
+      max-width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    `;
+    
+    // Set color based on type
+    const colors = {
+      info: '#3b82f6',
+      warning: '#f59e0b', 
+      error: '#ef4444',
+      success: '#10b981'
+    };
+    notification.style.backgroundColor = colors[type] || colors.info;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+      }
+    }, 3000);
+  }
+
   function displayAmenitiesOnMap(locationId, amenityType) {
     // Remove existing amenity layers
     clearAmenities();
-
-    // Hide properties panel when showing amenities
-    const propertiesPanel = document.getElementById('properties-panel');
-    if (propertiesPanel) {
-      propertiesPanel.style.display = 'none';
-    }
 
     // Show loading state
     const buttons = document.querySelectorAll('.amenity-btn');
@@ -3078,27 +3117,31 @@ map.on("load", async () => {
     
     if (!locationData) {
       console.error('❌ Location data not found for locationId:', locationId);
-      console.error('🔍 Available insightsData:', window.insightsData);
-      console.log('⏳ Retrying to find location data...');
-      
-      // Try to reload insights data if not found
-      if (!window.insightsData) {
-        console.log('🔄 Insights data not loaded, please wait...');
-        resetAmenityButtons(amenityType);
-        return;
-      }
-      
+      showNotification('Location data not found. Please select a location again.', 'error');
       resetAmenityButtons(amenityType);
       return;
     }
 
-    const lat = locationData.latitude;
-    const lng = locationData.longitude;
+    const lat = parseFloat(locationData.latitude);
+    const lng = parseFloat(locationData.longitude);
     
-    // Validate coordinates
-    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-      console.error('❌ Invalid coordinates:', { lat, lng, locationData });
-      console.log('🔄 Please try selecting the location again');
+    // Strict coordinate validation
+    if (!lat || !lng || isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
+      console.error('❌ Invalid coordinates:', { 
+        lat, lng, 
+        originalLat: locationData.latitude, 
+        originalLng: locationData.longitude,
+        locationData 
+      });
+      showNotification('Invalid location coordinates. Please select a different location.', 'error');
+      resetAmenityButtons(amenityType);
+      return;
+    }
+    
+    // Validate coordinates are within reasonable bounds for Hyderabad
+    if (lat < 17.0 || lat > 18.0 || lng < 78.0 || lng > 79.0) {
+      console.error('❌ Coordinates outside Hyderabad bounds:', { lat, lng });
+      showNotification('Location coordinates seem incorrect. Please try a different location.', 'error');
       resetAmenityButtons(amenityType);
       return;
     }
@@ -3126,19 +3169,20 @@ map.on("load", async () => {
         
         if (data.error) {
           console.error('❌ API Error:', data.error);
-          alert(`Failed to load ${amenityType}: ${data.error}`);
           resetAmenityButtons(amenityType);
           return;
         }
         
         if (!data.amenities || data.amenities.length === 0) {
           console.log('⚠️ No amenities found');
-          alert(`No ${amenityType} found within 5km radius`);
           resetAmenityButtons(amenityType);
           return;
         }
 
         console.log(`✅ Found ${data.amenities.length} ${amenityType}`);
+
+        // Show amenities panel on the right side
+        showAmenitiesPanel(data.amenities, amenityType);
 
         // Hide layers card if open
         const layersCard = document.getElementById("layers-card");
@@ -3336,7 +3380,7 @@ map.on("load", async () => {
           coordinates: { lat, lng },
           url: amenityUrl
         });
-        alert(`Failed to load ${amenityType}. Error: ${err.message}`);
+        showNotification(`Failed to load ${amenityType}. Please try again.`, 'error');
         resetAmenityButtons(amenityType);
       });
   }
@@ -3346,6 +3390,12 @@ map.on("load", async () => {
     const propertiesPanel = document.getElementById('properties-panel');
     if (propertiesPanel) {
       propertiesPanel.style.display = 'flex';
+    }
+
+    // Hide amenities panel
+    const amenitiesPanel = document.getElementById('amenities-panel');
+    if (amenitiesPanel) {
+      amenitiesPanel.style.display = 'none';
     }
 
     // Hide the clear button
@@ -3381,6 +3431,99 @@ map.on("load", async () => {
         btn.innerHTML = `<span class="btn-icon">${icons[type] || '📍'}</span><span class="btn-label">${labels[type] || type}</span>`;
       });
     }
+  }
+
+  function showAmenitiesPanel(amenities, amenityType) {
+    // Hide properties panel
+    const propertiesPanel = document.getElementById('properties-panel');
+    if (propertiesPanel) {
+      propertiesPanel.style.display = 'none';
+    }
+
+    // Get or create amenities panel
+    let amenitiesPanel = document.getElementById('amenities-panel');
+    if (!amenitiesPanel) {
+      amenitiesPanel = document.createElement('div');
+      amenitiesPanel.id = 'amenities-panel';
+      amenitiesPanel.className = 'side-panel';
+      amenitiesPanel.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        width: 320px;
+        max-height: calc(100vh - 100px);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        z-index: 1000;
+        overflow: hidden;
+        font-family: 'Inter', sans-serif;
+      `;
+      document.body.appendChild(amenitiesPanel);
+    }
+
+    // Create amenities list HTML
+    const amenitiesHtml = amenities.map(amenity => `
+      <div class="amenity-item" onclick="map.flyTo({center: [${amenity.longitude}, ${amenity.latitude}], zoom: 16})" style="
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: background-color 0.2s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      " onmouseover="this.style.backgroundColor='var(--bg-hover)'" onmouseout="this.style.backgroundColor='transparent'">
+        <div>
+          <div class="amenity-name" style="font-weight: 500; color: var(--t1); margin-bottom: 4px;">${amenity.name}</div>
+          <div class="amenity-distance" style="font-size: 12px; color: var(--t3);">${amenity.distance_km} km away</div>
+        </div>
+        <div class="amenity-color-indicator" style="
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background-color: ${amenity.color};
+        "></div>
+      </div>
+    `).join('');
+
+    amenitiesPanel.innerHTML = `
+      <div class="panel-header" style="
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--bg-card);
+      ">
+        <h3 style="margin: 0; color: var(--blue); font-family: 'Outfit', sans-serif; font-size: 18px;">
+          ${amenityType.charAt(0).toUpperCase() + amenityType.slice(1)} Nearby
+        </h3>
+        <button class="close-btn" onclick="clearAmenities()" style="
+          background: none;
+          border: none;
+          font-size: 20px;
+          color: var(--t3);
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 4px;
+        " onmouseover="this.style.backgroundColor='var(--bg-hover)'" onmouseout="this.style.backgroundColor='transparent'">×</button>
+      </div>
+      <div class="panel-content" style="max-height: calc(100vh - 200px); overflow-y: auto;">
+        <div class="amenities-count" style="
+          padding: 12px 16px;
+          font-size: 14px;
+          color: var(--t2);
+          background: var(--bg-subtle);
+          border-bottom: 1px solid var(--border);
+        ">${amenities.length} ${amenityType} found within 5km</div>
+        <div class="amenities-list">
+          ${amenitiesHtml}
+        </div>
+      </div>
+    `;
+
+    amenitiesPanel.style.display = 'block';
   }
 
   function resetAmenityButtons(activeType = null, count = null) {
@@ -3440,14 +3583,26 @@ map.on("load", async () => {
       
       // Check if insights data is loaded
       if (!window.insightsData || !Array.isArray(window.insightsData)) {
-        console.log('⏳ Please wait for location data to load, then try again.');
+        console.log('⏳ Location data is still loading. Please wait a moment and try again.');
+        
+        // Show a subtle notification instead of alert
+        showNotification('Please wait for location data to load, then try again.', 'info');
         return;
       }
       
       if (currentLocationId) {
+        // Double-check that we have valid location data before proceeding
+        const locationData = window.insightsData.find(d => d.location_id === currentLocationId);
+        if (!locationData || !locationData.latitude || !locationData.longitude) {
+          console.log('📍 Location coordinates not available. Please select a location again.');
+          showNotification('Please select a location on the map first.', 'warning');
+          return;
+        }
+        
         displayAmenitiesOnMap(currentLocationId, amenityType);
       } else {
         console.log('📍 Please select a location first by clicking on the map.');
+        showNotification('Please select a location on the map first.', 'info');
       }
     }
 

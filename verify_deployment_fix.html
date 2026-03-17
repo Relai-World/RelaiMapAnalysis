@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify Future Development Fix Deployment</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 10px 5px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Future Development Fix Verification</h1>
+    
+    <div class="status info">
+        <h3>Deployment Status</h3>
+        <p>Changes pushed to GitHub: <strong>✅ Complete</strong></p>
+        <p>Waiting for frontend hosting to redeploy...</p>
+        <p><strong>Next:</strong> Your hosting service (GitHub Pages/Netlify) should automatically detect the changes and redeploy.</p>
+    </div>
+    
+    <div class="status warning">
+        <h3>⏰ Expected Timeline</h3>
+        <ul>
+            <li><strong>GitHub Pages:</strong> 2-5 minutes</li>
+            <li><strong>Netlify:</strong> 1-3 minutes</li>
+            <li><strong>Vercel:</strong> 1-2 minutes</li>
+        </ul>
+        <p>Check your hosting dashboard for deployment status.</p>
+    </div>
+    
+    <button onclick="testDeployment()">🧪 Test Deployment Status</button>
+    <button onclick="testFutureDevAPI()">🏗️ Test Future Development API</button>
+    
+    <div id="test-results"></div>
+    
+    <!-- This will load the updated config.js -->
+    <script src="frontend/config.js"></script>
+    
+    <script>
+        async function testDeployment() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="status info"><h3>Testing Deployment...</h3></div>';
+            
+            let html = '';
+            
+            // Test 1: Check if new version is loaded
+            html += '<div class="status info">';
+            html += '<h3>Test 1: Version Check</h3>';
+            html += `<p><strong>API Base URL:</strong> ${window.API_BASE_URL}</p>`;
+            html += `<p><strong>Console Message:</strong> Check browser console for "Future Development Fixed" message</p>`;
+            html += '</div>';
+            
+            // Test 2: Check API connectivity
+            try {
+                const response = await fetch(`${window.API_BASE_URL}/api/v1/insights`);
+                if (response.ok) {
+                    html += '<div class="status success">';
+                    html += '<h3>Test 2: API Connectivity ✅</h3>';
+                    html += `<p>Successfully connected to: ${window.API_BASE_URL}</p>`;
+                    html += '</div>';
+                } else {
+                    html += '<div class="status error">';
+                    html += '<h3>Test 2: API Connectivity ❌</h3>';
+                    html += `<p>Failed to connect: ${response.status}</p>`;
+                    html += '</div>';
+                }
+            } catch (error) {
+                html += '<div class="status error">';
+                html += '<h3>Test 2: API Connectivity ❌</h3>';
+                html += `<p>Error: ${error.message}</p>`;
+                html += '</div>';
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        async function testFutureDevAPI() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="status info"><h3>Testing Future Development API...</h3></div>';
+            
+            try {
+                // Get Gachibowli data
+                const insightsResponse = await fetch(`${window.API_BASE_URL}/api/v1/insights`);
+                const insightsData = await insightsResponse.json();
+                const gachibowli = insightsData.find(d => d.location.toLowerCase().includes('gachibowli'));
+                
+                if (!gachibowli) {
+                    resultsDiv.innerHTML = '<div class="status error"><h3>❌ Gachibowli not found</h3></div>';
+                    return;
+                }
+                
+                // Test Future Development API
+                const futureResponse = await fetch(`${window.API_BASE_URL}/api/v1/future-development/${gachibowli.location_id}`);
+                const futureData = await futureResponse.json();
+                
+                let html = '<div class="status success">';
+                html += '<h3>🏗️ Future Development API Test Results</h3>';
+                html += `<p><strong>Location:</strong> ${gachibowli.location}</p>`;
+                html += `<p><strong>Location ID:</strong> ${gachibowli.location_id}</p>`;
+                html += `<p><strong>API Status:</strong> ${futureResponse.status}</p>`;
+                html += `<p><strong>Success:</strong> ${futureData.success}</p>`;
+                html += `<p><strong>Total Developments:</strong> ${futureData.total_count}</p>`;
+                html += '</div>';
+                
+                if (futureData.success && futureData.developments && futureData.developments.length > 0) {
+                    html += '<div class="status success">';
+                    html += '<h3>✅ Future Development Insights Should Work Now!</h3>';
+                    html += '<p>The API is returning data successfully. Try clicking on Gachibowli in your main application.</p>';
+                    html += '<h4>Sample Development:</h4>';
+                    html += `<pre>${JSON.stringify(futureData.developments[0], null, 2)}</pre>`;
+                    html += '</div>';
+                } else {
+                    html += '<div class="status warning">';
+                    html += '<h3>⚠️ API Working but No Data</h3>';
+                    html += '<p>The API is responding but no development data found.</p>';
+                    html += '</div>';
+                }
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="status error">
+                        <h3>❌ Test Failed</h3>
+                        <p>Error: ${error.message}</p>
+                        <p>This might mean the deployment is still in progress.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-run basic test
+        window.onload = function() {
+            console.log('🚀 Deployment verification page loaded');
+            console.log('🌐 API Base URL:', window.API_BASE_URL);
+            
+            // Check if we can see the updated console message
+            setTimeout(() => {
+                testDeployment();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

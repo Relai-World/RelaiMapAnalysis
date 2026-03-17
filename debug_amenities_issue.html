@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Amenities Issue</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 10px 5px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Amenities Issue</h1>
+    
+    <div class="test-section info">
+        <h3>Amenities Flow Analysis</h3>
+        <p>Testing the complete amenities flow from frontend to backend</p>
+    </div>
+    
+    <button onclick="testAmenitiesFlow()">🧪 Test Complete Amenities Flow</button>
+    <button onclick="testBackendDirect()">🔧 Test Backend API Direct</button>
+    <button onclick="testFrontendSetup()">⚙️ Test Frontend Setup</button>
+    
+    <div id="test-results"></div>
+    
+    <!-- Include the config.js -->
+    <script src="frontend/config.js"></script>
+    
+    <script>
+        // Simulate global variables that might be missing
+        let currentLocationId = null;
+        let window_insightsData = null;
+        
+        async function testAmenitiesFlow() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="test-section info"><h3>Testing Complete Amenities Flow...</h3></div>';
+            
+            let html = '';
+            
+            try {
+                // Step 1: Get location data (like the frontend does)
+                html += '<div class="test-section info">';
+                html += '<h3>Step 1: Getting Location Data</h3>';
+                
+                const insightsResponse = await fetch(`${window.API_BASE_URL}/api/v1/insights`);
+                const insightsData = await insightsResponse.json();
+                const gachibowli = insightsData.find(d => d.location.toLowerCase().includes('gachibowli'));
+                
+                if (!gachibowli) {
+                    html += '<p class="error">❌ Gachibowli not found in insights</p>';
+                    resultsDiv.innerHTML = html + '</div>';
+                    return;
+                }
+                
+                html += `<p class="success">✅ Found Gachibowli</p>`;
+                html += `<p>Location ID: ${gachibowli.location_id}</p>`;
+                html += `<p>Coordinates: ${gachibowli.latitude}, ${gachibowli.longitude}</p>`;
+                html += '</div>';
+                
+                // Step 2: Simulate setting currentLocationId (like handleLocationSelect does)
+                currentLocationId = gachibowli.location_id;
+                window_insightsData = insightsData;
+                
+                html += '<div class="test-section info">';
+                html += '<h3>Step 2: Simulating Location Selection</h3>';
+                html += `<p>✅ currentLocationId set to: ${currentLocationId}</p>`;
+                html += `<p>✅ insightsData loaded: ${insightsData.length} locations</p>`;
+                html += '</div>';
+                
+                // Step 3: Test amenities API call (like displayAmenitiesOnMap does)
+                html += '<div class="test-section info">';
+                html += '<h3>Step 3: Testing Amenities API Call</h3>';
+                
+                const amenityType = 'hospitals';
+                const locationData = insightsData.find(d => d.location_id === currentLocationId);
+                
+                if (!locationData) {
+                    html += '<p class="error">❌ Location data not found for currentLocationId</p>';
+                    resultsDiv.innerHTML = html + '</div>';
+                    return;
+                }
+                
+                const lat = locationData.latitude;
+                const lng = locationData.longitude;
+                const amenityUrl = `${window.API_BASE_URL}/api/v1/amenities/${amenityType}?lat=${lat}&lng=${lng}`;
+                
+                html += `<p>API URL: ${amenityUrl}</p>`;
+                html += `<p>Coordinates: lat=${lat}, lng=${lng}</p>`;
+                
+                const amenityResponse = await fetch(amenityUrl);
+                const amenityData = await amenityResponse.json();
+                
+                html += `<p>Response Status: ${amenityResponse.status}</p>`;
+                
+                if (amenityResponse.ok && amenityData.amenities) {
+                    html += `<p class="success">✅ Amenities API Success!</p>`;
+                    html += `<p>Total Count: ${amenityData.total_count}</p>`;
+                    html += `<p>Amenities Found: ${amenityData.amenities.length}</p>`;
+                    html += '<h4>Sample Amenity:</h4>';
+                    html += `<pre>${JSON.stringify(amenityData.amenities[0], null, 2)}</pre>`;
+                } else {
+                    html += `<p class="error">❌ Amenities API Failed</p>`;
+                    html += `<p>Error: ${amenityData.error || 'Unknown error'}</p>`;
+                    html += `<pre>${JSON.stringify(amenityData, null, 2)}</pre>`;
+                }
+                
+                html += '</div>';
+                
+                // Step 4: Check for potential frontend issues
+                html += '<div class="test-section warning">';
+                html += '<h3>Step 4: Potential Issues Check</h3>';
+                
+                const issues = [];
+                
+                // Check if API URL is correct
+                if (!window.API_BASE_URL.includes('hyderabad-intelligence.onrender.com')) {
+                    issues.push('❌ API URL might be incorrect');
+                }
+                
+                // Check if coordinates are valid
+                if (!lat || !lng || lat < 10 || lat > 20 || lng < 70 || lng > 85) {
+                    issues.push('❌ Invalid coordinates for Hyderabad');
+                }
+                
+                // Check if currentLocationId is set
+                if (!currentLocationId) {
+                    issues.push('❌ currentLocationId not set - amenity buttons won\'t work');
+                }
+                
+                if (issues.length === 0) {
+                    html += '<p class="success">✅ No obvious issues found</p>';
+                    html += '<p><strong>Conclusion:</strong> Amenities should be working. Check browser console for errors when clicking amenity buttons.</p>';
+                } else {
+                    html += '<p class="error">Issues found:</p>';
+                    html += '<ul>';
+                    issues.forEach(issue => {
+                        html += `<li>${issue}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                
+                html += '</div>';
+                
+            } catch (error) {
+                html += `<div class="test-section error">`;
+                html += `<h3>❌ Test Failed</h3>`;
+                html += `<p>Error: ${error.message}</p>`;
+                html += `</div>`;
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        async function testBackendDirect() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '<div class="test-section info"><h3>Testing Backend API Directly...</h3></div>';
+            
+            try {
+                // Test multiple amenity types
+                const amenityTypes = ['hospitals', 'schools', 'malls', 'restaurants', 'banks'];
+                const lat = 17.4436222; // Gachibowli
+                const lng = 78.3519638;
+                
+                let html = '<div class="test-section success">';
+                html += '<h3>Backend API Direct Test Results</h3>';
+                
+                for (const type of amenityTypes) {
+                    const url = `${window.API_BASE_URL}/api/v1/amenities/${type}?lat=${lat}&lng=${lng}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    html += `<h4>${type.charAt(0).toUpperCase() + type.slice(1)}</h4>`;
+                    html += `<p>Status: ${response.status}</p>`;
+                    html += `<p>Count: ${data.total_count || 0}</p>`;
+                    
+                    if (data.error) {
+                        html += `<p class="error">Error: ${data.error}</p>`;
+                    }
+                }
+                
+                html += '</div>';
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test-section error">
+                        <h3>❌ Backend Test Failed</h3>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testFrontendSetup() {
+            const resultsDiv = document.getElementById('test-results');
+            
+            let html = '<div class="test-section info">';
+            html += '<h3>Frontend Setup Analysis</h3>';
+            
+            // Check global variables
+            html += '<h4>Global Variables:</h4>';
+            html += `<p>window.API_BASE_URL: ${window.API_BASE_URL}</p>`;
+            html += `<p>currentLocationId: ${currentLocationId || 'Not set'}</p>`;
+            
+            // Check if amenity buttons exist (they won't in this test page)
+            const amenityButtons = document.querySelectorAll('.amenity-btn');
+            html += `<p>Amenity buttons found: ${amenityButtons.length}</p>`;
+            
+            if (amenityButtons.length === 0) {
+                html += '<p class="warning">⚠️ No amenity buttons found (expected in test page)</p>';
+                html += '<p>In your main app, check if amenity buttons are properly created in the HTML</p>';
+            }
+            
+            // Check console for errors
+            html += '<h4>Debugging Tips:</h4>';
+            html += '<ul>';
+            html += '<li>Open browser DevTools Console</li>';
+            html += '<li>Click on a location in your main app</li>';
+            html += '<li>Check if "currentLocationId" is set</li>';
+            html += '<li>Click an amenity button</li>';
+            html += '<li>Look for any JavaScript errors</li>';
+            html += '<li>Check Network tab for failed API calls</li>';
+            html += '</ul>';
+            
+            html += '</div>';
+            resultsDiv.innerHTML = html;
+        }
+        
+        // Auto-run basic test
+        window.onload = function() {
+            console.log('🔍 Amenities debug page loaded');
+            console.log('🌐 API Base URL:', window.API_BASE_URL);
+        };
+    </script>
+</body>
+</html>
