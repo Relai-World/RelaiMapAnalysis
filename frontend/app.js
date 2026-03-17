@@ -3079,7 +3079,15 @@ map.on("load", async () => {
     if (!locationData) {
       console.error('❌ Location data not found for locationId:', locationId);
       console.error('🔍 Available insightsData:', window.insightsData);
-      alert('Location data not found. Please click on a location first and wait for it to load.');
+      console.log('⏳ Retrying to find location data...');
+      
+      // Try to reload insights data if not found
+      if (!window.insightsData) {
+        console.log('🔄 Insights data not loaded, please wait...');
+        resetAmenityButtons(amenityType);
+        return;
+      }
+      
       resetAmenityButtons(amenityType);
       return;
     }
@@ -3090,7 +3098,7 @@ map.on("load", async () => {
     // Validate coordinates
     if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
       console.error('❌ Invalid coordinates:', { lat, lng, locationData });
-      alert('Invalid location coordinates. Please try selecting the location again.');
+      console.log('🔄 Please try selecting the location again');
       resetAmenityButtons(amenityType);
       return;
     }
@@ -3246,6 +3254,8 @@ map.on("load", async () => {
         const listContent = document.getElementById('amenities-list-content');
         const listTitle = document.getElementById('amenity-title');
 
+        console.log('🔍 Amenity list elements:', { listCard: !!listCard, listContent: !!listContent, listTitle: !!listTitle });
+
         if (listCard && listContent && listTitle) {
           // Update Title
           const typeName = amenityType.charAt(0).toUpperCase() + amenityType.slice(1);
@@ -3307,6 +3317,13 @@ map.on("load", async () => {
 
           // Show Card
           listCard.style.display = 'flex';
+          console.log('✅ Amenities list card should now be visible');
+        } else {
+          console.error('❌ Amenities list elements not found:', { 
+            listCard: !!listCard, 
+            listContent: !!listContent, 
+            listTitle: !!listTitle 
+          });
         }
 
       })
@@ -3423,14 +3440,14 @@ map.on("load", async () => {
       
       // Check if insights data is loaded
       if (!window.insightsData || !Array.isArray(window.insightsData)) {
-        alert('Please wait for location data to load, then try again.');
+        console.log('⏳ Please wait for location data to load, then try again.');
         return;
       }
       
       if (currentLocationId) {
         displayAmenitiesOnMap(currentLocationId, amenityType);
       } else {
-        alert('Please select a location first by clicking on the map.');
+        console.log('📍 Please select a location first by clicking on the map.');
       }
     }
 
