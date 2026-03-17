@@ -3424,85 +3424,189 @@ map.on("load", async () => {
     if (!amenitiesPanel) {
       amenitiesPanel = document.createElement('div');
       amenitiesPanel.id = 'amenities-panel';
-      amenitiesPanel.className = 'side-panel';
+      // Use the exact same styling as intel-card
       amenitiesPanel.style.cssText = `
         position: fixed;
-        top: 80px;
-        right: 20px;
+        top: 0;
+        right: 0;
         width: 320px;
-        max-height: calc(100vh - 100px);
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        height: 100vh;
+        background: var(--bg-base);
+        border-left: 1px solid var(--border-subtle);
         z-index: 1000;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        padding: 16px;
         font-family: 'Inter', sans-serif;
       `;
       document.body.appendChild(amenitiesPanel);
     }
 
-    // Create amenities list HTML
+    // Create amenities content using the same structure as insights card
+    const amenityIcons = {
+      hospitals: '🏥',
+      schools: '🏫', 
+      malls: '🏪',
+      restaurants: '🍽️',
+      banks: '🏦',
+      parks: '🏞️',
+      metro: '🚇'
+    };
+
+    const amenityIcon = amenityIcons[amenityType] || '📍';
+    const amenityTitle = amenityType.charAt(0).toUpperCase() + amenityType.slice(1);
+
+    // Create amenities list HTML using the same styling as insights content
     const amenitiesHtml = amenities.map(amenity => `
       <div class="amenity-item" onclick="map.flyTo({center: [${amenity.longitude}, ${amenity.latitude}], zoom: 16})" style="
         padding: 12px 16px;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--border-subtle);
         cursor: pointer;
-        transition: background-color 0.2s;
+        transition: all 0.2s ease;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-radius: 8px;
+        margin-bottom: 4px;
       " onmouseover="this.style.backgroundColor='var(--bg-hover)'" onmouseout="this.style.backgroundColor='transparent'">
-        <div>
-          <div class="amenity-name" style="font-weight: 500; color: var(--t1); margin-bottom: 4px;">${amenity.name}</div>
-          <div class="amenity-distance" style="font-size: 12px; color: var(--t3);">${amenity.distance_km} km away</div>
+        <div style="flex: 1;">
+          <div class="amenity-name" style="
+            font-weight: 500; 
+            color: var(--t1); 
+            margin-bottom: 4px;
+            font-size: 13px;
+            line-height: 1.4;
+          ">${amenity.name}</div>
+          <div class="amenity-distance" style="
+            font-size: 11px; 
+            color: var(--t3);
+            font-weight: 400;
+          ">${amenity.distance_km} km away</div>
         </div>
         <div class="amenity-color-indicator" style="
-          width: 12px;
-          height: 12px;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
           background-color: ${amenity.color};
+          margin-left: 12px;
+          flex-shrink: 0;
         "></div>
       </div>
     `).join('');
 
+    // Use the exact same structure as insights card
     amenitiesPanel.innerHTML = `
-      <div class="panel-header" style="
-        padding: 16px;
-        border-bottom: 1px solid var(--border);
+      <!-- HERO SECTION (matching insights card) -->
+      <div class="location-hero" style="
+        position: relative;
+        height: 120px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--gold-pale) 0%, var(--bg-card) 100%);
+        border: 1px solid var(--border-subtle);
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        background: var(--bg-card);
+        justify-content: center;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.04);
       ">
-        <h3 style="margin: 0; color: var(--blue); font-family: 'Outfit', sans-serif; font-size: 18px;">
-          ${amenityType.charAt(0).toUpperCase() + amenityType.slice(1)} Nearby
-        </h3>
-        <button class="close-btn" onclick="clearAmenities()" style="
-          background: none;
-          border: none;
-          font-size: 20px;
-          color: var(--t3);
-          cursor: pointer;
-          padding: 4px;
-          border-radius: 4px;
-        " onmouseover="this.style.backgroundColor='var(--bg-hover)'" onmouseout="this.style.backgroundColor='transparent'">×</button>
+        <div class="location-hero-overlay" style="
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(transparent, rgba(0,0,0,0.6));
+          border-radius: 0 0 16px 16px;
+          padding: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <div class="location-hero-name" style="
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          ">
+            <span style="font-size: 24px;">${amenityIcon}</span>
+            ${amenityTitle} Nearby
+          </div>
+        </div>
       </div>
-      <div class="panel-content" style="max-height: calc(100vh - 200px); overflow-y: auto;">
-        <div class="amenities-count" style="
-          padding: 12px 16px;
-          font-size: 14px;
-          color: var(--t2);
-          background: var(--bg-subtle);
-          border-bottom: 1px solid var(--border);
-        ">${amenities.length} ${amenityType} found within 5km</div>
-        <div class="amenities-list">
+
+      <!-- AMENITIES SECTION (matching insights structure) -->
+      <div class="amenities-section" style="
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+      ">
+        <div class="intelligence-header" style="margin-bottom: 16px;">
+          <h3 class="intelligence-title" style="
+            font-family: 'Playfair Display', serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--t1);
+            margin: 0 0 4px 0;
+          ">Found ${amenities.length} ${amenityTitle}</h3>
+          <p class="intelligence-subtitle" style="
+            font-size: 11px;
+            color: var(--t3);
+            margin: 0;
+            font-weight: 400;
+          ">Within 5km radius • Click to navigate</p>
+        </div>
+        
+        <div class="amenities-list" style="
+          max-height: calc(100vh - 300px);
+          overflow-y: auto;
+        ">
           ${amenitiesHtml}
         </div>
       </div>
+
+      <!-- CLOSE BUTTON (matching insights style) -->
+      <div style="
+        margin-top: auto;
+        padding-top: 16px;
+      ">
+        <button onclick="clearAmenities()" style="
+          width: 100%;
+          padding: 12px;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          color: var(--t2);
+          font-family: 'Inter', sans-serif;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        " onmouseover="
+          this.style.backgroundColor='var(--bg-hover)';
+          this.style.borderColor='var(--border-dark)';
+        " onmouseout="
+          this.style.backgroundColor='var(--bg-card)';
+          this.style.borderColor='var(--border)';
+        ">
+          <span>✕</span>
+          <span>Close ${amenityTitle}</span>
+        </button>
+      </div>
     `;
 
-    amenitiesPanel.style.display = 'block';
+    amenitiesPanel.style.display = 'flex';
   }
 
   function resetAmenityButtons(activeType = null, count = null) {
