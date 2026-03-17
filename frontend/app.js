@@ -2415,10 +2415,10 @@ map.on("load", async () => {
     `;
 
     // Use the same API URL pattern as amenities
-    // const PYTHON_API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
-    //   ? "http://127.0.0.1:8000" 
-    //   : window.location.origin;
-    const PYTHON_API_URL ="https://hyderabad-intelligence.onrender.com"
+    const PYTHON_API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
+      ? "http://127.0.0.1:8000" 
+      : window.location.origin;
+    
     const futureDevUrl = `${PYTHON_API_URL}/api/v1/future-development/${locationId}`;
     console.log('🔍 Fetching future development from:', futureDevUrl);
 
