@@ -2414,10 +2414,8 @@ map.on("load", async () => {
       </div>
     `;
 
-    // Use the same API URL pattern as amenities
-    const PYTHON_API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
-      ? "http://127.0.0.1:8000" 
-      : window.location.origin;
+    // Use the configured API URL from config.js
+    const PYTHON_API_URL = window.API_BASE_URL;
     
     const futureDevUrl = `${PYTHON_API_URL}/api/v1/future-development/${locationId}`;
     console.log('🔍 Fetching future development from:', futureDevUrl);
@@ -2774,9 +2772,8 @@ map.on("load", async () => {
 
   // FETCH FUTURE DEVELOPMENT FOR CHATBOT (CONVERSATIONAL RESPONSE)
   function fetchFutureDevForChatbot(locationId, locationName) {
-    const PYTHON_API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
-      ? "http://127.0.0.1:8000" 
-      : window.location.origin;
+    // Use the configured API URL from config.js
+    const PYTHON_API_URL = window.API_BASE_URL;
     
     const futureDevUrl = `${PYTHON_API_URL}/api/v1/future-development/${locationId}`;
     console.log('🔍 Fetching future development for chatbot:', futureDevUrl);
@@ -2941,9 +2938,8 @@ map.on("load", async () => {
 
   // FETCH FUTURE DEVELOPMENT DATA FOR MODAL
   function fetchFutureDevelopmentForModal(locationId, locationName) {
-    const PYTHON_API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
-      ? "http://127.0.0.1:8000" 
-      : window.location.origin;
+    // Use the configured API URL from config.js
+    const PYTHON_API_URL = window.API_BASE_URL;
     
     const futureDevUrl = `${PYTHON_API_URL}/api/v1/future-development/${locationId}`;
     console.log('🔍 Fetching future development for modal:', futureDevUrl);
@@ -3090,9 +3086,8 @@ map.on("load", async () => {
     const lng = locationData.longitude;
 
     // Fetch amenity data from Google Places API via Python backend
-    const PYTHON_API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") 
-      ? "http://127.0.0.1:8000" 
-      : window.location.origin;
+    // Use the configured API URL from config.js
+    const PYTHON_API_URL = window.API_BASE_URL;
     
     const amenityUrl = `${PYTHON_API_URL}/api/v1/amenities/${amenityType}?lat=${lat}&lng=${lng}`;
     console.log('🔍 Fetching amenities from:', amenityUrl);
