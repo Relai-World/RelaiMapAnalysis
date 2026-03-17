@@ -3077,13 +3077,25 @@ map.on("load", async () => {
       : null;
     
     if (!locationData) {
-      alert('Location data not found');
+      console.error('❌ Location data not found for locationId:', locationId);
+      console.error('🔍 Available insightsData:', window.insightsData);
+      alert('Location data not found. Please click on a location first and wait for it to load.');
       resetAmenityButtons(amenityType);
       return;
     }
 
     const lat = locationData.latitude;
     const lng = locationData.longitude;
+    
+    // Validate coordinates
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+      console.error('❌ Invalid coordinates:', { lat, lng, locationData });
+      alert('Invalid location coordinates. Please try selecting the location again.');
+      resetAmenityButtons(amenityType);
+      return;
+    }
+    
+    console.log('✅ Valid coordinates found:', { lat, lng, locationId });
 
     // Fetch amenity data from Google Places API via Python backend
     // Use the configured API URL from config.js
@@ -3408,8 +3420,17 @@ map.on("load", async () => {
     const amenityBtn = e.target.closest('.amenity-btn');
     if (amenityBtn) {
       const amenityType = amenityBtn.dataset.amenity;
+      
+      // Check if insights data is loaded
+      if (!window.insightsData || !Array.isArray(window.insightsData)) {
+        alert('Please wait for location data to load, then try again.');
+        return;
+      }
+      
       if (currentLocationId) {
         displayAmenitiesOnMap(currentLocationId, amenityType);
+      } else {
+        alert('Please select a location first by clicking on the map.');
       }
     }
 
