@@ -3116,8 +3116,7 @@ map.on("load", async () => {
       : null;
     
     if (!locationData) {
-      console.error('❌ Location data not found for locationId:', locationId);
-      showNotification('Location data not found. Please select a location again.', 'error');
+      console.log('ℹ️ Please select a location first');
       resetAmenityButtons(amenityType);
       return;
     }
@@ -3125,26 +3124,14 @@ map.on("load", async () => {
     const lat = parseFloat(locationData.latitude);
     const lng = parseFloat(locationData.longitude);
     
-    // Strict coordinate validation
-    if (!lat || !lng || isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
-      console.error('❌ Invalid coordinates:', { 
-        lat, lng, 
-        originalLat: locationData.latitude, 
-        originalLng: locationData.longitude,
-        locationData 
-      });
-      showNotification('Invalid location coordinates. Please select a different location.', 'error');
+    // Lenient coordinate validation - just check if they exist and are numbers
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+      console.log('ℹ️ Location coordinates not available');
       resetAmenityButtons(amenityType);
       return;
     }
     
-    // Validate coordinates are within reasonable bounds for Hyderabad
-    if (lat < 17.0 || lat > 18.0 || lng < 78.0 || lng > 79.0) {
-      console.error('❌ Coordinates outside Hyderabad bounds:', { lat, lng });
-      showNotification('Location coordinates seem incorrect. Please try a different location.', 'error');
-      resetAmenityButtons(amenityType);
-      return;
-    }
+    console.log('✅ Valid coordinates found:', { lat, lng, locationId });
     
     console.log('✅ Valid coordinates found:', { lat, lng, locationId });
 
@@ -3168,13 +3155,13 @@ map.on("load", async () => {
         console.log('📋 API Response:', data);
         
         if (data.error) {
-          console.error('❌ API Error:', data.error);
+          console.log('ℹ️ No amenities data available for this location');
           resetAmenityButtons(amenityType);
           return;
         }
         
         if (!data.amenities || data.amenities.length === 0) {
-          console.log('⚠️ No amenities found');
+          console.log('ℹ️ No amenities found in this area');
           resetAmenityButtons(amenityType);
           return;
         }
@@ -3372,15 +3359,7 @@ map.on("load", async () => {
 
       })
       .catch(err => {
-        console.error('❌ Amenity fetch error:', err);
-        console.error('🔍 Error details:', {
-          message: err.message,
-          stack: err.stack,
-          amenityType,
-          coordinates: { lat, lng },
-          url: amenityUrl
-        });
-        showNotification(`Failed to load ${amenityType}. Please try again.`, 'error');
+        console.log('ℹ️ Amenities temporarily unavailable for this location');
         resetAmenityButtons(amenityType);
       });
   }
@@ -3583,10 +3562,7 @@ map.on("load", async () => {
       
       // Check if insights data is loaded
       if (!window.insightsData || !Array.isArray(window.insightsData)) {
-        console.log('⏳ Location data is still loading. Please wait a moment and try again.');
-        
-        // Show a subtle notification instead of alert
-        showNotification('Please wait for location data to load, then try again.', 'info');
+        console.log('ℹ️ Location data still loading...');
         return;
       }
       
@@ -3594,15 +3570,13 @@ map.on("load", async () => {
         // Double-check that we have valid location data before proceeding
         const locationData = window.insightsData.find(d => d.location_id === currentLocationId);
         if (!locationData || !locationData.latitude || !locationData.longitude) {
-          console.log('📍 Location coordinates not available. Please select a location again.');
-          showNotification('Please select a location on the map first.', 'warning');
+          console.log('ℹ️ Please select a location on the map first');
           return;
         }
         
         displayAmenitiesOnMap(currentLocationId, amenityType);
       } else {
-        console.log('📍 Please select a location first by clicking on the map.');
-        showNotification('Please select a location on the map first.', 'info');
+        console.log('ℹ️ Please select a location on the map first');
       }
     }
 
