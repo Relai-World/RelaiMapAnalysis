@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug Amenities Console</title>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    .console-output {
+      background: #1e293b;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #2563eb; }
+    .success { color: #4ade80; }
+    .error { color: #ef4444; }
+    .info { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Debug Amenities Console</h1>
+  
+  <div class="info">
+    <p>This page will help debug what's happening when you click amenity buttons.</p>
+    <p>Open your browser's Developer Tools (F12) and watch the Console tab while testing.</p>
+  </div>
+
+  <h2>Step 1: Test API Configuration</h2>
+  <button onclick="testAPIConfig()">Test API Config</button>
+  <div id="api-config-result" class="console-output"></div>
+
+  <h2>Step 2: Test Backend Connection</h2>
+  <button onclick="testBackend()">Test Backend</button>
+  <div id="backend-result" class="console-output"></div>
+
+  <h2>Step 3: Simulate Location Click</h2>
+  <button onclick="simulateLocationClick()">Simulate Location Click</button>
+  <div id="location-result" class="console-output"></div>
+
+  <h2>Step 4: Test Amenity Fetch</h2>
+  <button onclick="testAmenityFetch()">Test Amenity Fetch</button>
+  <div id="amenity-result" class="console-output"></div>
+
+  <h2>Instructions for Main Site:</h2>
+  <div class="console-output">
+1. Open frontend/index.html in your browser
+2. Press F12 to open Developer Tools
+3. Go to Console tab
+4. Click on a location pin (like Gachibowli)
+5. Look for these console messages:
+   - "Location clicked: [object]"
+   - "currentLocationData set to: [object]"
+6. Click on an amenity button (Hospitals)
+7. Look for these console messages:
+   - "🔍 Fetching amenities from: [URL]"
+   - "📊 Response status: 200"
+   - "📋 API Response: [data]"
+8. If you see errors, copy them and tell me what they say!
+  </div>
+
+  <script src="config.js"></script>
+  <script>
+    // Test API Configuration
+    function testAPIConfig() {
+      const result = document.getElementById('api-config-result');
+      result.textContent = `API_BASE_URL: ${window.API_BASE_URL || 'UNDEFINED'}
+Current hostname: ${window.location.hostname}
+Is localhost: ${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'}`;
+    }
+
+    // Test Backend Connection
+    async function testBackend() {
+      const result = document.getElementById('backend-result');
+      result.textContent = 'Testing backend connection...';
+      
+      try {
+        const response = await fetch(`${window.API_BASE_URL}/health`);
+        const data = await response.json();
+        result.textContent = `✅ Backend healthy!
+Status: ${response.status}
+Response: ${JSON.stringify(data, null, 2)}`;
+      } catch (error) {
+        result.textContent = `❌ Backend connection failed!
+Error: ${error.message}`;
+      }
+    }
+
+    // Simulate Location Click
+    function simulateLocationClick() {
+      const result = document.getElementById('location-result');
+      
+      // Simulate the location data structure
+      window.currentLocationData = {
+        location_id: 1,
+        location: "Gachibowli",
+        latitude: 17.4401,
+        longitude: 78.3489,
+        avg_sentiment: 0.5,
+        growth_score: 0.8
+      };
+      window.currentLocationId = 1;
+      
+      result.textContent = `✅ Simulated location click!
+currentLocationId: ${window.currentLocationId}
+currentLocationData: ${JSON.stringify(window.currentLocationData, null, 2)}`;
+    }
+
+    // Test Amenity Fetch
+    async function testAmenityFetch() {
+      const result = document.getElementById('amenity-result');
+      
+      if (!window.currentLocationData) {
+        result.textContent = '❌ No location data! Click "Simulate Location Click" first.';
+        return;
+      }
+      
+      result.textContent = 'Testing amenity fetch...';
+      
+      const lat = window.currentLocationData.latitude;
+      const lng = window.currentLocationData.longitude;
+      const url = `${window.API_BASE_URL}/api/v1/amenities/hospitals?lat=${lat}&lng=${lng}`;
+      
+      try {
+        console.log('🔍 Fetching from:', url);
+        const response = await fetch(url);
+        console.log('📊 Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('📋 API Response:', data);
+        
+        result.textContent = `✅ Amenity fetch successful!
+URL: ${url}
+Status: ${response.status}
+Amenities found: ${data.amenities?.length || 0}
+Total count: ${data.total_count}
+First amenity: ${data.amenities?.[0]?.name || 'None'}`;
+        
+      } catch (error) {
+        result.textContent = `❌ Amenity fetch failed!
+URL: ${url}
+Error: ${error.message}`;
+        console.error('Fetch error:', error);
+      }
+    }
+
+    // Auto-run API config test
+    testAPIConfig();
+  </script>
+</body>
+</html>

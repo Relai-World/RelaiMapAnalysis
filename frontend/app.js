@@ -1163,6 +1163,8 @@ map.on("load", async () => {
 
     // Store current location ID for amenity buttons
     currentLocationId = p.location_id;
+    console.log('📍 LOCATION CLICKED - currentLocationId set to:', currentLocationId);
+    console.log('📍 Location data:', p);
 
     const sentimentScore = Math.min(Math.max(((p.avg_sentiment + 1) / 2) * 100, 0), 100).toFixed(0);
     const growthVal = Math.min(Math.max(p.growth_score * 100, 0), 100).toFixed(0);
@@ -3657,16 +3659,24 @@ map.on("load", async () => {
     });
   }
 
-  // Add event listeners to amenity buttons (delegated)
+  // Add event listeners to amenity buttons (delegated) - WITH FORCE DEBUG
   document.addEventListener('click', (e) => {
     // Amenity Buttons
     const amenityBtn = e.target.closest('.amenity-btn');
     if (amenityBtn) {
       const amenityType = amenityBtn.dataset.amenity;
       
+      console.log('🎯 AMENITY BUTTON CLICKED!');
+      console.log('- Button:', amenityBtn);
+      console.log('- Amenity type:', amenityType);
+      console.log('- window.insightsData exists:', !!window.insightsData);
+      console.log('- window.insightsData is array:', Array.isArray(window.insightsData));
+      console.log('- currentLocationId:', currentLocationId);
+      
       // Check if insights data is loaded
       if (!window.insightsData || !Array.isArray(window.insightsData)) {
-        console.log('ℹ️ Location data still loading...');
+        console.log('❌ FAILURE: insightsData not loaded');
+        alert('DEBUG: insightsData not loaded! Type: ' + typeof window.insightsData);
         return;
       }
       
@@ -3674,13 +3684,19 @@ map.on("load", async () => {
         // Double-check that we have valid location data before proceeding
         const locationData = window.insightsData.find(d => d.location_id === currentLocationId);
         if (!locationData || !locationData.latitude || !locationData.longitude) {
-          console.log('ℹ️ Please select a location on the map first');
+          console.log('❌ FAILURE: Location data not found or invalid');
+          console.log('- Looking for location_id:', currentLocationId);
+          console.log('- Available location_ids:', window.insightsData.map(d => d.location_id));
+          alert('DEBUG: Location data not found! currentLocationId: ' + currentLocationId);
           return;
         }
         
+        console.log('✅ All checks passed, calling displayAmenitiesOnMap...');
+        console.log('- Location data:', locationData);
         displayAmenitiesOnMap(currentLocationId, amenityType);
       } else {
-        console.log('ℹ️ Please select a location on the map first');
+        console.log('❌ FAILURE: currentLocationId not set');
+        alert('DEBUG: No location selected! Click a location pin first.');
       }
     }
 
