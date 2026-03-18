@@ -5,7 +5,7 @@ const API_CONFIG = {
   PRODUCTION_API_URL: 'https://hyderabad-intelligence.onrender.com',
   
   // Local development
-  LOCAL_API_URL: 'http://127.0.0.1:8000'
+  LOCAL_API_URL: 'http://127.0.0.1:8001'
 };
 
 // Auto-detect environment

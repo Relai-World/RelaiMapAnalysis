@@ -3412,6 +3412,9 @@ map.on("load", async () => {
     }
   }
 
+  // Make clearAmenities globally accessible
+  window.clearAmenities = clearAmenities;
+
   function showAmenitiesPanel(amenities, amenityType) {
     // Hide properties panel
     const propertiesPanel = document.getElementById('properties-panel');
@@ -3432,9 +3435,11 @@ map.on("load", async () => {
         width: 320px;
         max-height: calc(100vh - 100px);
         background: var(--bg-card);
-        border: 1px solid var(--border);
+        border: 1px solid var(--border-subtle);
         border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+        backdrop-filter: var(--blur);
+        -webkit-backdrop-filter: var(--blur);
         z-index: 1000;
         overflow: hidden;
         font-family: 'Inter', sans-serif;
@@ -3446,13 +3451,13 @@ map.on("load", async () => {
     const amenitiesHtml = amenities.map(amenity => `
       <div class="amenity-item" onclick="map.flyTo({center: [${amenity.longitude}, ${amenity.latitude}], zoom: 16})" style="
         padding: 12px 16px;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--border-subtle);
         cursor: pointer;
         transition: background-color 0.2s;
         display: flex;
         justify-content: space-between;
         align-items: center;
-      " onmouseover="this.style.backgroundColor='var(--bg-hover)'" onmouseout="this.style.backgroundColor='transparent'">
+      " onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.backgroundColor='transparent'">
         <div>
           <div class="amenity-name" style="font-weight: 500; color: var(--t1); margin-bottom: 4px;">${amenity.name}</div>
           <div class="amenity-distance" style="font-size: 12px; color: var(--t3);">${amenity.distance_km} km away</div>
@@ -3468,17 +3473,18 @@ map.on("load", async () => {
 
     amenitiesPanel.innerHTML = `
       <div class="panel-header" style="
-        padding: 16px;
-        border-bottom: 1px solid var(--border);
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-subtle);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: var(--bg-card);
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), transparent);
+        border-radius: 16px 16px 0 0;
       ">
-        <h3 style="margin: 0; color: var(--blue); font-family: 'Outfit', sans-serif; font-size: 18px;">
+        <h3 style="margin: 0; color: var(--gold); font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600;">
           ${amenityType.charAt(0).toUpperCase() + amenityType.slice(1)} Nearby
         </h3>
-        <button class="close-btn" onclick="clearAmenities()" style="
+        <button class="close-btn" onclick="window.clearAmenities()" style="
           background: none;
           border: none;
           font-size: 20px;
@@ -3486,15 +3492,15 @@ map.on("load", async () => {
           cursor: pointer;
           padding: 4px;
           border-radius: 4px;
-        " onmouseover="this.style.backgroundColor='var(--bg-hover)'" onmouseout="this.style.backgroundColor='transparent'">×</button>
+        " onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.backgroundColor='transparent'">×</button>
       </div>
       <div class="panel-content" style="max-height: calc(100vh - 200px); overflow-y: auto;">
         <div class="amenities-count" style="
           padding: 12px 16px;
           font-size: 14px;
           color: var(--t2);
-          background: var(--bg-subtle);
-          border-bottom: 1px solid var(--border);
+          background: rgba(255, 255, 255, 0.2);
+          border-bottom: 1px solid var(--border-subtle);
         ">${amenities.length} ${amenityType} found within 5km</div>
         <div class="amenities-list">
           ${amenitiesHtml}

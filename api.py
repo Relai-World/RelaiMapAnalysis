@@ -672,6 +672,10 @@ def get_amenities(amenity_type: str, lat: float, lng: float):
         return {"error": "Invalid amenity type", "amenities": []}
 
     g_type = google_type_mapping[amenity_type]
+    
+    # Force reload .env file to get the correct API key
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
     api_key = os.getenv("GOOGLE_PLACES_API_KEY")
     
     if not api_key:
