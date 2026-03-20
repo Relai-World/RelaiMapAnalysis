@@ -2,10 +2,10 @@
 // Update this after deploying your API to Render
 const API_CONFIG = {
   // Change this to your Render API URL after deployment
-  PRODUCTION_API_URL: 'https://hyderabad-intelligence.onrender.com',
+  PRODUCTION_API_URL: 'https://west-hyderabad-intelliweb.onrender.com',
   
   // Local development
-  LOCAL_API_URL: 'http://127.0.0.1:8001'
+  LOCAL_API_URL: 'http://127.0.0.1:8000'
 };
 
 // Auto-detect environment

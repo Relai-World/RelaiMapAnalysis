@@ -3,38 +3,6 @@ console.log("App.js Loaded - V 2.1 - Future Development Fixed - API URLs Correct
 const protocol = new pmtiles.Protocol();
 maplibregl.addProtocol("pmtiles", protocol.tile);
 
-// DEBUG: Check Lakes Metadata
-async function checkLakes() {
-  try {
-    const p = new pmtiles.PMTiles("maptiles/lakes.pmtiles");
-    const metadata = await p.getMetadata();
-    console.log("=== LAKES METADATA ===");
-    if (metadata && metadata.vector_layers) {
-      console.log("LAYERS:", metadata.vector_layers);
-    } else {
-      console.log("Metadata:", metadata);
-    }
-  } catch (e) { console.error("Lakes Check Failed:", e); }
-}
-checkLakes();
-
-// DEBUG: Check Metro Metadata
-async function checkMetro() {
-  try {
-    const p = new pmtiles.PMTiles("maptiles/metro.pmtiles");
-    const metadata = await p.getMetadata();
-    console.log("=== METRO METADATA ===");
-    if (metadata && metadata.vector_layers) {
-      console.log("LAYERS:", metadata.vector_layers);
-    } else {
-      console.log("Metadata:", metadata);
-    }
-  } catch (e) { console.error("Metro Check Failed:", e); }
-}
-checkMetro();
-
-
-
 const map = new maplibregl.Map({
   container: "map",
   // Neutral, slightly desaturated light basemap to match luxury UI
@@ -1305,14 +1273,28 @@ map.on("load", async () => {
         </div>
       </div>
 
-      <!-- PRICE CHART -->
-      <div class="chart-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <h4 class="section-label">Price Trend</h4>
-          <span id="cagr-stat" style="font-size:11px; font-weight:700; color:var(--green); font-family:'Outfit',sans-serif;">Computing…</span>
+      <!-- TRENDS CHARTS - STACKED LAYOUT -->
+      <div class="charts-section">
+        <!-- Price Trends Chart -->
+        <div class="chart-block">
+          <div class="chart-header">
+            <h4 class="chart-title">📈 Price Trends</h4>
+            <span id="price-chart-stat" class="chart-stat">Computing…</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="priceChart"></canvas>
+          </div>
         </div>
-        <div class="chart-container">
-          <canvas id="priceChart"></canvas>
+
+        <!-- Volume Trends Chart -->
+        <div class="chart-block">
+          <div class="chart-header">
+            <h4 class="chart-title">📊 Volume Trends</h4>
+            <span id="volume-chart-stat" class="chart-stat">Computing…</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="volumeChart"></canvas>
+          </div>
         </div>
       </div>
 
@@ -1324,8 +1306,9 @@ map.on("load", async () => {
     // FETCH AND DISPLAY PROPERTY COSTS DYNAMICALLY
     fetchPropertyCosts(p.location);
 
-    // DRAW THE PRICE CHART
+    // INITIALIZE BOTH CHARTS SIMULTANEOUSLY
     drawPriceChart(p.location_id);
+    drawVolumeChart(p.location);
 
     if (activeMarker) activeMarker.remove();
     const markerEl = document.createElement('div');
@@ -2076,8 +2059,9 @@ map.on("load", async () => {
 
 
 
-  // CHART.JS HELPER - Enhanced Price Trends Visualization
-  let priceChartInstance = null; // Store chart instance globally
+  // CHART.JS HELPER - Dual Charts Display
+  let priceChartInstance = null; // Store price chart instance
+  let volumeChartInstance = null; // Store volume chart instance
 
   function drawPriceChart(locationId) {
     console.log('Drawing price chart for location ID:', locationId);
@@ -2091,10 +2075,10 @@ map.on("load", async () => {
         // Handle new API response structure
         if (!result || result.error || !result.trends || result.trends.length === 0) {
           console.warn('No chart data available:', result?.error || 'No trends data');
-          document.getElementById('cagr-stat').style.display = 'none';
+          document.getElementById('price-chart-stat').style.display = 'none';
 
           // Show "No data" message in chart area
-          const chartContainer = document.querySelector('.chart-container');
+          const chartContainer = document.querySelector('#priceChart').parentElement;
           if (chartContainer) {
             chartContainer.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#999; font-size:11px; font-family:Outfit;">No price trend data available</div>';
           }
@@ -2105,17 +2089,17 @@ map.on("load", async () => {
         const cagr = result.cagr || 0;
         const growthYoy = result.growth_yoy || 0;
 
-        console.log('Rendering chart with', trendsData.length, 'data points');
+        console.log('Rendering price chart with', trendsData.length, 'data points');
 
         // Update CAGR stat with enhanced styling
-        const cagrElement = document.getElementById('cagr-stat');
+        const statElement = document.getElementById('price-chart-stat');
         if (cagr !== 0) {
           const cagrColor = cagr > 10 ? '#4CAF50' : cagr > 5 ? '#FFA726' : '#A68A3D';
-          const trendIcon = cagr > 0 ? '📈' : '📉';
-          cagrElement.innerHTML = `${trendIcon} <span style="color:${cagrColor}; font-weight:800;">${cagr.toFixed(1)}%</span> CAGR`;
-          cagrElement.style.display = 'block';
+          const trendIcon = cagr > 0 ? '↗' : '↘';
+          statElement.innerHTML = `${trendIcon} <span style="color:${cagrColor}; font-weight:800;">${cagr.toFixed(1)}%</span> CAGR`;
+          statElement.style.display = 'block';
         } else {
-          cagrElement.style.display = 'none';
+          statElement.style.display = 'none';
         }
 
         // Destroy existing chart instance if it exists
@@ -2125,20 +2109,20 @@ map.on("load", async () => {
 
         const canvas = document.getElementById('priceChart');
         if (!canvas) {
-          console.error('Canvas element not found!');
+          console.error('Price canvas element not found!');
           return;
         }
 
         const ctx = canvas.getContext('2d');
 
         // Enhanced gradient with richer colors
-        const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+        const gradient = ctx.createLinearGradient(0, 0, 0, 140);
         gradient.addColorStop(0, 'rgba(201, 162, 74, 0.35)');
         gradient.addColorStop(0.5, 'rgba(166, 138, 61, 0.15)');
         gradient.addColorStop(1, 'rgba(166, 138, 61, 0)');
 
         // Create glow effect gradient for line
-        const glowGradient = ctx.createLinearGradient(0, 0, 0, 200);
+        const glowGradient = ctx.createLinearGradient(0, 0, 0, 140);
         glowGradient.addColorStop(0, '#FFD700');
         glowGradient.addColorStop(0.5, '#C9A24A');
         glowGradient.addColorStop(1, '#A68A3D');
@@ -2151,22 +2135,18 @@ map.on("load", async () => {
               label: 'Price per SqFt',
               data: trendsData.map(d => d.price),
               borderColor: glowGradient,
-              borderWidth: 3,
+              borderWidth: 2.5,
               fill: true,
               backgroundColor: gradient,
               tension: 0.4,
-              pointRadius: 6,
-              pointHoverRadius: 8,
+              pointRadius: 4,
+              pointHoverRadius: 6,
               pointBackgroundColor: '#FFD700',
               pointBorderColor: '#FFFFFF',
               pointBorderWidth: 2,
               pointHoverBackgroundColor: '#FFF',
               pointHoverBorderColor: '#FFD700',
-              pointHoverBorderWidth: 3,
-              shadowOffsetX: 0,
-              shadowOffsetY: 4,
-              shadowBlur: 10,
-              shadowColor: 'rgba(201, 162, 74, 0.3)'
+              pointHoverBorderWidth: 2
             }]
           },
           options: {
@@ -2182,25 +2162,25 @@ map.on("load", async () => {
                 enabled: true,
                 backgroundColor: 'rgba(26, 28, 30, 0.95)',
                 borderColor: '#FFD700',
-                borderWidth: 2,
+                borderWidth: 1,
                 titleColor: '#FFD700',
                 bodyColor: '#FFFFFF',
                 titleFont: {
                   family: 'Outfit',
                   weight: '700',
-                  size: 13
+                  size: 11
                 },
                 bodyFont: {
                   family: 'Outfit',
-                  size: 12,
+                  size: 10,
                   weight: '600'
                 },
-                padding: 14,
-                cornerRadius: 8,
+                padding: 10,
+                cornerRadius: 6,
                 displayColors: false,
                 callbacks: {
                   title: (context) => {
-                    return `Year ${context[0].label}`;
+                    return `${context[0].label}`;
                   },
                   label: (context) => {
                     const price = context.parsed.y;
@@ -2212,23 +2192,10 @@ map.on("load", async () => {
                       const prevPrice = trendsData[index - 1].price;
                       const change = ((price - prevPrice) / prevPrice * 100).toFixed(1);
                       const changeIcon = change > 0 ? '↑' : '↓';
-                      const changeColor = change > 0 ? '🟢' : '🔴';
-                      changeText = `\n${changeColor} ${changeIcon} ${Math.abs(change)}% YoY`;
+                      changeText = ` (${changeIcon}${Math.abs(change)}% YoY)`;
                     }
 
                     return `₹${price.toLocaleString()}/sqft${changeText}`;
-                  },
-                  afterLabel: (context) => {
-                    const index = context.dataIndex;
-                    const price = context.parsed.y;
-
-                    // Show growth from start
-                    if (index > 0) {
-                      const startPrice = trendsData[0].price;
-                      const totalGrowth = ((price - startPrice) / startPrice * 100).toFixed(1);
-                      return `\n📊 +${totalGrowth}% from ${trendsData[0].year}`;
-                    }
-                    return '';
                   }
                 }
               }
@@ -2244,10 +2211,10 @@ map.on("load", async () => {
                   color: '#9E9E9E',
                   font: {
                     family: 'Outfit',
-                    size: 11,
+                    size: 9,
                     weight: '600'
                   },
-                  padding: 8
+                  padding: 4
                 },
                 border: {
                   color: 'rgba(166, 138, 61, 0.2)'
@@ -2262,10 +2229,10 @@ map.on("load", async () => {
                   color: '#9E9E9E',
                   font: {
                     family: 'Outfit',
-                    size: 11,
+                    size: 9,
                     weight: '600'
                   },
-                  padding: 8,
+                  padding: 4,
                   callback: (v) => {
                     if (v >= 1000) {
                       return '₹' + (v / 1000).toFixed(1) + 'k';
@@ -2279,22 +2246,245 @@ map.on("load", async () => {
               }
             },
             animation: {
-              duration: 1500,
+              duration: 1000,
               easing: 'easeInOutQuart'
             }
           }
         });
 
-        console.log('Chart created successfully:', priceChartInstance);
+        console.log('Price chart created successfully:', priceChartInstance);
       })
       .catch(err => {
-        console.error("Chart Fetch Error:", err);
-        document.getElementById('cagr-stat').style.display = 'none';
-        const chartContainer = document.querySelector('.chart-container');
+        console.error("Price Chart Fetch Error:", err);
+        document.getElementById('price-chart-stat').style.display = 'none';
+        const chartContainer = document.querySelector('#priceChart').parentElement;
         if (chartContainer) {
-          chartContainer.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#ff5555; font-size:11px; font-family:Outfit;">Error loading chart data</div>';
+          chartContainer.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#ff5555; font-size:11px; font-family:Outfit;">Error loading price data</div>';
         }
       });
+  }
+
+  function drawVolumeChart(locationName) {
+    console.log('Drawing volume chart for location:', locationName);
+
+    // Check if volume data exists for this location
+    if (!window.VOLUME_TRENDS_DATA || !window.VOLUME_TRENDS_DATA[locationName]) {
+      console.warn('No volume data available for:', locationName);
+      document.getElementById('volume-chart-stat').style.display = 'none';
+      
+      const chartContainer = document.querySelector('#volumeChart').parentElement;
+      if (chartContainer) {
+        chartContainer.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#999; font-size:11px; font-family:Outfit;">No volume trend data available</div>';
+      }
+      return;
+    }
+
+    const volumeData = window.VOLUME_TRENDS_DATA[locationName];
+    console.log('Rendering volume chart with data:', volumeData);
+
+    // Calculate comprehensive volume statistics
+    const volumes = volumeData.volumes;
+    const years = volumeData.years;
+    
+    // Find peak and trough
+    const maxVolume = Math.max(...volumes);
+    const minVolume = Math.min(...volumes);
+    const maxIndex = volumes.indexOf(maxVolume);
+    const minIndex = volumes.indexOf(minVolume);
+    const peakYear = years[maxIndex];
+    const troughYear = years[minIndex];
+    
+    // Calculate recent YoY growth (last two years)
+    let yoyGrowth = 0;
+    if (volumes.length >= 2) {
+      const currentYear = volumes[volumes.length - 1];
+      const previousYear = volumes[volumes.length - 2];
+      yoyGrowth = ((currentYear - previousYear) / previousYear * 100);
+    }
+    
+    // Calculate decline from peak (if applicable)
+    const currentVolume = volumes[volumes.length - 1];
+    const declineFromPeak = ((currentVolume - maxVolume) / maxVolume * 100);
+    
+    // Determine market phase and create comprehensive stat
+    let statText = '';
+    let statColor = '#9E9E9E';
+    
+    if (Math.abs(declineFromPeak) < 5) {
+      // Near peak
+      statText = `📊 Peak: ${maxVolume.toLocaleString()} (${peakYear}) • ${yoyGrowth > 0 ? '↗' : '↘'} ${Math.abs(yoyGrowth).toFixed(1)}% YoY`;
+      statColor = yoyGrowth > 0 ? '#4CAF50' : '#FFA726';
+    } else if (declineFromPeak < -10) {
+      // Significant decline from peak
+      statText = `📉 Down ${Math.abs(declineFromPeak).toFixed(1)}% from peak ${maxVolume.toLocaleString()} (${peakYear}) • ${yoyGrowth.toFixed(1)}% YoY`;
+      statColor = '#F44336';
+    } else if (yoyGrowth > 5) {
+      // Strong recent growth
+      statText = `📈 ${yoyGrowth.toFixed(1)}% YoY • Peak: ${maxVolume.toLocaleString()} (${peakYear})`;
+      statColor = '#4CAF50';
+    } else {
+      // Standard display
+      const trendIcon = yoyGrowth > 0 ? '↗' : '↘';
+      statText = `${trendIcon} ${Math.abs(yoyGrowth).toFixed(1)}% YoY • Peak: ${maxVolume.toLocaleString()} (${peakYear})`;
+      statColor = yoyGrowth > 0 ? '#4CAF50' : (yoyGrowth < -5 ? '#F44336' : '#FFA726');
+    }
+
+    // Update stat display with comprehensive information
+    const statElement = document.getElementById('volume-chart-stat');
+    statElement.innerHTML = `<span style="color:${statColor}; font-weight:800;">${statText}</span>`;
+    statElement.style.display = 'block';
+
+    // Destroy existing chart instance if it exists
+    if (volumeChartInstance) {
+      volumeChartInstance.destroy();
+    }
+
+    const canvas = document.getElementById('volumeChart');
+    if (!canvas) {
+      console.error('Volume canvas element not found!');
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    // Volume chart gradient (blue color scheme)
+    const gradient = ctx.createLinearGradient(0, 0, 0, 140);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
+    gradient.addColorStop(0.5, 'rgba(37, 99, 235, 0.15)');
+    gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
+
+    // Create glow effect gradient for line
+    const glowGradient = ctx.createLinearGradient(0, 0, 0, 140);
+    glowGradient.addColorStop(0, '#3B82F6');
+    glowGradient.addColorStop(0.5, '#2563EB');
+    glowGradient.addColorStop(1, '#1D4ED8');
+
+    volumeChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: years,
+        datasets: [{
+          label: 'Transaction Volume',
+          data: volumes,
+          borderColor: glowGradient,
+          borderWidth: 2.5,
+          fill: true,
+          backgroundColor: gradient,
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#3B82F6',
+          pointBorderColor: '#FFFFFF',
+          pointBorderWidth: 2,
+          pointHoverBackgroundColor: '#FFF',
+          pointHoverBorderColor: '#3B82F6',
+          pointHoverBorderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            backgroundColor: 'rgba(26, 28, 30, 0.95)',
+            borderColor: '#3B82F6',
+            borderWidth: 1,
+            titleColor: '#3B82F6',
+            bodyColor: '#FFFFFF',
+            titleFont: {
+              family: 'Outfit',
+              weight: '700',
+              size: 11
+            },
+            bodyFont: {
+              family: 'Outfit',
+              size: 10,
+              weight: '600'
+            },
+            padding: 10,
+            cornerRadius: 6,
+            displayColors: false,
+            callbacks: {
+              title: (context) => {
+                return `${context[0].label}`;
+              },
+              label: (context) => {
+                const volume = context.parsed.y;
+                const index = context.dataIndex;
+
+                // Calculate YoY change if not first point
+                let changeText = '';
+                if (index > 0) {
+                  const prevVolume = volumes[index - 1];
+                  const change = ((volume - prevVolume) / prevVolume * 100).toFixed(1);
+                  const changeIcon = change > 0 ? '↑' : '↓';
+                  changeText = ` (${changeIcon}${Math.abs(change)}% YoY)`;
+                }
+
+                return `${volume.toLocaleString()} transactions${changeText}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              display: true,
+              color: 'rgba(59, 130, 246, 0.05)',
+              lineWidth: 1
+            },
+            ticks: {
+              color: '#9E9E9E',
+              font: {
+                family: 'Outfit',
+                size: 9,
+                weight: '600'
+              },
+              padding: 4
+            },
+            border: {
+              color: 'rgba(59, 130, 246, 0.2)'
+            }
+          },
+          y: {
+            grid: {
+              color: 'rgba(59, 130, 246, 0.08)',
+              lineWidth: 1
+            },
+            ticks: {
+              color: '#9E9E9E',
+              font: {
+                family: 'Outfit',
+                size: 9,
+                weight: '600'
+              },
+              padding: 4,
+              callback: (v) => {
+                if (v >= 1000) {
+                  return (v / 1000).toFixed(1) + 'k';
+                }
+                return v;
+              }
+            },
+            border: {
+              color: 'rgba(59, 130, 246, 0.2)'
+            }
+          }
+        },
+        animation: {
+          duration: 1000,
+          easing: 'easeInOutQuart'
+        }
+      }
+    });
+
+    console.log('Volume chart created successfully:', volumeChartInstance);
   }
 
   // FETCH PROPERTY COSTS DYNAMICALLY
@@ -2779,10 +2969,15 @@ map.on("load", async () => {
     console.log('🔍 Fetching future development for chatbot:', futureDevUrl);
 
     fetch(futureDevUrl)
-      .then(response => response.json())
+      .then(response => {
+        console.log('🔍 API Response status:', response.status);
+        return response.json();
+      })
       .then(data => {
         const messagesContainer = document.getElementById('chatbot-messages');
-        if (!messagesContainer) return; // Chatbot was closed
+        if (!messagesContainer) {
+          return;
+        }
         
         // Remove typing indicator
         const typingMessage = messagesContainer.querySelector('.typing-message');
@@ -3139,7 +3334,7 @@ map.on("load", async () => {
     // Use the configured API URL from config.js
     const PYTHON_API_URL = window.API_BASE_URL;
     
-    const amenityUrl = `${PYTHON_API_URL}/api/v1/amenities/${amenityType}?lat=${lat}&lng=${lng}`;
+    const amenityUrl = `${PYTHON_API_URL}/api/v1/amenities/${amenityType}?lat=${lat}&lng=${lng}&limit=10`;
     console.log('🔍 Fetching amenities from:', amenityUrl);
     console.log('📍 Location coordinates:', { lat, lng, locationId });
     
@@ -3288,9 +3483,9 @@ map.on("load", async () => {
         console.log('🔍 Amenity list elements:', { listCard: !!listCard, listContent: !!listContent, listTitle: !!listTitle });
 
         if (listCard && listContent && listTitle) {
-          // Update Title
+          // Update Title - Simple text only
           const typeName = amenityType.charAt(0).toUpperCase() + amenityType.slice(1);
-          listTitle.textContent = `Nearby ${typeName} (${data.total_count})`;
+          listTitle.textContent = `${typeName} nearby`;
 
           // Clear previous list
           listContent.innerHTML = '';
@@ -3310,38 +3505,35 @@ map.on("load", async () => {
 
             item.innerHTML = `
               <div class="amenity-info">
-                <div class="amenity-name" style="font-size:0.9rem; font-weight:500;">${amenity.name}</div>
-                <div style="display:flex; gap:6px; margin-top:8px;">
-                  <span style="background:#E6F4EA; color:#166534; padding:3px 8px; border-radius:12px; font-size:10px; font-weight:600; border:1px solid #16653430;">📍 ${amenity.distance_km} km</span>
-                  <span style="background:#F1F5F9; color:#334155; padding:3px 8px; border-radius:12px; font-size:10px; font-weight:600; text-transform:uppercase; border:1px solid #33415530;">${colorLabel}</span>
+                <div class="amenity-name">${amenity.name}</div>
+                <div class="amenity-badges">
+                  <span class="amenity-badge amenity-badge-distance">${amenity.distance_km} km</span>
+                  <span class="amenity-badge amenity-badge-range">${colorLabel}</span>
                 </div>
               </div>
             `;
 
-            // Click to Fly
-            item.onclick = () => {
-              map.flyTo({
-                center: [amenity.longitude, amenity.latitude],
-                zoom: 15,
-                pitch: 45,
-                essential: true
-              });
+            // Click to Fly - Enhanced with debugging and better event handling
+            item.style.cursor = 'pointer';
+            item.addEventListener('click', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              console.log('🔍 Amenity clicked:', amenity.name);
+              console.log('🔍 Coordinates:', amenity.longitude, amenity.latitude);
+              
+              if (!amenity.longitude || !amenity.latitude) {
+                console.error('❌ Missing coordinates for:', amenity.name);
+                return;
+              }
 
-              // Trigger Popup (Simulate)
-              if (currentPopup) currentPopup.remove();
-              currentPopup = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '240px' })
-                .setLngLat([amenity.longitude, amenity.latitude])
-                .setHTML(`
-                  <div class="popup-container" style="padding:16px;">
-                    <div class="popup-title serif" style="font-size:16px; margin-bottom:8px;">${amenity.name}</div>
-                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                      <span style="background:#E6F4EA; color:#166534; padding:4px 8px; border-radius:12px; font-size:10px; font-weight:600; border:1px solid #16653430;">📍 ${amenity.distance_km} km</span>
-                      <span style="background:#F1F5F9; color:#334155; padding:4px 8px; border-radius:12px; font-size:10px; font-weight:600; text-transform:uppercase; border:1px solid #33415530;">${colorLabel}</span>
-                    </div>
-                  </div>
-                `)
-                .addTo(map);
-            };
+              console.log('🚀 Flying to amenity location...');
+              
+              // Use the navigateToAmenity function which is proven to work
+              navigateToAmenity(amenity.longitude, amenity.latitude, amenity.name);
+              
+              console.log('✅ Navigation should be complete');
+            });
 
             listContent.appendChild(item);
           });
@@ -3413,6 +3605,92 @@ map.on("load", async () => {
   }
 
   // Make clearAmenities globally accessible
+  // Helper functions for the amenities panel
+  function getAmenityConfig(amenityType) {
+    const configs = {
+      hospitals: { 
+        icon: '🏥', 
+        label: 'Healthcare Centers',
+        gradient: 'linear-gradient(135deg, #ff6b6b, #ee5a52)'
+      },
+      schools: { 
+        icon: '🎓', 
+        label: 'Educational Institutions',
+        gradient: 'linear-gradient(135deg, #4ecdc4, #44a08d)'
+      },
+      parks: { 
+        icon: '🌳', 
+        label: 'Parks & Recreation',
+        gradient: 'linear-gradient(135deg, #a8e6cf, #7fcdcd)'
+      },
+      malls: { 
+        icon: '🛍️', 
+        label: 'Shopping Centers',
+        gradient: 'linear-gradient(135deg, #ffd93d, #ff6b6b)'
+      },
+      restaurants: { 
+        icon: '🍽️', 
+        label: 'Restaurants & Dining',
+        gradient: 'linear-gradient(135deg, #ff9a9e, #fecfef)'
+      },
+      banks: { 
+        icon: '🏦', 
+        label: 'Banks & ATMs',
+        gradient: 'linear-gradient(135deg, #667eea, #764ba2)'
+      },
+      metro: { 
+        icon: '🚇', 
+        label: 'Metro Stations',
+        gradient: 'linear-gradient(135deg, #f093fb, #f5576c)'
+      }
+    };
+    return configs[amenityType] || { 
+      icon: '📍', 
+      label: 'Amenities',
+      gradient: 'linear-gradient(135deg, #a8edea, #fed6e3)'
+    };
+  }
+
+  function calculateAverageDistance(amenities) {
+    if (!amenities.length) return 'N/A';
+    const total = amenities.reduce((sum, amenity) => sum + parseFloat(amenity.distance_km), 0);
+    return (total / amenities.length).toFixed(1) + ' km';
+  }
+
+  function navigateToAmenity(longitude, latitude, name) {
+    console.log(`🧭 Navigating to: ${name} at [${longitude}, ${latitude}]`);
+    
+    // Fly to the amenity location
+    map.flyTo({
+      center: [longitude, latitude],
+      zoom: 17,
+      duration: 1500,
+      essential: true
+    });
+    
+    // Show notification
+    showNotification(`📍 Navigating to ${name}`, 'success');
+    
+    // Optional: Add a temporary marker
+    setTimeout(() => {
+      const popup = new maplibregl.Popup({ closeOnClick: true })
+        .setLngLat([longitude, latitude])
+        .setHTML(`
+          <div style="text-align: center; padding: 8px;">
+            <strong>${name}</strong><br>
+            <small style="color: #666;">You have arrived!</small>
+          </div>
+        `)
+        .addTo(map);
+      
+      // Auto-close popup after 3 seconds
+      setTimeout(() => popup.remove(), 3000);
+    }, 1500);
+  }
+
+  // Make navigateToAmenity globally accessible
+  window.navigateToAmenity = navigateToAmenity;
+
   window.clearAmenities = clearAmenities;
 
   function showAmenitiesPanel(amenities, amenityType) {
@@ -3422,93 +3700,67 @@ map.on("load", async () => {
       propertiesPanel.style.display = 'none';
     }
 
-    // Get or create amenities panel
-    let amenitiesPanel = document.getElementById('amenities-panel');
-    if (!amenitiesPanel) {
-      amenitiesPanel = document.createElement('div');
-      amenitiesPanel.id = 'amenities-panel';
-      amenitiesPanel.className = 'side-panel';
-      amenitiesPanel.style.cssText = `
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        width: 320px;
-        max-height: calc(100vh - 100px);
-        background: var(--bg-card);
-        border: 1px solid var(--border-subtle);
-        border-radius: 16px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.04);
-        backdrop-filter: var(--blur);
-        -webkit-backdrop-filter: var(--blur);
-        z-index: 1000;
-        overflow: hidden;
-        font-family: 'Inter', sans-serif;
-      `;
-      document.body.appendChild(amenitiesPanel);
+    // Remove existing amenities panel
+    const existingPanel = document.getElementById('amenities-panel');
+    if (existingPanel) {
+      existingPanel.remove();
     }
 
-    // Create amenities list HTML
-    const amenitiesHtml = amenities.map(amenity => `
-      <div class="amenity-item" onclick="map.flyTo({center: [${amenity.longitude}, ${amenity.latitude}], zoom: 16})" style="
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--border-subtle);
-        cursor: pointer;
-        transition: background-color 0.2s;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      " onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.backgroundColor='transparent'">
-        <div>
-          <div class="amenity-name" style="font-weight: 500; color: var(--t1); margin-bottom: 4px;">${amenity.name}</div>
-          <div class="amenity-distance" style="font-size: 12px; color: var(--t3);">${amenity.distance_km} km away</div>
+    // Create compact amenities panel
+    const amenitiesPanel = document.createElement('div');
+    amenitiesPanel.id = 'amenities-panel';
+    amenitiesPanel.className = 'amenities-panel-compact';
+
+    // Sort amenities by distance
+    const sortedAmenities = amenities.sort((a, b) => parseFloat(a.distance_km) - parseFloat(b.distance_km));
+    
+    // Get amenity configuration
+    const amenityConfig = getAmenityConfig(amenityType);
+    
+    // Create compact amenities list
+    const amenitiesList = sortedAmenities.map((amenity, index) => `
+      <div class="amenity-item-compact" onclick="navigateToAmenity(${amenity.longitude}, ${amenity.latitude}, '${amenity.name.replace(/'/g, "\\'")}')">
+        <div class="amenity-content">
+          <div class="amenity-name-compact">${amenity.name}</div>
+          <div class="amenity-distance-compact">${amenity.distance_km} km away</div>
         </div>
-        <div class="amenity-color-indicator" style="
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background-color: ${amenity.color};
-        "></div>
       </div>
     `).join('');
 
     amenitiesPanel.innerHTML = `
-      <div class="panel-header" style="
-        padding: 16px 20px;
-        border-bottom: 1px solid var(--border-subtle);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), transparent);
-        border-radius: 16px 16px 0 0;
-      ">
-        <h3 style="margin: 0; color: var(--gold); font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 600;">
-          ${amenityType.charAt(0).toUpperCase() + amenityType.slice(1)} Nearby
-        </h3>
-        <button class="close-btn" onclick="window.clearAmenities()" style="
-          background: none;
-          border: none;
-          font-size: 20px;
-          color: var(--t3);
-          cursor: pointer;
-          padding: 4px;
-          border-radius: 4px;
-        " onmouseover="this.style.backgroundColor='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.backgroundColor='transparent'">×</button>
+      <div class="amenities-header-compact">
+        <div class="header-info-compact">
+          <div class="header-text-compact">
+            <h3 class="amenities-title-compact">${amenityConfig.label}</h3>
+            <p class="amenities-count-compact">${sortedAmenities.length} nearby</p>
+          </div>
+        </div>
+        <button class="close-btn-compact" onclick="window.clearAmenities()">✕</button>
       </div>
-      <div class="panel-content" style="max-height: calc(100vh - 200px); overflow-y: auto;">
-        <div class="amenities-count" style="
-          padding: 12px 16px;
-          font-size: 14px;
-          color: var(--t2);
-          background: rgba(255, 255, 255, 0.2);
-          border-bottom: 1px solid var(--border-subtle);
-        ">${amenities.length} ${amenityType} found within 5km</div>
-        <div class="amenities-list">
-          ${amenitiesHtml}
+      
+      <div class="amenities-scroll-container">
+        ${amenitiesList}
+      </div>
+      
+      <div class="amenities-footer-compact">
+        <div class="footer-stat">
+          <span class="stat-label-small">Nearest:</span>
+          <span class="stat-value-small">${sortedAmenities[0]?.distance_km || 'N/A'} km</span>
+        </div>
+        <div class="footer-divider"></div>
+        <div class="footer-stat">
+          <span class="stat-label-small">Average:</span>
+          <span class="stat-value-small">${calculateAverageDistance(sortedAmenities)}</span>
         </div>
       </div>
     `;
 
-    amenitiesPanel.style.display = 'block';
+    document.body.appendChild(amenitiesPanel);
+
+    // Animate panel in
+    setTimeout(() => {
+      amenitiesPanel.classList.add('panel-visible');
+    }, 50);
   }
 
   function resetAmenityButtons(activeType = null, count = null) {
@@ -3842,96 +4094,6 @@ function createProjectGroupCard(project) {
 
   // Click handler to show all configurations
   card.onclick = () => showProjectConfigurations(project);
-
-  return card;
-}
-
-function createPropertyCard(property) {
-  const card = document.createElement('div');
-  card.className = 'prop-card';
-
-  // Parse images for thumbnail
-  let imageUrl = null;
-  if (property.images) {
-    try {
-      const images = JSON.parse(property.images);
-      if (Array.isArray(images) && images.length > 0) {
-        imageUrl = images[0];
-      }
-    } catch (e) {
-      console.warn('Failed to parse images:', e);
-    }
-  }
-
-  // Format all the required fields
-  const projectName = property.projectname || 'Unnamed Project';
-  const builderName = property.buildername || 'Builder not specified';
-  const projectType = property.project_type || 'N/A';
-  const bhk = property.bhk ? (parseFloat(property.bhk) % 1 === 0 ? parseInt(property.bhk) : parseFloat(property.bhk)) : 'N/A';
-  const sqfeet = property.sqfeet || 'N/A';
-  const pricePerSqft = property.price_per_sft
-    ? `₹${Math.round(property.price_per_sft).toLocaleString()}/sqft`
-    : 'Price on request';
-  const constructionStatus = property.construction_status || 'N/A';
-  const areaName = property.areaname || 'N/A';
-
-  // Status badge color
-  let statusClass = 'prop-tag-status';
-  if (property.construction_status) {
-    const status = property.construction_status.toLowerCase();
-    if (status.includes('rtm') || status.includes('ready')) {
-      statusClass = 'prop-tag-status'; // Green
-    } else if (status.includes('under') || status.includes('construction')) {
-      statusClass = 'prop-tag-avail'; // Orange-ish
-    }
-  }
-
-  card.innerHTML = `
-      ${imageUrl
-      ? `<img src="${imageUrl}" alt="${projectName}" class="prop-card-thumb" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />`
-      : ''
-    }
-      <div class="prop-card-thumb-placeholder" style="${imageUrl ? 'display:none;' : ''}">🏢</div>
-      
-      <div class="prop-card-body">
-        <h3 class="prop-card-name">${projectName}</h3>
-        <p class="prop-card-builder">by ${builderName}</p>
-        
-        <div class="prop-card-details">
-          <div class="prop-detail-row">
-            <span class="prop-detail-label">Type:</span>
-            <span class="prop-detail-value">${projectType}</span>
-          </div>
-          <div class="prop-detail-row">
-            <span class="prop-detail-label">BHK:</span>
-            <span class="prop-detail-value">${bhk}</span>
-          </div>
-          <div class="prop-detail-row">
-            <span class="prop-detail-label">Area:</span>
-            <span class="prop-detail-value">${sqfeet} sqft</span>
-          </div>
-          <div class="prop-detail-row">
-            <span class="prop-detail-label">₹/sqft:</span>
-            <span class="prop-detail-value prop-price">${pricePerSqft}</span>
-          </div>
-          <div class="prop-detail-row">
-            <span class="prop-detail-label">Status:</span>
-            <span class="prop-detail-value">
-              <span class="prop-tag ${statusClass}">${constructionStatus}</span>
-            </span>
-          </div>
-          <div class="prop-detail-row">
-            <span class="prop-detail-label">Area:</span>
-            <span class="prop-detail-value">
-              <span class="prop-tag prop-tag-area">${areaName}</span>
-            </span>
-          </div>
-        </div>
-      </div>
-    `;
-
-  // Click handler to show full property details
-  card.onclick = () => showPropertyDetails(property);
 
   return card;
 }
