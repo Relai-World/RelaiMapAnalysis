@@ -843,6 +843,12 @@ map.on("load", async () => {
         "circle-stroke-opacity": 1
       }
     });
+
+    // Apply any pending filter sent from parent dashboard before layers were ready
+    if (window._relaiFilterAreas && typeof window.applyAreaFilter === 'function') {
+      window.applyAreaFilter(window._relaiFilterAreas);
+      window._relaiFilterAreas = null;
+    }
   } catch (err) {
     console.error("Failed to load locations:", err);
   }
@@ -4400,3 +4406,46 @@ window.goBackToProjects = function () {
     window.currentProject = null;
   }
 };
+
+
+// ── AREA FILTER: show only lead-specific locations ────────────────────────
+function applyAreaFilter(areas) {
+  if (!areas || !areas.length) return;
+  const normalizedAreas = areas.map(a => a.toLowerCase().trim());
+  // Filter both layers to show only the matching location pins
+  const filterExpr = ['in', ['downcase', ['get', 'location']], ['literal', normalizedAreas]];
+  if (map.getLayer('location-core')) map.setFilter('location-core', filterExpr);
+  if (map.getLayer('location-glow')) map.setFilter('location-glow', filterExpr);
+  // Auto-fit the map to the filtered locations
+  if (!window.insightsData || !Array.isArray(window.insightsData)) return;
+  const matches = window.insightsData.filter(d =>
+    normalizedAreas.includes((d.location || '').toLowerCase().trim())
+  );
+  if (!matches.length) return;
+  if (matches.length === 1) {
+    map.flyTo({ center: [matches[0].longitude, matches[0].latitude], zoom: 13.5, duration: 1500 });
+  } else {
+    const bounds = new maplibregl.LngLatBounds();
+    matches.forEach(loc => bounds.extend([loc.longitude, loc.latitude]));
+    map.fitBounds(bounds, { padding: 100, maxZoom: 14, duration: 1500 });
+  }
+  console.log(`Map filtered to ${matches.length} location(s):`, areas);
+}
+
+// Make function globally accessible
+window.applyAreaFilter = applyAreaFilter;
+
+// ── POSTMESSAGE LISTENER: receive filter from Expert Dashboard iframe ──────
+window.addEventListener('message', (event) => {
+  if (!event.origin.includes('localhost') && !event.origin.includes('relai')) return;
+  if (!event.data || event.data.type !== 'RELAI_FILTER') return;
+  const { areas = [] } = event.data;
+  if (!areas.length) return;
+  console.log('RELAI_FILTER received from parent:', areas);
+  // If layers are already ready, apply immediately; otherwise store for when they load
+  if (map.getLayer('location-core')) {
+    applyAreaFilter(areas);
+  } else {
+    window._relaiFilterAreas = areas;
+  }
+});

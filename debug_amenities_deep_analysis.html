@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deep Amenities Analysis</title>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+      background: #0f172a;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+    .test-section {
+      background: #1e293b;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+    .success { color: #4ade80; }
+    .error { color: #ef4444; }
+    .info { color: #60a5fa; }
+    .warning { color: #f59e0b; }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #2563eb; }
+    pre {
+      background: #0f172a;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+    .step {
+      margin: 10px 0;
+      padding: 10px;
+      border-left: 3px solid #3b82f6;
+      background: #1e293b;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Deep Amenities Analysis - Commit 348767a</h1>
+  
+  <div class="test-section">
+    <h2>🎯 Root Cause Analysis</h2>
+    <p class="info">Based on the code analysis, here are the potential failure points:</p>
+    
+    <div class="step">
+      <strong>Step 1:</strong> <code>window.insightsData</code> must be loaded from Supabase
+    </div>
+    <div class="step">
+      <strong>Step 2:</strong> <code>currentLocationId</code> must be set when location is clicked
+    </div>
+    <div class="step">
+      <strong>Step 3:</strong> Amenity button click must find location data in <code>window.insightsData</code>
+    </div>
+    <div class="step">
+      <strong>Step 4:</strong> API call to backend must succeed
+    </div>
+    <div class="step">
+      <strong>Step 5:</strong> Backend must have valid Google API key
+    </div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 1: Check Global Variables</h2>
+    <button onclick="testGlobalVars()">Test Global Variables</button>
+    <div id="global-vars-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 2: Test Supabase Connection</h2>
+    <button onclick="testSupabase()">Test Supabase</button>
+    <div id="supabase-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 3: Simulate Location Click</h2>
+    <button onclick="simulateLocationClick()">Simulate Location Click</button>
+    <div id="location-click-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 4: Test Backend API</h2>
+    <button onclick="testBackendAPI()">Test Backend API</button>
+    <div id="backend-api-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Test 5: Full Amenities Flow</h2>
+    <button onclick="testFullFlow()">Test Full Flow</button>
+    <div id="full-flow-result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>📋 Manual Testing Instructions</h2>
+    <div class="info">
+      <p><strong>Open your main site and follow these steps:</strong></p>
+      <ol>
+        <li>Open <code>frontend/index.html</code> in browser</li>
+        <li>Press F12 → Console tab</li>
+        <li>Look for: <code>🔍 DEBUG: Raw insights data: [...]</code></li>
+        <li>Click on a location pin (like Gachibowli)</li>
+        <li>Look for: <code>currentLocationId = X</code> in console</li>
+        <li>Click on amenity button (Hospitals)</li>
+        <li>Look for: <code>🔍 Fetching amenities from: [URL]</code></li>
+        <li>Check what error appears</li>
+      </ol>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script>
+    // Test 1: Global Variables
+    function testGlobalVars() {
+      const result = document.getElementById('global-vars-result');
+      
+      const tests = [
+        { name: 'window.API_BASE_URL', value: window.API_BASE_URL, expected: 'string' },
+        { name: 'window.insightsData', value: window.insightsData, expected: 'array or null' },
+        { name: 'window.currentLocationId', value: window.currentLocationId, expected: 'number or null' }
+      ];
+      
+      let output = '<pre>';
+      tests.forEach(test => {
+        const type = typeof test.value;
+        const isArray = Array.isArray(test.value);
+        const status = test.value ? '✅' : '❌';
+        
+        output += `${status} ${test.name}: ${type}${isArray ? ' (array)' : ''}\n`;
+        if (test.value && typeof test.value === 'object') {
+          output += `   Length: ${test.value.length || 'N/A'}\n`;
+          if (isArray && test.value.length > 0) {
+            output += `   First item: ${JSON.stringify(test.value[0], null, 2).substring(0, 100)}...\n`;
+          }
+        } else {
+          output += `   Value: ${test.value}\n`;
+        }
+        output += '\n';
+      });
+      output += '</pre>';
+      
+      result.innerHTML = output;
+    }
+
+    // Test 2: Supabase Connection
+    async function testSupabase() {
+      const result = document.getElementById('supabase-result');
+      result.innerHTML = '<p class="info">Testing Supabase connection...</p>';
+      
+      try {
+        // Simulate the same call as the main app
+        const SUPABASE_URL = "https://ihraowxbduhlichzszgk.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocmFvd3hiZHVobGljaHpzemdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5MDU5OTEsImV4cCI6MjA2NTQ4MTk5MX0.9SGeXWpk4_OI2qMPyfCfVtUqar6q62-ZFifaA3lc3BE";
+        
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_all_insights`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({})
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        result.innerHTML = `
+          <p class="success">✅ Supabase connection successful!</p>
+          <pre>Status: ${response.status}
+Data type: ${typeof data} (${Array.isArray(data) ? 'array' : 'object'})
+Records: ${data.length || 'N/A'}
+First record: ${data.length > 0 ? JSON.stringify(data[0], null, 2).substring(0, 200) + '...' : 'None'}</pre>
+        `;
+        
+        // Store for other tests
+        window.testInsightsData = data;
+        
+      } catch (error) {
+        result.innerHTML = `
+          <p class="error">❌ Supabase connection failed!</p>
+          <pre>Error: ${error.message}</pre>
+        `;
+      }
+    }
+
+    // Test 3: Simulate Location Click
+    function simulateLocationClick() {
+      const result = document.getElementById('location-click-result');
+      
+      if (!window.testInsightsData || !Array.isArray(window.testInsightsData)) {
+        result.innerHTML = '<p class="error">❌ Run Supabase test first to get insights data!</p>';
+        return;
+      }
+      
+      // Simulate setting currentLocationId and insightsData like the real app
+      const firstLocation = window.testInsightsData[0];
+      window.currentLocationId = firstLocation.location_id;
+      window.insightsData = window.testInsightsData;
+      
+      result.innerHTML = `
+        <p class="success">✅ Simulated location click!</p>
+        <pre>currentLocationId: ${window.currentLocationId}
+Location: ${firstLocation.location}
+Coordinates: ${firstLocation.latitude}, ${firstLocation.longitude}
+insightsData length: ${window.insightsData.length}</pre>
+      `;
+    }
+
+    // Test 4: Backend API
+    async function testBackendAPI() {
+      const result = document.getElementById('backend-api-result');
+      result.innerHTML = '<p class="info">Testing backend API...</p>';
+      
+      if (!window.currentLocationId || !window.insightsData) {
+        result.innerHTML = '<p class="error">❌ Run location click simulation first!</p>';
+        return;
+      }
+      
+      const locationData = window.insightsData.find(d => d.location_id === window.currentLocationId);
+      if (!locationData) {
+        result.innerHTML = '<p class="error">❌ Location data not found!</p>';
+        return;
+      }
+      
+      const lat = locationData.latitude;
+      const lng = locationData.longitude;
+      const url = `${window.API_BASE_URL}/api/v1/amenities/hospitals?lat=${lat}&lng=${lng}`;
+      
+      try {
+        console.log('🔍 Testing URL:', url);
+        const response = await fetch(url);
+        console.log('📊 Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('📋 API Response:', data);
+        
+        if (data.error) {
+          result.innerHTML = `
+            <p class="error">❌ API returned error!</p>
+            <pre>URL: ${url}
+Error: ${data.error}</pre>
+          `;
+          return;
+        }
+        
+        result.innerHTML = `
+          <p class="success">✅ Backend API working!</p>
+          <pre>URL: ${url}
+Status: ${response.status}
+Amenities found: ${data.amenities?.length || 0}
+Total count: ${data.total_count}
+First amenity: ${data.amenities?.[0]?.name || 'None'}</pre>
+        `;
+        
+      } catch (error) {
+        result.innerHTML = `
+          <p class="error">❌ Backend API failed!</p>
+          <pre>URL: ${url}
+Error: ${error.message}</pre>
+        `;
+      }
+    }
+
+    // Test 5: Full Flow
+    async function testFullFlow() {
+      const result = document.getElementById('full-flow-result');
+      result.innerHTML = '<p class="info">Testing full amenities flow...</p>';
+      
+      let output = '<pre>';
+      
+      try {
+        // Step 1: Check if insights data is loaded
+        output += '1. Checking window.insightsData...\n';
+        if (!window.insightsData || !Array.isArray(window.insightsData)) {
+          output += '   ❌ window.insightsData not loaded or not array\n';
+          output += `   Type: ${typeof window.insightsData}\n`;
+          output += `   Value: ${window.insightsData}\n`;
+          result.innerHTML = output + '</pre>';
+          return;
+        }
+        output += `   ✅ window.insightsData loaded (${window.insightsData.length} locations)\n\n`;
+        
+        // Step 2: Check currentLocationId
+        output += '2. Checking currentLocationId...\n';
+        if (!window.currentLocationId) {
+          output += '   ❌ currentLocationId not set\n';
+          result.innerHTML = output + '</pre>';
+          return;
+        }
+        output += `   ✅ currentLocationId: ${window.currentLocationId}\n\n`;
+        
+        // Step 3: Find location data
+        output += '3. Finding location data...\n';
+        const locationData = window.insightsData.find(d => d.location_id === window.currentLocationId);
+        if (!locationData) {
+          output += '   ❌ Location data not found in insightsData\n';
+          result.innerHTML = output + '</pre>';
+          return;
+        }
+        output += `   ✅ Location found: ${locationData.location}\n`;
+        output += `   Coordinates: ${locationData.latitude}, ${locationData.longitude}\n\n`;
+        
+        // Step 4: Test API call
+        output += '4. Testing API call...\n';
+        const url = `${window.API_BASE_URL}/api/v1/amenities/hospitals?lat=${locationData.latitude}&lng=${locationData.longitude}`;
+        output += `   URL: ${url}\n`;
+        
+        const response = await fetch(url);
+        output += `   Status: ${response.status}\n`;
+        
+        if (!response.ok) {
+          output += `   ❌ HTTP Error: ${response.status} ${response.statusText}\n`;
+          result.innerHTML = output + '</pre>';
+          return;
+        }
+        
+        const data = await response.json();
+        if (data.error) {
+          output += `   ❌ API Error: ${data.error}\n`;
+          result.innerHTML = output + '</pre>';
+          return;
+        }
+        
+        output += `   ✅ API Success: ${data.amenities?.length || 0} amenities found\n\n`;
+        
+        output += '🎉 FULL FLOW TEST PASSED!\n';
+        output += 'The amenities system should be working.\n';
+        output += 'If it\'s still not working in the main app, the issue is likely:\n';
+        output += '- Event handler not triggering\n';
+        output += '- DOM elements not found\n';
+        output += '- JavaScript errors preventing execution\n';
+        
+      } catch (error) {
+        output += `❌ Error during full flow test: ${error.message}\n`;
+      }
+      
+      output += '</pre>';
+      result.innerHTML = output;
+    }
+
+    // Auto-run initial test
+    testGlobalVars();
+  </script>
+</body>
+</html>
