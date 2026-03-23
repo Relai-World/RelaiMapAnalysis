@@ -3397,31 +3397,60 @@ map.on("load", async () => {
     
     console.log('✅ Valid coordinates found:', { lat, lng, locationId });
 
-    // Fetch amenity data from Google Places API via Python backend
-    // Use the configured API URL from config.js
-    const PYTHON_API_URL = window.API_BASE_URL;
-    
-    const amenityUrl = `${PYTHON_API_URL}/api/v1/amenities/${amenityType}?lat=${lat}&lng=${lng}&limit=10`;
-    console.log('🔍 Fetching amenities from:', amenityUrl);
-    console.log('📍 Location coordinates:', { lat, lng, locationId });
-    
-    fetch(amenityUrl)
-      .then(res => {
-        console.log('📊 Response status:', res.status);
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        console.log('📋 API Response:', data);
-        
-        if (data.error) {
-          console.log('ℹ️ No amenities data available for this location');
-          resetAmenityButtons(amenityType);
-          return;
-        }
-        
+    // Fetch amenity data from OpenStreetMap Overpass API (free, no key, CORS-friendly)
+    console.log('🔍 Fetching amenities via Overpass API for:', amenityType, { lat, lng });
+
+    // Map amenity type to Overpass tags
+    const overpassTagMap = {
+      hospitals:   '[amenity=hospital]',
+      schools:     '[amenity=school]',
+      malls:       '[shop=mall]',
+      restaurants: '[amenity=restaurant]',
+      banks:       '[amenity=bank]',
+      parks:       '[leisure=park]',
+      metro:       '[railway=station]'
+    };
+    const colorMap = {
+      hospitals: '#ef4444', schools: '#3b82f6', malls: '#a855f7',
+      restaurants: '#f97316', banks: '#22c55e', parks: '#14b8a6', metro: '#eab308'
+    };
+    const tag = overpassTagMap[amenityType] || `[amenity=${amenityType}]`;
+    const radius = 3000; // 3 km radius
+    const overpassQuery = `[out:json][timeout:20];(node${tag}(around:${radius},${lat},${lng});way${tag}(around:${radius},${lat},${lng}););out center 10;`;
+    const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
+
+    // Haversine distance in km
+    function haversine(lat1, lng1, lat2, lng2) {
+      const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    fetch(overpassUrl)
+      .then(res => { if (!res.ok) throw new Error(`Overpass ${res.status}`); return res.json(); })
+      .then(osm => {
+        const elements = osm.elements || [];
+        const amenities = elements
+          .map(el => {
+            const elLat = el.lat ?? el.center?.lat;
+            const elLng = el.lon ?? el.center?.lon;
+            if (!elLat || !elLng) return null;
+            return {
+              name: el.tags?.name || el.tags?.amenity || amenityType,
+              latitude: elLat,
+              longitude: elLng,
+              distance_km: parseFloat(haversine(lat, lng, elLat, elLng).toFixed(2)),
+              address: el.tags?.['addr:street'] || '',
+              rating: null,
+              color: colorMap[amenityType] || '#6366f1'
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => a.distance_km - b.distance_km)
+          .slice(0, 10);
+
+        const data = { amenities };
+
         if (!data.amenities || data.amenities.length === 0) {
           console.log('ℹ️ No amenities found in this area');
           resetAmenityButtons(amenityType);
