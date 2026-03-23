@@ -3409,21 +3409,30 @@ map.on("load", async () => {
 
     // ─── Helper: read cached amenity data from Supabase locations table ──────
     async function fetchFromDB() {
-      if (!locationId || !dataCol) return null;
+      if (!locationId || !dataCol) {
+        console.log(`⚠️ fetchFromDB skip — locationId=${locationId} dataCol=${dataCol}`);
+        return null;
+      }
       const url = `${SUPABASE_URL}/rest/v1/locations?id=eq.${locationId}&select=${dataCol}`;
+      console.log(`🗄️ fetchFromDB GET:`, url);
       const res = await fetch(url, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
       });
-      if (!res.ok) return null;
+      if (!res.ok) { console.error(`❌ fetchFromDB GET failed (${res.status})`); return null; }
       const rows = await res.json();
+      console.log(`🗄️ fetchFromDB rows:`, rows);
       const val = rows?.[0]?.[dataCol];
       return Array.isArray(val) && val.length > 0 ? val : null;
     }
 
     // ─── Helper: persist fetched amenities back to DB ────────────────────────
     async function saveToDB(amenities) {
-      if (!locationId || !dataCol) return;
+      if (!locationId || !dataCol) {
+        console.error(`❌ saveToDB skip — locationId=${locationId} dataCol=${dataCol}`);
+        return;
+      }
       const body = { [dataCol]: amenities, [countCol]: amenities.length };
+      console.log(`💾 saveToDB PATCH → location=${locationId} col=${dataCol} count=${amenities.length}`);
       const res = await fetch(`${SUPABASE_URL}/rest/v1/locations?id=eq.${locationId}`, {
         method: 'PATCH',
         headers: {
@@ -3436,9 +3445,9 @@ map.on("load", async () => {
       });
       if (!res.ok) {
         const errText = await res.text();
-        console.error(`❌ saveToDB failed (${res.status}) for ${amenityType} location=${locationId}:`, errText);
+        console.error(`❌ saveToDB PATCH failed (${res.status}):`, errText);
       } else {
-        console.log(`💾 Saved ${amenities.length} ${amenityType} to DB for location ${locationId}`);
+        console.log(`✅ saveToDB success — ${amenities.length} ${amenityType} saved for location ${locationId}`);
       }
     }
 
