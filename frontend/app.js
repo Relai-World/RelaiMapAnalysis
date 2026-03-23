@@ -3517,8 +3517,8 @@ map.on("load", async () => {
     function fetchRace(encodedQ) {
       const mirrors = [
         `https://overpass.kumi.systems/api/interpreter?data=${encodedQ}`,
-        `https://maps.mail.ru/osm/tools/overpass/api/interpreter?data=${encodedQ}`,
-        `https://overpass-api.de/api/interpreter?data=${encodedQ}`
+        `https://overpass-api.de/api/interpreter?data=${encodedQ}`,
+        `https://overpass.openstreetmap.ru/api/interpreter?data=${encodedQ}`
       ];
       let resolved = false;
       return new Promise((resolve, reject) => {
