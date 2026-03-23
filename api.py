@@ -27,17 +27,18 @@ def get_supabase() -> Client:
 
 app = FastAPI(title="Real Estate Intelligence API")
 
+# CORS must be added before any routes
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Health Check Endpoint
 @app.get("/")
 def health_check():
     return {"status": "ok", "message": "West Hyderabad Intelligence API is running"}
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for local development
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # FUTURE DEVELOPMENT ENDPOINT - Fixed encoding issue
 @app.get("/api/v1/future-development/{location_id}")
