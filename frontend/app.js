@@ -3398,9 +3398,7 @@ map.on("load", async () => {
     console.log('✅ Valid coordinates found:', { lat, lng, locationId });
 
     // Fetch amenity data from OpenStreetMap Overpass API (free, no key, CORS-friendly)
-    // Uses multiple mirrors with automatic fallback for reliability
-    console.log('🔍 Fetching amenities via Overpass API for:', amenityType, { lat, lng });
-
+    // Uses parallel mirror racing + in-memory cache for fast response
     const overpassTagMap = {
       hospitals:   '[amenity=hospital]',
       schools:     '[amenity=school]',
@@ -3415,16 +3413,16 @@ map.on("load", async () => {
       restaurants: '#f97316', banks: '#22c55e', parks: '#14b8a6', metro: '#eab308'
     };
     const tag = overpassTagMap[amenityType] || `[amenity=${amenityType}]`;
-    const radius = 2000; // 2 km radius (smaller = faster query)
-    const overpassQuery = `[out:json][timeout:15][maxsize:1000000];(node${tag}(around:${radius},${lat},${lng});way${tag}(around:${radius},${lat},${lng}););out center 10;`;
+    const radius = 1500; // 1.5 km radius for faster query
+    const overpassQuery = `[out:json][timeout:10][maxsize:500000];(node${tag}(around:${radius},${lat},${lng});way${tag}(around:${radius},${lat},${lng}););out center 8;`;
     const encodedQuery = encodeURIComponent(overpassQuery);
 
-    // Multiple mirrors — tried in order until one succeeds
-    const mirrors = [
-      `https://overpass.kumi.systems/api/interpreter?data=${encodedQuery}`,
-      `https://maps.mail.ru/osm/tools/overpass/api/interpreter?data=${encodedQuery}`,
-      `https://overpass-api.de/api/interpreter?data=${encodedQuery}`
-    ];
+    // Cache keyed by location+type — instant on repeat clicks
+    if (!window._amenityCache) window._amenityCache = {};
+    const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)},${amenityType}`;
+    if (window._amenityCache[cacheKey]) {
+      console.log(`⚡ Cache hit for ${amenityType}`);
+    }
 
     // Haversine distance in km
     function haversine(lat1, lng1, lat2, lng2) {
@@ -3433,24 +3431,50 @@ map.on("load", async () => {
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    // Try each mirror in sequence until one works
-    function fetchWithFallback(urls) {
-      if (!urls.length) return Promise.reject(new Error('All Overpass mirrors failed'));
-      return fetch(urls[0])
-        .then(res => {
-          if (!res.ok) throw new Error(`${res.status}`);
-          return res.text().then(text => {
-            if (text.startsWith('<')) throw new Error('HTML error response'); // server returned error XML
-            return JSON.parse(text);
-          });
-        })
-        .catch(err => {
-          console.log(`⚠️ Mirror failed (${urls[0].split('/')[2]}): ${err.message}, trying next...`);
-          return fetchWithFallback(urls.slice(1));
-        });
+    // Fetch from one mirror with a per-mirror timeout
+    function fetchMirror(url, timeoutMs) {
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('timeout')), timeoutMs);
+        fetch(url)
+          .then(res => {
+            clearTimeout(timer);
+            if (!res.ok) throw new Error(`${res.status}`);
+            return res.text();
+          })
+          .then(text => {
+            if (text.startsWith('<')) throw new Error('HTML error');
+            resolve(JSON.parse(text));
+          })
+          .catch(err => { clearTimeout(timer); reject(err); });
+      });
     }
 
-    fetchWithFallback(mirrors)
+    // Race all mirrors in parallel — return the first to succeed
+    function fetchRace(encodedQ) {
+      const mirrors = [
+        `https://overpass.kumi.systems/api/interpreter?data=${encodedQ}`,
+        `https://maps.mail.ru/osm/tools/overpass/api/interpreter?data=${encodedQ}`,
+        `https://overpass-api.de/api/interpreter?data=${encodedQ}`
+      ];
+      let resolved = false;
+      return new Promise((resolve, reject) => {
+        let failures = 0;
+        mirrors.forEach(url => {
+          fetchMirror(url, 8000).then(data => {
+            if (!resolved) { resolved = true; resolve(data); }
+          }).catch(() => {
+            failures++;
+            if (failures === mirrors.length) reject(new Error('All mirrors failed'));
+          });
+        });
+      });
+    }
+
+    const fetchPromise = window._amenityCache[cacheKey]
+      ? Promise.resolve(window._amenityCache[cacheKey])
+      : fetchRace(encodedQuery);
+
+    fetchPromise
       .then(osm => {
         const elements = osm.elements || [];
         const amenities = elements
@@ -3473,6 +3497,11 @@ map.on("load", async () => {
           .slice(0, 10);
 
         const data = { amenities };
+
+        // Store in cache for instant repeat clicks
+        if (!window._amenityCache[cacheKey]) {
+          window._amenityCache[cacheKey] = osm;
+        }
 
         if (!data.amenities || data.amenities.length === 0) {
           console.log('ℹ️ No amenities found in this area');
