@@ -1365,6 +1365,19 @@ map.on("load", async () => {
     const loadingEl = document.getElementById('prop-loading');
     const countEl = document.getElementById('prop-panel-count');
 
+    // Track current location for re-renders when RELAI_FILTER arrives later
+    window._relaiCurrentLocation = locationName;
+
+    // If parent injected lead-specific properties for this location, use them directly
+    const locationKey = (locationName || '').toLowerCase().trim();
+    if (window._relaiInjectedByArea && window._relaiInjectedByArea[locationKey]) {
+      panel.classList.add('open');
+      if (loadingEl) loadingEl.style.display = 'none';
+      listContainer.innerHTML = '';
+      renderInjectedProperties(window._relaiInjectedByArea[locationKey]);
+      return;
+    }
+
     // Open panel and show loading state
     panel.classList.add('open');
     loadingEl.style.display = 'flex';
@@ -4451,6 +4464,32 @@ function applyAreaFilter(areas) {
 // Make function globally accessible
 window.applyAreaFilter = applyAreaFilter;
 
+// ── INJECTED PROPERTIES: render parent's exact lead-matched data directly ──
+function renderInjectedProperties(projects) {
+  const listContainer = document.getElementById('prop-list');
+  const countEl = document.getElementById('prop-panel-count');
+  const loadingEl = document.getElementById('prop-loading');
+  const panel = document.getElementById('properties-panel');
+  if (!listContainer || !countEl) return;
+
+  if (loadingEl) loadingEl.style.display = 'none';
+  if (panel) panel.classList.add('open');
+  listContainer.innerHTML = '';
+
+  if (!projects || projects.length === 0) {
+    listContainer.innerHTML = `<div class="prop-empty"><div class="prop-empty-icon">🏢</div><p>No lead-matched properties in this location</p></div>`;
+    countEl.textContent = '0 projects (lead-matched)';
+    return;
+  }
+
+  countEl.textContent = `${projects.length} project${projects.length !== 1 ? 's' : ''} (lead-matched)`;
+  projects.forEach(project => {
+    const card = createProjectGroupCard(project);
+    listContainer.appendChild(card);
+  });
+}
+window.renderInjectedProperties = renderInjectedProperties;
+
 // ── RERA FILTER: filter properties panel to lead-specific matched projects ──
 function applyReraFilterToPanel(normalizedReras, normalizedProjectNames) {
   if (!window.allLocationProperties) return;
@@ -4513,17 +4552,22 @@ window.applyReraFilterToPanel = applyReraFilterToPanel;
 window.addEventListener('message', (event) => {
   if (!event.origin.includes('localhost') && !event.origin.includes('relai')) return;
   if (!event.data || event.data.type !== 'RELAI_FILTER') return;
-  const { areas = [], reras = [], projectNames = [] } = event.data;
+  const { areas = [], reras = [], injectedProperties = [] } = event.data;
   if (!areas.length) return;
-  console.log('RELAI_FILTER received from parent:', areas, '| RERAs:', reras.length, '| Projects:', projectNames.length);
+  console.log('RELAI_FILTER received from parent:', areas, '| RERAs:', reras.length, '| Injected:', injectedProperties.length);
 
-  // Store normalized filters so loadPropertiesForLocation can use them
-  window._relaiFilterReras = reras.length > 0
-    ? reras.map(r => (r || '').toLowerCase().trim()).filter(Boolean)
-    : null;
-  window._relaiFilterProjectNames = projectNames.length > 0
-    ? projectNames.map(n => (n || '').toLowerCase().trim()).filter(Boolean)
-    : null;
+  // Store injected properties indexed by area (lowercase) for use in loadPropertiesForLocation
+  if (injectedProperties.length > 0) {
+    window._relaiInjectedByArea = {};
+    injectedProperties.forEach(p => {
+      const area = (p.areaname || '').toLowerCase().trim();
+      if (!area) return;
+      if (!window._relaiInjectedByArea[area]) window._relaiInjectedByArea[area] = [];
+      window._relaiInjectedByArea[area].push(p);
+    });
+  } else {
+    window._relaiInjectedByArea = null;
+  }
 
   // If layers are already ready, apply immediately; otherwise store for when they load
   if (map.getLayer('location-core')) {
@@ -4532,8 +4576,10 @@ window.addEventListener('message', (event) => {
     window._relaiFilterAreas = areas;
   }
 
-  // If the properties panel already has data, re-filter it immediately
-  if (window.allLocationProperties && window.allLocationProperties.length > 0) {
-    applyReraFilterToPanel(window._relaiFilterReras, window._relaiFilterProjectNames);
+  // If the properties panel is already open for a location, re-render with injected data
+  if (window._relaiCurrentLocation && window._relaiInjectedByArea) {
+    const key = window._relaiCurrentLocation.toLowerCase().trim();
+    const locationProjects = window._relaiInjectedByArea[key];
+    if (locationProjects) renderInjectedProperties(locationProjects);
   }
 });
