@@ -1390,12 +1390,18 @@ map.on("load", async () => {
         window.allLocationProperties = properties;
         window.currentPropertyIndex = 0;
 
-        // If a lead-specific RERA filter is active (sent from Expert Dashboard), apply it
+        // If a lead-specific filter is active (sent from Expert Dashboard), apply it
+        // Match by RERA number (primary) or project name (fallback for properties without RERA)
         let displayProperties = properties;
-        if (window._relaiFilterReras && window._relaiFilterReras.length > 0) {
+        const hasLeadFilter = (window._relaiFilterReras && window._relaiFilterReras.length > 0) ||
+                              (window._relaiFilterProjectNames && window._relaiFilterProjectNames.length > 0);
+        if (hasLeadFilter) {
           displayProperties = properties.filter(prop => {
             const rera = ((prop.full_details && prop.full_details.rera_number) || '').toLowerCase().trim();
-            return window._relaiFilterReras.includes(rera);
+            if (rera && window._relaiFilterReras && window._relaiFilterReras.includes(rera)) return true;
+            const name = (prop.projectname || '').toLowerCase().trim();
+            if (name && window._relaiFilterProjectNames && window._relaiFilterProjectNames.includes(name)) return true;
+            return false;
           });
         }
 
@@ -1420,7 +1426,7 @@ map.on("load", async () => {
         const projects = Object.values(projectGroups)
           .sort((a, b) => b.properties.length - a.properties.length);
 
-        const filterLabel = (window._relaiFilterReras && window._relaiFilterReras.length > 0) ? ' (lead-matched)' : '';
+        const filterLabel = hasLeadFilter ? ' (lead-matched)' : '';
         countEl.textContent = `${projects.length} project${projects.length !== 1 ? 's' : ''}${filterLabel}`;
 
         // Render project cards
@@ -4446,7 +4452,7 @@ function applyAreaFilter(areas) {
 window.applyAreaFilter = applyAreaFilter;
 
 // ── RERA FILTER: filter properties panel to lead-specific matched projects ──
-function applyReraFilterToPanel(normalizedReras) {
+function applyReraFilterToPanel(normalizedReras, normalizedProjectNames) {
   if (!window.allLocationProperties) return;
   const listContainer = document.getElementById('prop-list');
   const countEl = document.getElementById('prop-panel-count');
@@ -4454,11 +4460,15 @@ function applyReraFilterToPanel(normalizedReras) {
 
   let properties = window.allLocationProperties;
 
-  // Filter by RERA numbers when filter is active
-  if (normalizedReras && normalizedReras.length > 0) {
+  // Filter by RERA (primary) or project name (fallback for properties without RERA)
+  const hasFilter = (normalizedReras && normalizedReras.length > 0) || (normalizedProjectNames && normalizedProjectNames.length > 0);
+  if (hasFilter) {
     properties = properties.filter(prop => {
       const rera = ((prop.full_details && prop.full_details.rera_number) || '').toLowerCase().trim();
-      return normalizedReras.includes(rera);
+      if (rera && normalizedReras && normalizedReras.includes(rera)) return true;
+      const name = (prop.projectname || '').toLowerCase().trim();
+      if (name && normalizedProjectNames && normalizedProjectNames.includes(name)) return true;
+      return false;
     });
   }
 
@@ -4489,7 +4499,8 @@ function applyReraFilterToPanel(normalizedReras) {
     return;
   }
 
-  const label = normalizedReras && normalizedReras.length > 0 ? ' (lead-matched)' : '';
+  const hasFilter = (normalizedReras && normalizedReras.length > 0) || (normalizedProjectNames && normalizedProjectNames.length > 0);
+  const label = hasFilter ? ' (lead-matched)' : '';
   countEl.textContent = `${projects.length} project${projects.length !== 1 ? 's' : ''}${label}`;
   projects.forEach(project => {
     const card = createProjectGroupCard(project);
@@ -4502,13 +4513,16 @@ window.applyReraFilterToPanel = applyReraFilterToPanel;
 window.addEventListener('message', (event) => {
   if (!event.origin.includes('localhost') && !event.origin.includes('relai')) return;
   if (!event.data || event.data.type !== 'RELAI_FILTER') return;
-  const { areas = [], reras = [] } = event.data;
+  const { areas = [], reras = [], projectNames = [] } = event.data;
   if (!areas.length) return;
-  console.log('RELAI_FILTER received from parent:', areas, '| RERAs:', reras.length);
+  console.log('RELAI_FILTER received from parent:', areas, '| RERAs:', reras.length, '| Projects:', projectNames.length);
 
-  // Store normalized RERA filter so loadPropertiesForLocation can use it
+  // Store normalized filters so loadPropertiesForLocation can use them
   window._relaiFilterReras = reras.length > 0
     ? reras.map(r => (r || '').toLowerCase().trim()).filter(Boolean)
+    : null;
+  window._relaiFilterProjectNames = projectNames.length > 0
+    ? projectNames.map(n => (n || '').toLowerCase().trim()).filter(Boolean)
     : null;
 
   // If layers are already ready, apply immediately; otherwise store for when they load
@@ -4520,6 +4534,6 @@ window.addEventListener('message', (event) => {
 
   // If the properties panel already has data, re-filter it immediately
   if (window.allLocationProperties && window.allLocationProperties.length > 0) {
-    applyReraFilterToPanel(window._relaiFilterReras);
+    applyReraFilterToPanel(window._relaiFilterReras, window._relaiFilterProjectNames);
   }
 });
