@@ -3360,6 +3360,7 @@ map.on("load", async () => {
   }
 
   function displayAmenitiesOnMap(locationId, amenityType) {
+    console.log(`🚀 displayAmenitiesOnMap called — locationId=${locationId} type=${amenityType}`);
     // Remove existing amenity layers
     clearAmenities();
 
@@ -3446,9 +3447,19 @@ map.on("load", async () => {
       if (!res.ok) {
         const errText = await res.text();
         console.error(`❌ saveToDB PATCH failed (${res.status}):`, errText);
+        showDbStatus(`❌ Save failed (${res.status}): ${errText}`, 'red');
       } else {
         console.log(`✅ saveToDB success — ${amenities.length} ${amenityType} saved for location ${locationId}`);
+        showDbStatus(`✅ Saved ${amenities.length} ${amenityType} to DB (loc ${locationId})`, 'green');
       }
+
+    function showDbStatus(msg, color) {
+      const el = document.createElement('div');
+      el.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:${color === 'green' ? '#166534' : '#7f1d1d'};color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;z-index:99999;max-width:90vw;word-break:break-all`;
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 6000);
+    }
     }
 
     // ─── Overpass fetch (parallel mirror race + in-memory cache) ─────────────
