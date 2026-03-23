@@ -3398,9 +3398,9 @@ map.on("load", async () => {
     console.log('✅ Valid coordinates found:', { lat, lng, locationId });
 
     // Fetch amenity data from OpenStreetMap Overpass API (free, no key, CORS-friendly)
+    // Uses multiple mirrors with automatic fallback for reliability
     console.log('🔍 Fetching amenities via Overpass API for:', amenityType, { lat, lng });
 
-    // Map amenity type to Overpass tags
     const overpassTagMap = {
       hospitals:   '[amenity=hospital]',
       schools:     '[amenity=school]',
@@ -3415,9 +3415,16 @@ map.on("load", async () => {
       restaurants: '#f97316', banks: '#22c55e', parks: '#14b8a6', metro: '#eab308'
     };
     const tag = overpassTagMap[amenityType] || `[amenity=${amenityType}]`;
-    const radius = 3000; // 3 km radius
-    const overpassQuery = `[out:json][timeout:20];(node${tag}(around:${radius},${lat},${lng});way${tag}(around:${radius},${lat},${lng}););out center 10;`;
-    const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
+    const radius = 2000; // 2 km radius (smaller = faster query)
+    const overpassQuery = `[out:json][timeout:15][maxsize:1000000];(node${tag}(around:${radius},${lat},${lng});way${tag}(around:${radius},${lat},${lng}););out center 10;`;
+    const encodedQuery = encodeURIComponent(overpassQuery);
+
+    // Multiple mirrors — tried in order until one succeeds
+    const mirrors = [
+      `https://overpass.kumi.systems/api/interpreter?data=${encodedQuery}`,
+      `https://maps.mail.ru/osm/tools/overpass/api/interpreter?data=${encodedQuery}`,
+      `https://overpass-api.de/api/interpreter?data=${encodedQuery}`
+    ];
 
     // Haversine distance in km
     function haversine(lat1, lng1, lat2, lng2) {
@@ -3426,8 +3433,24 @@ map.on("load", async () => {
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    fetch(overpassUrl)
-      .then(res => { if (!res.ok) throw new Error(`Overpass ${res.status}`); return res.json(); })
+    // Try each mirror in sequence until one works
+    function fetchWithFallback(urls) {
+      if (!urls.length) return Promise.reject(new Error('All Overpass mirrors failed'));
+      return fetch(urls[0])
+        .then(res => {
+          if (!res.ok) throw new Error(`${res.status}`);
+          return res.text().then(text => {
+            if (text.startsWith('<')) throw new Error('HTML error response'); // server returned error XML
+            return JSON.parse(text);
+          });
+        })
+        .catch(err => {
+          console.log(`⚠️ Mirror failed (${urls[0].split('/')[2]}): ${err.message}, trying next...`);
+          return fetchWithFallback(urls.slice(1));
+        });
+    }
+
+    fetchWithFallback(mirrors)
       .then(osm => {
         const elements = osm.elements || [];
         const amenities = elements
