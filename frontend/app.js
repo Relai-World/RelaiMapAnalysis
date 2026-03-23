@@ -3424,7 +3424,7 @@ map.on("load", async () => {
     async function saveToDB(amenities) {
       if (!locationId || !dataCol) return;
       const body = { [dataCol]: amenities, [countCol]: amenities.length };
-      await fetch(`${SUPABASE_URL}/rest/v1/locations?id=eq.${locationId}`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/locations?id=eq.${locationId}`, {
         method: 'PATCH',
         headers: {
           'apikey': SUPABASE_KEY,
@@ -3434,7 +3434,12 @@ map.on("load", async () => {
         },
         body: JSON.stringify(body)
       });
-      console.log(`💾 Saved ${amenities.length} ${amenityType} to DB for location ${locationId}`);
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error(`❌ saveToDB failed (${res.status}) for ${amenityType} location=${locationId}:`, errText);
+      } else {
+        console.log(`💾 Saved ${amenities.length} ${amenityType} to DB for location ${locationId}`);
+      }
     }
 
     // ─── Overpass fetch (parallel mirror race + in-memory cache) ─────────────
