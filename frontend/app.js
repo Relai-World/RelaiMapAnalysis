@@ -3394,11 +3394,50 @@ map.on("load", async () => {
     }
     
     console.log('✅ Valid coordinates found:', { lat, lng, locationId });
-    
-    console.log('✅ Valid coordinates found:', { lat, lng, locationId });
 
-    // Fetch amenity data from OpenStreetMap Overpass API (free, no key, CORS-friendly)
-    // Uses parallel mirror racing + in-memory cache for fast response
+    // ─── Column name map (amenityType → DB column) ───────────────────────────
+    const dbColumnMap = {
+      hospitals: 'hospitals_data', schools: 'schools_data', malls: 'malls_data',
+      restaurants: 'restaurants_data', banks: 'banks_data', parks: 'parks_data', metro: 'metro_data'
+    };
+    const dbCountMap = {
+      hospitals: 'hospital_count', schools: 'school_count', malls: 'malls_count',
+      restaurants: 'restaurants_count', banks: 'banks_count', parks: 'parks_count', metro: 'metro_count'
+    };
+    const dataCol  = dbColumnMap[amenityType];
+    const countCol = dbCountMap[amenityType];
+
+    // ─── Helper: read cached amenity data from Supabase locations table ──────
+    async function fetchFromDB() {
+      if (!locationId || !dataCol) return null;
+      const url = `${SUPABASE_URL}/rest/v1/locations?id=eq.${locationId}&select=${dataCol}`;
+      const res = await fetch(url, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+      });
+      if (!res.ok) return null;
+      const rows = await res.json();
+      const val = rows?.[0]?.[dataCol];
+      return Array.isArray(val) && val.length > 0 ? val : null;
+    }
+
+    // ─── Helper: persist fetched amenities back to DB ────────────────────────
+    async function saveToDB(amenities) {
+      if (!locationId || !dataCol) return;
+      const body = { [dataCol]: amenities, [countCol]: amenities.length };
+      await fetch(`${SUPABASE_URL}/rest/v1/locations?id=eq.${locationId}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(body)
+      });
+      console.log(`💾 Saved ${amenities.length} ${amenityType} to DB for location ${locationId}`);
+    }
+
+    // ─── Overpass fetch (parallel mirror race + in-memory cache) ─────────────
     const overpassTagMap = {
       hospitals:   '[amenity=hospital]',
       schools:     '[amenity=school]',
@@ -3470,38 +3509,54 @@ map.on("load", async () => {
       });
     }
 
-    const fetchPromise = window._amenityCache[cacheKey]
-      ? Promise.resolve(window._amenityCache[cacheKey])
-      : fetchRace(encodedQuery);
+    // ─── Main flow: DB → in-memory cache → Overpass API ─────────────────────
+    async function resolveAmenities() {
+      // 1. In-memory cache (instant, same session)
+      if (window._amenityCache[cacheKey]) {
+        console.log(`⚡ In-memory cache hit for ${amenityType}`);
+        return { amenities: window._amenityCache[cacheKey], fromCache: true };
+      }
 
-    fetchPromise
-      .then(osm => {
-        const elements = osm.elements || [];
-        const amenities = elements
-          .map(el => {
-            const elLat = el.lat ?? el.center?.lat;
-            const elLng = el.lon ?? el.center?.lon;
-            if (!elLat || !elLng) return null;
-            return {
-              name: el.tags?.name || el.tags?.amenity || amenityType,
-              latitude: elLat,
-              longitude: elLng,
-              distance_km: parseFloat(haversine(lat, lng, elLat, elLng).toFixed(2)),
-              address: el.tags?.['addr:street'] || '',
-              rating: null,
-              color: colorMap[amenityType] || '#6366f1'
-            };
-          })
-          .filter(Boolean)
-          .sort((a, b) => a.distance_km - b.distance_km)
-          .slice(0, 10);
+      // 2. Supabase DB cache (persisted, first hit per location)
+      console.log(`🗄️ Checking DB cache for ${amenityType} at location ${locationId}…`);
+      const dbAmenities = await fetchFromDB();
+      if (dbAmenities) {
+        console.log(`✅ DB cache hit — ${dbAmenities.length} ${amenityType} loaded from DB`);
+        window._amenityCache[cacheKey] = dbAmenities; // promote to in-memory
+        return { amenities: dbAmenities, fromCache: true };
+      }
 
+      // 3. Overpass API (first ever fetch for this location+type)
+      console.log(`🌐 No cache — fetching ${amenityType} from Overpass API…`);
+      const osm = await fetchRace(encodedQuery);
+      const amenities = (osm.elements || [])
+        .map(el => {
+          const elLat = el.lat ?? el.center?.lat;
+          const elLng = el.lon ?? el.center?.lon;
+          if (!elLat || !elLng) return null;
+          return {
+            name: el.tags?.name || el.tags?.amenity || amenityType,
+            latitude: elLat,
+            longitude: elLng,
+            distance_km: parseFloat(haversine(lat, lng, elLat, elLng).toFixed(2)),
+            address: el.tags?.['addr:street'] || '',
+            rating: null,
+            color: colorMap[amenityType] || '#6366f1'
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.distance_km - b.distance_km)
+        .slice(0, 8);
+
+      // Save to DB and in-memory cache for future hits
+      window._amenityCache[cacheKey] = amenities;
+      saveToDB(amenities); // fire-and-forget
+      return { amenities, fromCache: false };
+    }
+
+    resolveAmenities()
+      .then(({ amenities, fromCache }) => {
         const data = { amenities };
-
-        // Store in cache for instant repeat clicks
-        if (!window._amenityCache[cacheKey]) {
-          window._amenityCache[cacheKey] = osm;
-        }
 
         if (!data.amenities || data.amenities.length === 0) {
           console.log('ℹ️ No amenities found in this area');
@@ -3509,7 +3564,7 @@ map.on("load", async () => {
           return;
         }
 
-        console.log(`✅ Found ${data.amenities.length} ${amenityType}`);
+        console.log(`✅ ${fromCache ? '(cached)' : '(live)'} ${data.amenities.length} ${amenityType}`);
 
         // Show amenities panel on the right side
         showAmenitiesPanel(data.amenities, amenityType);
