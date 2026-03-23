@@ -3,14 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import requests
 import time
-import psycopg2
+# Removed psycopg2 - using Supabase REST API only
 
 import os
 import random
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-load_dotenv()
+load_dotenv(override=True)
 
 # Supabase REST client (no DB password needed)
 _supabase: Client = None
@@ -23,15 +23,7 @@ def get_supabase() -> Client:
             _supabase = create_client(url, key)
     return _supabase
 
-# PostgreSQL direct connection for properties
-def get_db():
-    return psycopg2.connect(
-        host=os.getenv("DB_HOST"),
-        port=os.getenv("DB_PORT", 6543),
-        dbname=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD")
-    )
+# All database operations now use Supabase REST API only
 
 app = FastAPI(title="Real Estate Intelligence API")
 
@@ -107,15 +99,11 @@ def get_future_development(location_id: int):
 @app.get("/api/v1/amenities/{amenity_type}")
 def get_amenities(amenity_type: str, lat: float, lng: float, limit: int = 10):
     """
-    Get amenities from Google Places API (Legacy)
+    Get amenities from Google Places API
     Query params: lat, lng, limit (default: 10)
     amenity_type: 'hospitals', 'schools', 'malls', 'restaurants', 'banks', 'parks', 'metro'
     """
     print(f"🔍 Amenities Request: type={amenity_type}, lat={lat}, lng={lng}, limit={limit}")
-    
-    # Debug: Confirm limit parameter
-    print(f"🎯 LIMIT PARAMETER RECEIVED: {limit}")
-    print(f"🎯 LIMIT TYPE: {type(limit)}")
     
     # Map amenity types to Google Places API types
     google_type_mapping = {
@@ -134,9 +122,6 @@ def get_amenities(amenity_type: str, lat: float, lng: float, limit: int = 10):
 
     g_type = google_type_mapping[amenity_type]
     
-    # Force reload .env file to get the correct API key
-    from dotenv import load_dotenv
-    load_dotenv(override=True)
     api_key = os.getenv("GOOGLE_PLACES_API_KEY")
     
     if not api_key:
@@ -250,6 +235,11 @@ def get_amenities(amenity_type: str, lat: float, lng: float, limit: int = 10):
         import traceback
         traceback.print_exc()
         return {"error": str(e), "amenities": []}
+
+# ===============================
+# TELANGANA ENDPOINTS REMOVED
+# All Telangana registration data endpoints have been removed as they are not used by the frontend.
+# ===============================
 
 
 
@@ -436,123 +426,7 @@ def get_distance_color(distance_km):
 # ===============================
 
 
-# Removed unused properties endpoint - frontend uses Supabase RPC directly
-
-def get_property_detail(property_id: int):
-    """Get full detail for a single property from unified_data_DataType_Raghu table."""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT
-                id, projectname, buildername, project_type, communitytype,
-                status, project_status, isavailable, configsoldoutstatus,
-                city, state,
-                areaname, projectlocation, google_place_name,
-                google_place_address, google_place_location,
-                google_maps_location, mobile_google_map_url,
-                baseprojectprice, price_per_sft, total_buildup_area,
-                floor_rise_charges, floor_rise_amount_per_floor,
-                floor_rise_applicable_above_floor_no, facing_charges,
-                preferential_location_charges,
-                preferential_location_charges_conditions,
-                amount_for_extra_car_parking, price_per_sft_update_date,
-                project_launch_date, possession_date, construction_status,
-                construction_material, total_land_area, number_of_towers,
-                number_of_floors, number_of_flats_per_floor,
-                total_number_of_units, open_space, carpet_area_percentage,
-                floor_to_ceiling_height,
-                bhk, sqfeet, sqyard, facing, no_of_car_parkings,
-                external_amenities, specification, powerbackup,
-                no_of_passenger_lift, no_of_service_lift,
-                visitor_parking, ground_vehicle_movement,
-                main_door_height, available_banks_for_loan, home_loan,
-                builder_age, builder_completed_properties,
-                builder_ongoing_projects, builder_operating_locations,
-                builder_origin_city, builder_total_properties,
-                builder_upcoming_properties,
-                poc_name, poc_contact, poc_role,
-                alternative_contact, useremail,
-                images, google_place_rating, google_place_user_ratings_total,
-                rera_number, projectbrochure
-            FROM unified_data_DataType_Raghu
-            WHERE id = %s;
-        """, (property_id,))
-        r = cur.fetchone()
-        cur.close()
-        conn.close()
-
-        if not r:
-            return {"error": "Property not found"}
-
-        cols = [
-            "id","projectname","buildername","project_type","communitytype",
-            "status","project_status","isavailable","configsoldoutstatus",
-            "city","state",
-            "areaname","projectlocation","google_place_name",
-            "google_place_address","google_place_location",
-            "google_maps_location","mobile_google_map_url",
-            "baseprojectprice","price_per_sft","total_buildup_area",
-            "floor_rise_charges","floor_rise_amount_per_floor",
-            "floor_rise_applicable_above_floor_no","facing_charges",
-            "preferential_location_charges",
-            "preferential_location_charges_conditions",
-            "amount_for_extra_car_parking","price_per_sft_update_date",
-            "project_launch_date","possession_date","construction_status",
-            "construction_material","total_land_area","number_of_towers",
-            "number_of_floors","number_of_flats_per_floor",
-            "total_number_of_units","open_space","carpet_area_percentage",
-            "floor_to_ceiling_height",
-            "bhk","sqfeet","sqyard","facing","no_of_car_parkings",
-            "external_amenities","specification","powerbackup",
-            "no_of_passenger_lift","no_of_service_lift",
-            "visitor_parking","ground_vehicle_movement",
-            "main_door_height","available_banks_for_loan","home_loan",
-            "builder_age","builder_completed_properties",
-            "builder_ongoing_projects","builder_operating_locations",
-            "builder_origin_city","builder_total_properties",
-            "builder_upcoming_properties",
-            "poc_name","poc_contact","poc_role",
-            "alternative_contact","useremail",
-            "images","google_place_rating","google_place_user_ratings_total",
-            "rera_number","projectbrochure"
-        ]
-
-        result = {}
-        for i, col in enumerate(cols):
-            val = r[i]
-            # Handle numeric conversions safely for unified_data_DataType_Raghu data
-            if val and col in ["baseprojectprice", "price_per_sft", "google_place_rating"] and isinstance(val, str):
-                try:
-                    val = float(val) if val != 'None' and val != '' and val is not None else None
-                except (ValueError, TypeError):
-                    val = None
-            elif hasattr(val, '__float__') and not isinstance(val, (int, float)):
-                try:
-                    val = float(val)
-                except (ValueError, TypeError):
-                    val = None
-            result[col] = val
-        
-        # Return in the same format as the list endpoint
-        property_card = {
-            'id': result.get('id'),
-            'projectname': result.get('projectname'),
-            'buildername': result.get('buildername'),
-            'project_type': result.get('project_type'),
-            'bhk': result.get('bhk'),
-            'sqfeet': result.get('sqfeet'),
-            'price_per_sft': result.get('price_per_sft'),
-            'construction_status': result.get('construction_status'),
-            'areaname': result.get('areaname'),
-            'images': result.get('images'),
-            'full_details': result
-        }
-        
-        return property_card
-    except Exception as e:
-        print(f"🔥 PROPERTY DETAIL ERROR: {e}")
-        return {"error": str(e)}
+# All endpoints now use Supabase REST API only - no direct database connections
 
 # Mount static files to serve the frontend (must be last)
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

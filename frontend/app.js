@@ -529,6 +529,7 @@ map.on("load", async () => {
     minzoom: 0,
     maxzoom: 24
   });
+  console.log("✅ Lakes layer added successfully");
 
   // 7. Natural Drainage Network (REAL DATA from Felt Pipeline)
   map.addSource("flood-drainage-source", {
@@ -864,8 +865,11 @@ map.on("load", async () => {
       const id = e.target.dataset.layer;
       const targetOpacity = e.target.checked ? (opacities[id] || 1) : 0;
 
+      console.log(`🔄 Layer toggle: ${id}, checked: ${e.target.checked}, opacity: ${targetOpacity}`);
+
       if (map.getLayer(id)) {
         const type = map.getLayer(id).type;
+        console.log(`✅ Layer found: ${id}, type: ${type}`);
         if (type === "fill") map.setPaintProperty(id, "fill-opacity", targetOpacity);
         if (type === "line") map.setPaintProperty(id, "line-opacity", targetOpacity);
         if (type === "symbol") map.setPaintProperty(id, "icon-opacity", targetOpacity);
@@ -875,6 +879,8 @@ map.on("load", async () => {
         }
         if (type === "raster") map.setPaintProperty(id, "raster-opacity", targetOpacity);
         if (type === "heatmap") map.setPaintProperty(id, "heatmap-opacity", targetOpacity);
+      } else {
+        console.error(`❌ Layer not found: ${id}`);
       }
 
       // Special handling for Metro (multi-layer)
@@ -1399,7 +1405,7 @@ map.on("load", async () => {
         const projects = Object.values(projectGroups)
           .sort((a, b) => b.properties.length - a.properties.length);
 
-        countEl.textContent = `${projects.length} project${projects.length !== 1 ? 's' : ''} (${properties.length} units)`;
+        countEl.textContent = `${projects.length} project${projects.length !== 1 ? 's' : ''}`;
 
         // Render project cards
         projects.forEach(project => {
@@ -1717,7 +1723,7 @@ map.on("load", async () => {
       { label: 'Towers', value: proj.number_of_towers },
       { label: 'Floors', value: proj.number_of_floors },
       { label: 'Flats/Floor', value: proj.number_of_flats_per_floor },
-      { label: 'Total Units', value: proj.total_number_of_units },
+      { label: 'Total Sizes', value: proj.total_number_of_units },
       { label: 'Open Space %', value: proj.open_space },
       { label: 'Carpet Area %', value: proj.carpet_area_percentage },
       { label: 'Floor-to-Ceiling Height', value: proj.floor_to_ceiling_height }
@@ -1917,7 +1923,7 @@ map.on("load", async () => {
       { label: 'Towers', value: prop.number_of_towers },
       { label: 'Floors', value: prop.number_of_floors },
       { label: 'Flats/Floor', value: prop.number_of_flats_per_floor },
-      { label: 'Total Units', value: prop.total_number_of_units },
+      { label: 'Total Sizes', value: prop.total_number_of_units },
       { label: 'Open Space %', value: prop.open_space },
       { label: 'Carpet Area %', value: prop.carpet_area_percentage },
       { label: 'Floor-to-Ceiling Height', value: prop.floor_to_ceiling_height }
@@ -2535,12 +2541,21 @@ map.on("load", async () => {
           invFactSpan.style.opacity = 1;
         }
 
+        // Calculate unique project count from the properties data
+        let projectCount = result.count; // fallback to total property count
+        if (result.properties && Array.isArray(result.properties)) {
+          const uniqueProjects = new Set(result.properties.map(p => p.project_name || p.project_id));
+          projectCount = uniqueProjects.size;
+        } else if (window.currentProjectsList && window.currentProjectsList.length > 0) {
+          projectCount = window.currentProjectsList.length;
+        }
+
         // Render the property costs section
         container.innerHTML = `
           <div style="margin: 12px 12px 0; padding-top:12px; border-top:1px solid var(--border);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
               <span style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:2.5px; color:var(--gold); font-family:'Outfit',sans-serif;">💰 Property Costs</span>
-              <span style="font-size:9px; color:var(--t3); background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:8px; border:1px solid var(--border-subtle); font-family:'Outfit',sans-serif; font-weight:600;">${result.count} Props</span>
+              <span style="font-size:9px; color:var(--t3); background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:8px; border:1px solid var(--border-subtle); font-family:'Outfit',sans-serif; font-weight:600;">${projectCount} Props</span>
             </div>
             
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:7px;">
@@ -2680,6 +2695,11 @@ map.on("load", async () => {
   // SHOW SMALL ROBOT ICON (COLLAPSED STATE)
   function showFutureDevChatbot(locationData) {
     console.log('🚀 showFutureDevChatbot called for:', locationData.location);
+    console.log('🔍 DEBUG: locationData received:', {
+      location: locationData.location,
+      location_id: locationData.location_id,
+      location_id_type: typeof locationData.location_id
+    });
     
     // Close any existing chatbot or robot
     const existingChatbot = document.getElementById('future-dev-chatbot');
@@ -2842,6 +2862,12 @@ map.on("load", async () => {
 
   // ASK QUESTION - User clicks on suggested question
   window.askQuestion = function(locationName, locationId) {
+    console.log('🔍 DEBUG: askQuestion called with:', {
+      locationName: locationName,
+      locationId: locationId,
+      locationIdType: typeof locationId
+    });
+    
     const messagesContainer = document.getElementById('chatbot-messages');
     if (!messagesContainer) return;
     
@@ -2964,6 +2990,12 @@ map.on("load", async () => {
   function fetchFutureDevForChatbot(locationId, locationName) {
     // Use the configured API URL from config.js
     const PYTHON_API_URL = window.API_BASE_URL;
+    
+    console.log('🔍 DEBUG: fetchFutureDevForChatbot called with:', {
+      locationId: locationId,
+      locationName: locationName,
+      locationIdType: typeof locationId
+    });
     
     const futureDevUrl = `${PYTHON_API_URL}/api/v1/future-development/${locationId}`;
     console.log('🔍 Fetching future development for chatbot:', futureDevUrl);
@@ -4067,8 +4099,8 @@ function createProjectGroupCard(project) {
             <span class="prop-detail-value">${project.project_type || 'N/A'}</span>
           </div>
           <div class="prop-detail-row">
-            <span class="prop-detail-label">Units:</span>
-            <span class="prop-detail-value">${project.properties.length} available</span>
+            <span class="prop-detail-label">Sizes:</span>
+            <span class="prop-detail-value">${project.properties.length} projects</span>
           </div>
           <div class="prop-detail-row">
             <span class="prop-detail-label">₹/sqft:</span>
@@ -4273,7 +4305,7 @@ function showPropertyDetails(property) {
     renderField('Towers', details.number_of_towers),
     renderField('Floors', details.number_of_floors),
     renderField('Flats/Floor', details.number_of_flats_per_floor),
-    renderField('Total Units', details.total_number_of_units),
+    renderField('Total Sizes', details.total_number_of_units),
     renderField('Open Space %', details.open_space),
     renderField('Carpet Area %', details.carpet_area_percentage),
     renderField('Floor-to-Ceiling Height', details.floor_to_ceiling_height)
@@ -4361,8 +4393,7 @@ window.goBackToProjects = function () {
 
     // Restore the count
     const projectCount = window.currentProjectsList.length;
-    const totalUnits = window.allLocationProperties ? window.allLocationProperties.length : 0;
-    countEl.textContent = `${projectCount} project${projectCount !== 1 ? 's' : ''} (${totalUnits} units)`;
+    countEl.textContent = `${projectCount} project${projectCount !== 1 ? 's' : ''}`;
 
     // Clear navigation state
     window.currentProjectsList = null;
