@@ -25,6 +25,10 @@
   <!-- Volume Trends Data -->
   <script src="volume_trends_data.js"></script>
 
+  <!-- Popper.js & Tippy.js -->
+  <script src="https://unpkg.com/@popperjs/core@2"></script>
+  <script src="https://unpkg.com/tippy.js@6"></script>
+
   <link rel="stylesheet" href="style.css?v=6.0" />
 </head>
 
@@ -67,6 +71,11 @@
 
   </aside>
 
+  <!-- Sidebar Toggle Button (outside sidebar so it stays visible) -->
+  <button id="sidebar-toggle" class="sidebar-toggle-btn" aria-label="Toggle Sidebar">
+    <span class="toggle-icon">‹</span>
+  </button>
+
   <!-- ═══════════════════════════════════════════
        MAP (fills right side)
   ═══════════════════════════════════════════ -->
@@ -75,9 +84,9 @@
   <!-- ═══════════════════════════════════════════
        LAYER BAR — horizontal, bottom center
   ═══════════════════════════════════════════ -->
-  <div class="layer-controls">
+  <div class="layer-controls" id="layer-controls">
 
-    <label class="layer-toggle">
+    <label class="layer-toggle" data-tippy-content="Major Highways & Arterial Roads">
       <input type="checkbox" id="highways" data-layer="highways-layer" />
       <div class="layer-card">
         <img src="assets/highway.png" alt="Highways" />
@@ -85,7 +94,7 @@
       </div>
     </label>
 
-    <label class="layer-toggle">
+    <label class="layer-toggle" data-tippy-content="Hyderabad Metro Corridors">
       <input type="checkbox" id="metro" data-layer="metro-layer" />
       <div class="layer-card">
         <img src="assets/metro.png" alt="Metro" />
@@ -93,7 +102,7 @@
       </div>
     </label>
 
-    <label class="layer-toggle">
+    <label class="layer-toggle" data-tippy-content="Outer Ring Road (ORR)">
       <input type="checkbox" id="orr" data-layer="orr-layer" />
       <div class="layer-card">
         <img src="assets/orr.png" alt="ORR" />
@@ -101,7 +110,7 @@
       </div>
     </label>
 
-    <label class="layer-toggle">
+    <label class="layer-toggle" data-tippy-content="Lakes & Water Bodies">
       <input type="checkbox" id="lakes" data-layer="lakes-layer" />
       <div class="layer-card">
         <img src="assets/lakes.png" alt="Lakes" />
@@ -109,7 +118,7 @@
       </div>
     </label>
 
-    <label class="layer-toggle">
+    <label class="layer-toggle" data-tippy-content="Regional Ring Road (RRR)">
       <input type="checkbox" id="rrr" data-layer="rrr-layer" />
       <div class="layer-card">
         <img src="assets/rrr.png" alt="RRR" />
@@ -117,7 +126,7 @@
       </div>
     </label>
 
-    <label class="layer-toggle">
+    <label class="layer-toggle" data-tippy-content="HMDA Masterplan Boundary">
       <input type="checkbox" id="hmda" data-layer="hmda-layer" />
       <div class="layer-card">
         <img src="assets/HMDA.png" alt="HMDA" />
@@ -125,7 +134,7 @@
       </div>
     </label>
 
-    <label class="layer-toggle">
+    <label class="layer-toggle" data-tippy-content="Drainage Networks & Flood Risk Heatmap">
       <input type="checkbox" id="flood" data-layer="flood-risk-layer" />
       <div class="layer-card">
         <img src="assets/floods.png" alt="Floods" />
@@ -133,6 +142,53 @@
       </div>
     </label>
 
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       FUTURE INSIGHTS MODAL — Clean centered design
+  ═══════════════════════════════════════════ -->
+  <div class="fi-modal-overlay" id="fi-modal-overlay" style="display: none;">
+    <div class="fi-modal" id="fi-modal">
+      <div class="fi-modal-header">
+        <div class="fi-modal-title-section">
+          <h3>🚀 Future Developments</h3>
+          <p class="fi-modal-subtitle" id="fi-modal-subtitle">Gachibowli</p>
+        </div>
+        <button class="fi-modal-close" id="fi-modal-close">✕</button>
+      </div>
+
+      <div class="fi-timeline-section">
+        <div class="fi-timeline-label">Select Year</div>
+        <div class="fi-timeline-slider">
+          <div class="fi-timeline-track">
+            <div class="fi-timeline-years" id="fi-timeline-years">
+              <!-- Year buttons will be populated here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fi-scrollable-wrapper">
+        <div class="fi-modal-stats" id="fi-modal-stats">
+          <div class="fi-stat-item">
+            <span class="fi-stat-number" id="fi-stat-total">0</span>
+            <span class="fi-stat-label">Total Projects</span>
+          </div>
+          <div class="fi-stat-item">
+            <span class="fi-stat-number" id="fi-stat-high">0</span>
+            <span class="fi-stat-label">High Certainty</span>
+          </div>
+          <div class="fi-stat-item">
+            <span class="fi-stat-number" id="fi-stat-medium">0</span>
+            <span class="fi-stat-label">Medium</span>
+          </div>
+        </div>
+
+        <div class="fi-modal-content" id="fi-modal-content">
+          <!-- Development cards will be populated here -->
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════
@@ -146,6 +202,50 @@
     <div id="amenities-list-content"></div>
   </div>
 
+  <!-- ═══════════════════════════════════════════
+       COMMUTE CALCULATOR MODAL
+  ═══════════════════════════════════════════ -->
+  <div class="commute-modal-overlay" id="commute-modal-overlay" style="display: none;">
+    <div class="commute-modal" id="commute-modal">
+      <div class="commute-modal-header">
+        <div>
+          <h3>🚗 Commute Calculator</h3>
+          <p class="commute-subtitle" id="commute-property-name"></p>
+        </div>
+        <button class="commute-close" id="commute-close">✕</button>
+      </div>
+
+      <div class="commute-search-section">
+        <label for="office-search-input">Search for your office location:</label>
+        <input 
+          type="text" 
+          id="office-search-input" 
+          placeholder="e.g., Google Hyderabad, HITEC City..."
+          autocomplete="off"
+        />
+        <div class="office-suggestions" id="office-suggestions"></div>
+      </div>
+
+      <div class="commute-routes-section" id="commute-routes-section" style="display: none;">
+        <h4>Available Routes</h4>
+        <div class="route-toggle-buttons">
+          <button class="route-toggle-btn active" data-mode="driving" onclick="toggleRoute('driving')">
+            🚗 Car
+          </button>
+          <button class="route-toggle-btn" data-mode="transit" onclick="toggleRoute('transit')">
+            🚇 Metro/Transit
+          </button>
+          <button class="route-toggle-btn" data-mode="bus" onclick="toggleRoute('bus')">
+            🚌 Bus
+          </button>
+        </div>
+
+        <div class="route-info-cards" id="route-info-cards">
+          <!-- Route cards will be populated here -->
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ═══════════════════════════════════════════
        PROPERTIES LIST PANEL (Right Side)
@@ -195,7 +295,7 @@
     <div class="detail-sections" id="detail-sections"></div>
   </div>
 
-  <script src="app.js?v=5.0"></script>
+  <script src="app.js?v=6.2"></script>
 </body>
 
 </html>

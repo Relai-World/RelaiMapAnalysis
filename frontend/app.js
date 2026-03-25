@@ -51,7 +51,7 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // Supabase RPC call helper
 async function callSupabaseRPC(functionName, params = {}) {
   console.log(`🔍 Calling Supabase RPC: ${functionName}`, params);
-  
+
   try {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${functionName}`, {
       method: 'POST',
@@ -62,15 +62,15 @@ async function callSupabaseRPC(functionName, params = {}) {
       },
       body: JSON.stringify(params)
     });
-    
+
     console.log(`🔍 Response status: ${response.status}`);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`❌ Supabase RPC error: ${response.statusText}`, errorText);
       throw new Error(`Supabase RPC error: ${response.statusText} - ${errorText}`);
     }
-    
+
     const data = await response.json();
     console.log(`✅ RPC ${functionName} success:`, data);
     return data;
@@ -80,7 +80,7 @@ async function callSupabaseRPC(functionName, params = {}) {
   }
 }
 
-  // 🚀 EARLY FETCH: Start getting data immediately while map initializes
+// 🚀 EARLY FETCH: Start getting data immediately while map initializes
 const insightsPromise = callSupabaseRPC('get_all_insights');
 
 // Store insights data globally for amenities
@@ -148,7 +148,7 @@ function getInvestFact(p) {
 // 2. MARKDOWN FORMATTER - Convert markdown to HTML for better display
 function formatMarkdownText(text) {
   if (!text) return text;
-  
+
   return text
     // Convert **bold** to <strong>
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -169,14 +169,13 @@ function formatMarkdownText(text) {
 }
 
 // 3. METRIC EXPAND FUNCTION
+// 3. METRIC EXPAND FUNCTION
 function expandMetric(clickedBox) {
   const allBoxes = document.querySelectorAll('.metric-card');
   const isCurrentlyExpanded = clickedBox.classList.contains('expanded');
-  
-  console.log('Expand metric clicked:', clickedBox.dataset.metric, 'Currently expanded:', isCurrentlyExpanded);
-  
+
   const intelCard = document.getElementById('intel-card');
-  
+
   // If clicking the same expanded box, collapse all
   if (isCurrentlyExpanded) {
     allBoxes.forEach(box => {
@@ -184,36 +183,31 @@ function expandMetric(clickedBox) {
     });
     return;
   }
-  
+
   // Expand clicked box and collapse others
   allBoxes.forEach(box => {
     if (box === clickedBox) {
       box.classList.add('expanded');
       box.classList.remove('collapsed');
-      console.log('Expanded:', box.dataset.metric);
     } else {
       box.classList.add('collapsed');
       box.classList.remove('expanded');
-      console.log('Collapsed:', box.dataset.metric);
     }
   });
-  
-  // Scroll to show the expanded card smoothly (after CSS transition starts)
+
+  // Scroll to show the expanded card smoothly
   if (intelCard) {
     setTimeout(() => {
       const cardTop = clickedBox.offsetTop;
       const cardHeight = clickedBox.offsetHeight;
       const containerHeight = intelCard.clientHeight;
       const currentScroll = intelCard.scrollTop;
-      
-      // Calculate if card is fully visible
+
       const cardBottom = cardTop + cardHeight;
       const visibleTop = currentScroll;
       const visibleBottom = currentScroll + containerHeight;
-      
-      // If card is not fully visible, scroll to show it
+
       if (cardTop < visibleTop || cardBottom > visibleBottom) {
-        // Scroll to position the card at the top with some padding
         intelCard.scrollTo({
           top: cardTop - 20,
           behavior: 'smooth'
@@ -223,7 +217,6 @@ function expandMetric(clickedBox) {
   }
 }
 
-// Make function globally available
 window.expandMetric = expandMetric;
 
 // 2. THE INTELLIGENCE ENGINE (Fetches Deep Data)
@@ -510,8 +503,8 @@ map.on("load", async () => {
   });
 
   // 1. Lakes (Moved to end)
-  map.addSource("lakes-source", { 
-    type: "vector", 
+  map.addSource("lakes-source", {
+    type: "vector",
     url: `pmtiles://${BASE_TILES_URL}/lakes.pmtiles`,
     minzoom: 0,
     maxzoom: 24
@@ -669,18 +662,18 @@ map.on("load", async () => {
 
   try {
     const data = await insightsPromise;
-    
+
     // Store globally for amenities
     window.insightsData = data;
-    
+
     console.log("🔍 DEBUG: Raw insights data:", data);
     console.log("🔍 DEBUG: Data type:", typeof data, "Is array:", Array.isArray(data));
-    
+
     if (Array.isArray(data) && data.length > 0) {
       console.log("🔍 DEBUG: First location:", data[0]);
       console.log("🔍 DEBUG: Coordinates:", data[0].longitude, data[0].latitude);
     }
-    
+
     const searchInput = document.getElementById("location-search");
     const searchResults = document.getElementById("search-results");
 
@@ -1122,7 +1115,7 @@ map.on("load", async () => {
 
     if (emptyState) emptyState.style.display = "none";
     card.style.display = "flex";
-    
+
     // Reset scroll position to top when new location is selected
     card.scrollTop = 0;
 
@@ -1280,7 +1273,10 @@ map.on("load", async () => {
             <span class="btn-label">Metro</span>
           </button>
         </div>
-        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
+        <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
+          <button id="future-insights-btn" class="future-insights-trigger-btn">
+            🚀 Future Insights
+          </button>
           <button id="clear-amenities-btn" class="clear-btn" style="display:none;">✕ Clear</button>
         </div>
       </div>
@@ -1315,6 +1311,14 @@ map.on("load", async () => {
 
     document.getElementById("download-report").onclick = () => generateReport(p);
 
+    // FUTURE INSIGHTS BUTTON
+    const futureInsightsBtn = document.getElementById("future-insights-btn");
+    if (futureInsightsBtn) {
+      futureInsightsBtn.onclick = () => {
+        showFutureInsights(p.location_id, p.location);
+      };
+    }
+
     // FETCH AND DISPLAY PROPERTY COSTS DYNAMICALLY
     fetchPropertyCosts(p.location);
 
@@ -1329,20 +1333,25 @@ map.on("load", async () => {
     activeMarker = new maplibregl.Marker({ element: markerEl, anchor: 'center' })
       .setLngLat([p.longitude, p.latitude])
       .addTo(map);
-    
-    // Initialize metric grid - no auto-expand needed
+
+    // Initialize map layer tooltips
     setTimeout(() => {
-      console.log('Metric grid initialized');
-    }, 100);
+      if (window.tippy) {
+        // Only keep layer tooltips, removed metric tooltips
+        tippy('.layer-toggle[data-tippy-content]', {
+          theme: 'nocturnal',
+          placement: 'top',
+          animation: 'shift-away',
+          delay: [150, 0]
+        });
+      }
+    }, 150);
   }
 
   map.on("click", "location-core", async e => {
     console.log('Location clicked:', e.features[0].properties);
     const p = e.features[0].properties;
-    
-    // Show chatbot-style future development popup
-    showFutureDevChatbot(p);
-    
+
     handleLocationSelect(p);
     // NEW: Also load properties for this location
     loadPropertiesForLocation(p.location);
@@ -1407,7 +1416,7 @@ map.on("load", async () => {
         // Match by RERA number (primary) or project name (fallback for properties without RERA)
         let displayProperties = properties;
         const hasLeadFilter = (window._relaiFilterReras && window._relaiFilterReras.length > 0) ||
-                              (window._relaiFilterProjectNames && window._relaiFilterProjectNames.length > 0);
+          (window._relaiFilterProjectNames && window._relaiFilterProjectNames.length > 0);
         if (hasLeadFilter) {
           displayProperties = properties.filter(prop => {
             const rera = ((prop.full_details && prop.full_details.rera_number) || '').toLowerCase().trim();
@@ -1457,33 +1466,66 @@ map.on("load", async () => {
         if (map.getLayer('property-pins-labels')) map.removeLayer('property-pins-labels');
         if (map.getSource('property-pins')) map.removeSource('property-pins');
 
+        // Robust bounding box / coordinate extractor
+        function extractLatLng(locInfo) {
+          if (!locInfo) return null;
+
+          if (typeof locInfo === 'object') {
+            if (locInfo.lat !== undefined && locInfo.lng !== undefined) return { lat: parseFloat(locInfo.lat), lng: parseFloat(locInfo.lng) };
+            if (locInfo.latitude !== undefined && locInfo.longitude !== undefined) return { lat: parseFloat(locInfo.latitude), lng: parseFloat(locInfo.longitude) };
+            return null;
+          }
+
+          const str = String(locInfo).trim();
+
+          if (str.startsWith('{')) {
+            try {
+              const validJson = str.replace(/'/g, '"');
+              const parsed = JSON.parse(validJson);
+              if (parsed.lat !== undefined && parsed.lng !== undefined) return { lat: parseFloat(parsed.lat), lng: parseFloat(parsed.lng) };
+            } catch (e) { }
+          }
+
+          const urlMatch = str.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || str.match(/(?:q|query)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+          if (urlMatch) return { lat: parseFloat(urlMatch[1]), lng: parseFloat(urlMatch[2]) };
+
+          const rawMatch = str.match(/(-?\d+\.\d{3,})\s*,\s*(-?\d+\.\d{3,})/);
+          if (rawMatch) return { lat: parseFloat(rawMatch[1]), lng: parseFloat(rawMatch[2]) };
+
+          return null;
+        }
+
         // One GeoJSON feature per project — use first property with valid lat/lng
         const pinFeatures = [];
         projects.forEach((project, idx) => {
+          let projectCoords = null;
+          // Loop through properties in the project to find the first valid coordinate
           for (const prop of project.properties) {
-            const locStr = prop.google_place_location;
-            if (!locStr) continue;
-            try {
-              const loc = typeof locStr === 'string' ? JSON.parse(locStr) : locStr;
-              const lat = parseFloat(loc.lat);
-              const lng = parseFloat(loc.lng);
-              if (!isNaN(lat) && !isNaN(lng)) {
-                pinFeatures.push({
-                  type: 'Feature',
-                  geometry: { type: 'Point', coordinates: [lng, lat] },
-                  properties: {
-                    project_index: idx,
-                    projectname: project.projectname,
-                    buildername: project.buildername || '',
-                    price_per_sft: prop.price_per_sft || 0,
-                    unit_count: project.properties.length
-                  }
-                });
-                break; // one pin per project
+            projectCoords = extractLatLng(prop.google_place_location) || extractLatLng(prop.google_maps_location);
+            if (projectCoords && !isNaN(projectCoords.lat) && !isNaN(projectCoords.lng)) {
+              break;
+            }
+          }
+
+          if (projectCoords && !isNaN(projectCoords.lat) && !isNaN(projectCoords.lng)) {
+            pinFeatures.push({
+              type: 'Feature',
+              geometry: { type: 'Point', coordinates: [projectCoords.lng, projectCoords.lat] },
+              properties: {
+                project_index: idx,
+                projectname: project.projectname,
+                buildername: project.buildername || '',
+                price_per_sft: project.properties[0].price_per_sft || 0,
+                unit_count: project.properties.length
               }
-            } catch (e) { /* skip malformed */ }
+            });
+            console.log(`✅ Added pin for ${project.projectname} at [${projectCoords.lng}, ${projectCoords.lat}]`);
+          } else {
+            console.warn(`⚠️ Could not map ${project.projectname} - no valid coordinates found.`);
           }
         });
+
+        console.log(`📍 Total property pins to display: ${pinFeatures.length} out of ${projects.length} projects`);
 
         if (pinFeatures.length > 0) {
           map.addSource('property-pins', {
@@ -1491,42 +1533,39 @@ map.on("load", async () => {
             data: { type: 'FeatureCollection', features: pinFeatures }
           });
 
-          // Gold circle
+          // Royal Indigo circle for property pins - sleek & premium
           map.addLayer({
             id: 'property-pins-layer',
             type: 'circle',
             source: 'property-pins',
             paint: {
-              'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 7, 15, 11],
-              'circle-color': '#C9A24A',
+              'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 4, 15, 10],
+              'circle-color': '#f40000ff', // Royal Indigo
               'circle-stroke-color': '#FFFFFF',
               'circle-stroke-width': 2,
-              'circle-opacity': 0.92
+              'circle-opacity': 0.95
             }
           });
 
-          // Price label above each pin
+          // Project name label above each pin
           map.addLayer({
             id: 'property-pins-labels',
             type: 'symbol',
             source: 'property-pins',
             layout: {
-              'text-field': [
-                'case',
-                ['>', ['get', 'price_per_sft'], 0],
-                ['concat', '₹', ['to-string', ['round', ['get', 'price_per_sft']]], '/sqft'],
-                ''
-              ],
-              'text-size': 10,
+              'text-field': ['get', 'projectname'],
+              'text-size': 11,
               'text-offset': [0, -1.8],
               'text-anchor': 'bottom',
-              'text-font': ['Noto Sans Regular'],
-              'text-allow-overlap': false
+              'text-font': ['Noto Sans Bold'],
+              'text-allow-overlap': false,
+              'text-optional': true
             },
             paint: {
-              'text-color': '#C9A24A',
-              'text-halo-color': '#1A1C1E',
-              'text-halo-width': 1.5
+              'text-color': '#FFFFFF',
+              'text-halo-color': '#f40000ff',
+              'text-halo-width': 2,
+              'text-halo-blur': 1
             }
           });
 
@@ -1536,10 +1575,10 @@ map.on("load", async () => {
             const proj = (window._propertyPinProjects || [])[pinProps.project_index];
             if (!proj) return;
 
-            // Reset nav state so back button works correctly
-            window.currentProjectsList = null;
-            window.currentProject = null;
-            window.currentConfigsList = null;
+            // Store current list for back navigation BEFORE clearing
+            if (!window.currentProjectsList && listContainer.children.length > 0) {
+              window.currentProjectsList = Array.from(listContainer.children);
+            }
 
             // Clear list and show this project's detail
             listContainer.innerHTML = '';
@@ -1721,6 +1760,11 @@ map.on("load", async () => {
           <div class="detail-badges">${badgesHTML}</div>
           <h2 class="detail-proj-name">${proj.projectname || 'Unnamed Project'}</h2>
           <p class="detail-builder">${proj.buildername || 'Builder not specified'}</p>
+          ${proj.latitude && proj.longitude ? `
+          <button class="calculate-commute-btn" onclick='openCommuteCalculator(${proj.latitude}, ${proj.longitude}, "${(proj.projectname || '').replace(/"/g, '&quot;')}")'>
+            🚗 Calculate Commute
+          </button>
+          ` : ''}
         </div>
         
         <div class="config-tabs-container">
@@ -1915,6 +1959,28 @@ map.on("load", async () => {
           <div class="detail-key-stats">${keyStats}</div>
         </div>
         
+        ${prop.latitude && prop.longitude ? `
+        <div class="detail-section commute-calc-section">
+          <h3 class="detail-section-title">🚗 Commute Calculator</h3>
+          <div class="commute-search-box-detail">
+            <input 
+              type="text" 
+              id="office-search-detail-${prop.id}" 
+              class="office-search-input-detail" 
+              placeholder="Search for your office location..." 
+              autocomplete="off"
+              data-prop-lat="${prop.latitude}"
+              data-prop-lng="${prop.longitude}"
+              data-prop-name="${(prop.projectname || '').replace(/"/g, '&quot;')}"
+            />
+            <div id="office-suggestions-detail-${prop.id}" class="office-suggestions-detail"></div>
+          </div>
+          <div id="commute-routes-detail-${prop.id}" class="commute-routes-detail" style="display: none;">
+            <div class="route-cards-detail"></div>
+          </div>
+        </div>
+        ` : ''}
+        
         <div class="detail-sections">
           ${buildDetailSection('🏠 Basic Info', [
       { label: 'Project Name', value: prop.projectname },
@@ -2100,6 +2166,57 @@ map.on("load", async () => {
 
 
 
+  // --- ADVANCED CHART.JS PLUGINS ---
+
+  // 1. Vertical Crosshair Plugin
+  // Draws a sleek vertical dotted line aligned with the cursor
+  const crosshairPlugin = {
+    id: 'crosshairLine',
+    afterDraw: chart => {
+      if (chart.tooltip && chart.tooltip._active && chart.tooltip._active.length) {
+        const activePoint = chart.tooltip._active[0];
+        const ctx = chart.ctx;
+        const x = activePoint.element.x;
+        const topY = chart.scales.y.top;
+        const bottomY = chart.scales.y.bottom;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, topY);
+        ctx.lineTo(x, bottomY);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.setLineDash([4, 4]); // Dashboard style dotted line
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  };
+
+  // 2. Glowing Line Shadow Plugin
+  // Adds a native canvas drop-shadow that makes a line look like glowing neon
+  const glowingLinePlugin = {
+    id: 'glowingLine',
+    beforeDatasetsDraw: chart => {
+      if (chart.config.type !== 'line') return;
+      const ctx = chart.ctx;
+      ctx.save();
+      // Drop shadow configuration
+      ctx.shadowColor = 'rgba(255, 215, 0, 0.6)'; // Gold glow
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 4;
+    },
+    afterDatasetsDraw: chart => {
+      chart.ctx.restore();
+    }
+  };
+
+  // Register globally so all charts get the crosshair tracking
+  if (window.Chart) {
+    Chart.register(crosshairPlugin, glowingLinePlugin);
+  }
+
   // CHART.JS HELPER - Dual Charts Display
   let priceChartInstance = null; // Store price chart instance
   let volumeChartInstance = null; // Store volume chart instance
@@ -2156,17 +2273,17 @@ map.on("load", async () => {
 
         const ctx = canvas.getContext('2d');
 
-        // Enhanced gradient with richer colors
+        // Enhanced Emerald Green gradient for Price Trend
         const gradient = ctx.createLinearGradient(0, 0, 0, 140);
-        gradient.addColorStop(0, 'rgba(201, 162, 74, 0.35)');
-        gradient.addColorStop(0.5, 'rgba(166, 138, 61, 0.15)');
-        gradient.addColorStop(1, 'rgba(166, 138, 61, 0)');
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)'); // Emerald Green
+        gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.15)');
+        gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
 
         // Create glow effect gradient for line
         const glowGradient = ctx.createLinearGradient(0, 0, 0, 140);
-        glowGradient.addColorStop(0, '#FFD700');
-        glowGradient.addColorStop(0.5, '#C9A24A');
-        glowGradient.addColorStop(1, '#A68A3D');
+        glowGradient.addColorStop(0, '#34D399'); // Light Emerald
+        glowGradient.addColorStop(0.5, '#10B981'); // Standard Emerald
+        glowGradient.addColorStop(1, '#059669'); // Dark Emerald
 
         priceChartInstance = new Chart(ctx, {
           type: 'line',
@@ -2176,17 +2293,19 @@ map.on("load", async () => {
               label: 'Price per SqFt',
               data: trendsData.map(d => d.price),
               borderColor: glowGradient,
-              borderWidth: 2.5,
+              borderWidth: 3,
               fill: true,
               backgroundColor: gradient,
-              tension: 0.4,
-              pointRadius: 4,
+              tension: 0.45,
+              // Clean Premium Point Styling
+              pointStyle: 'circle',
+              pointRadius: 3.5,
               pointHoverRadius: 6,
-              pointBackgroundColor: '#FFD700',
-              pointBorderColor: '#FFFFFF',
+              pointBackgroundColor: '#FFFFFF',
+              pointBorderColor: '#059669', // Emerald
               pointBorderWidth: 2,
-              pointHoverBackgroundColor: '#FFF',
-              pointHoverBorderColor: '#FFD700',
+              pointHoverBackgroundColor: '#059669',
+              pointHoverBorderColor: '#FFFFFF',
               pointHoverBorderWidth: 2
             }]
           },
@@ -2197,31 +2316,68 @@ map.on("load", async () => {
               mode: 'index',
               intersect: false
             },
+            animations: {
+              x: {
+                type: 'number',
+                easing: 'linear',
+                duration: 1500 / Math.max(1, trendsData.length),
+                from: NaN,
+                delay(ctx) {
+                  if (ctx.type !== 'data' || ctx.xStarted) {
+                    return 0;
+                  }
+                  ctx.xStarted = true;
+                  return ctx.index * (1500 / Math.max(1, trendsData.length));
+                }
+              },
+              y: {
+                type: 'number',
+                easing: 'linear',
+                duration: 1500 / Math.max(1, trendsData.length),
+                from(ctx) {
+                  if (ctx.index === 0) {
+                    return ctx.chart.scales.y.getPixelForValue(trendsData[0].price);
+                  }
+                  const meta = ctx.chart.getDatasetMeta(ctx.datasetIndex);
+                  return meta.data[ctx.index - 1] ? meta.data[ctx.index - 1].getProps(['y'], true).y : ctx.chart.scales.y.getPixelForValue(trendsData[ctx.index].price);
+                },
+                delay(ctx) {
+                  if (ctx.type !== 'data' || ctx.yStarted) {
+                    return 0;
+                  }
+                  ctx.yStarted = true;
+                  return ctx.index * (1500 / Math.max(1, trendsData.length));
+                }
+              }
+            },
             plugins: {
               legend: { display: false },
               tooltip: {
                 enabled: true,
-                backgroundColor: 'rgba(26, 28, 30, 0.95)',
-                borderColor: '#FFD700',
+                mode: 'index',
+                intersect: false,
+                backgroundColor: 'rgba(15, 23, 42, 0.9)', // Match Nocturnal Theme
+                borderColor: 'rgba(16, 185, 129, 0.3)', // Emerald border
                 borderWidth: 1,
-                titleColor: '#FFD700',
-                bodyColor: '#FFFFFF',
+                titleColor: '#34D399', // Light emerald
+                bodyColor: '#e2e2e8',
                 titleFont: {
                   family: 'Outfit',
                   weight: '700',
-                  size: 11
+                  size: 12
                 },
                 bodyFont: {
-                  family: 'Outfit',
-                  size: 10,
-                  weight: '600'
+                  family: 'Inter',
+                  size: 11,
+                  weight: '500'
                 },
-                padding: 10,
-                cornerRadius: 6,
+                padding: 12,
+                cornerRadius: 8,
+                caretSize: 6,
                 displayColors: false,
                 callbacks: {
                   title: (context) => {
-                    return `${context[0].label}`;
+                    return `Year ${context[0].label}`;
                   },
                   label: (context) => {
                     const price = context.parsed.y;
@@ -2236,7 +2392,7 @@ map.on("load", async () => {
                       changeText = ` (${changeIcon}${Math.abs(change)}% YoY)`;
                     }
 
-                    return `₹${price.toLocaleString()}/sqft${changeText}`;
+                    return `Price: ₹${price.toLocaleString()}/sqft${changeText}`;
                   }
                 }
               }
@@ -2245,7 +2401,7 @@ map.on("load", async () => {
               x: {
                 grid: {
                   display: true,
-                  color: 'rgba(166, 138, 61, 0.05)',
+                  color: 'rgba(16, 185, 129, 0.05)',
                   lineWidth: 1
                 },
                 ticks: {
@@ -2258,12 +2414,12 @@ map.on("load", async () => {
                   padding: 4
                 },
                 border: {
-                  color: 'rgba(166, 138, 61, 0.2)'
+                  color: 'rgba(16, 185, 129, 0.2)'
                 }
               },
               y: {
                 grid: {
-                  color: 'rgba(166, 138, 61, 0.08)',
+                  color: 'rgba(16, 185, 129, 0.08)',
                   lineWidth: 1
                 },
                 ticks: {
@@ -2285,10 +2441,6 @@ map.on("load", async () => {
                   color: 'rgba(166, 138, 61, 0.2)'
                 }
               }
-            },
-            animation: {
-              duration: 1000,
-              easing: 'easeInOutQuart'
             }
           }
         });
@@ -2312,7 +2464,7 @@ map.on("load", async () => {
     if (!window.VOLUME_TRENDS_DATA || !window.VOLUME_TRENDS_DATA[locationName]) {
       console.warn('No volume data available for:', locationName);
       document.getElementById('volume-chart-stat').style.display = 'none';
-      
+
       const chartContainer = document.querySelector('#volumeChart').parentElement;
       if (chartContainer) {
         chartContainer.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#999; font-size:11px; font-family:Outfit;">No volume trend data available</div>';
@@ -2326,7 +2478,7 @@ map.on("load", async () => {
     // Calculate comprehensive volume statistics
     const volumes = volumeData.volumes;
     const years = volumeData.years;
-    
+
     // Find peak and trough
     const maxVolume = Math.max(...volumes);
     const minVolume = Math.min(...volumes);
@@ -2334,7 +2486,7 @@ map.on("load", async () => {
     const minIndex = volumes.indexOf(minVolume);
     const peakYear = years[maxIndex];
     const troughYear = years[minIndex];
-    
+
     // Calculate recent YoY growth (last two years)
     let yoyGrowth = 0;
     if (volumes.length >= 2) {
@@ -2342,15 +2494,15 @@ map.on("load", async () => {
       const previousYear = volumes[volumes.length - 2];
       yoyGrowth = ((currentYear - previousYear) / previousYear * 100);
     }
-    
+
     // Calculate decline from peak (if applicable)
     const currentVolume = volumes[volumes.length - 1];
     const declineFromPeak = ((currentVolume - maxVolume) / maxVolume * 100);
-    
+
     // Determine market phase and create comprehensive stat
     let statText = '';
     let statColor = '#9E9E9E';
-    
+
     if (Math.abs(declineFromPeak) < 5) {
       // Near peak
       statText = `📊 Peak: ${maxVolume.toLocaleString()} (${peakYear}) • ${yoyGrowth > 0 ? '↗' : '↘'} ${Math.abs(yoyGrowth).toFixed(1)}% YoY`;
@@ -2388,38 +2540,22 @@ map.on("load", async () => {
 
     const ctx = canvas.getContext('2d');
 
-    // Volume chart gradient (blue color scheme)
-    const gradient = ctx.createLinearGradient(0, 0, 0, 140);
-    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
-    gradient.addColorStop(0.5, 'rgba(37, 99, 235, 0.15)');
-    gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
-
-    // Create glow effect gradient for line
-    const glowGradient = ctx.createLinearGradient(0, 0, 0, 140);
-    glowGradient.addColorStop(0, '#3B82F6');
-    glowGradient.addColorStop(0.5, '#2563EB');
-    glowGradient.addColorStop(1, '#1D4ED8');
-
     volumeChartInstance = new Chart(ctx, {
-      type: 'line',
+      type: 'bar',
       data: {
         labels: years,
         datasets: [{
           label: 'Transaction Volume',
           data: volumes,
-          borderColor: glowGradient,
-          borderWidth: 2.5,
-          fill: true,
-          backgroundColor: gradient,
-          tension: 0.4,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          pointBackgroundColor: '#3B82F6',
-          pointBorderColor: '#FFFFFF',
-          pointBorderWidth: 2,
-          pointHoverBackgroundColor: '#FFF',
-          pointHoverBorderColor: '#3B82F6',
-          pointHoverBorderWidth: 2
+          backgroundColor: 'rgba(99, 102, 241, 0.9)', // Solid, crisp Royal Indigo
+          borderColor: 'transparent',
+          borderWidth: 0,
+          borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 }, // Sharp sleek corners
+          hoverBackgroundColor: 'rgba(79, 70, 229, 1)', // Hover Dark Indigo
+          barThickness: 'flex',
+          maxBarThickness: 32,
+          barPercentage: 0.75, // Thicker, sharper bars
+          categoryPercentage: 0.85
         }]
       },
       options: {
@@ -2429,31 +2565,42 @@ map.on("load", async () => {
           mode: 'index',
           intersect: false
         },
+        animation: {
+          duration: 800,
+          easing: 'easeOutQuart',
+          delay: (context) => {
+            if (context.type !== 'data') return 0;
+            return context.dataIndex * 120;
+          }
+        },
         plugins: {
           legend: { display: false },
           tooltip: {
             enabled: true,
-            backgroundColor: 'rgba(26, 28, 30, 0.95)',
-            borderColor: '#3B82F6',
+            mode: 'index',
+            intersect: false,
+            backgroundColor: 'rgba(15, 23, 42, 0.9)', // Match Nocturnal Theme
+            borderColor: 'rgba(99, 102, 241, 0.4)', // Indigo
             borderWidth: 1,
-            titleColor: '#3B82F6',
-            bodyColor: '#FFFFFF',
+            titleColor: '#818CF8', // Light Indigo
+            bodyColor: '#e2e2e8',
             titleFont: {
               family: 'Outfit',
               weight: '700',
-              size: 11
+              size: 12
             },
             bodyFont: {
-              family: 'Outfit',
-              size: 10,
-              weight: '600'
+              family: 'Inter',
+              size: 11,
+              weight: '500'
             },
-            padding: 10,
-            cornerRadius: 6,
+            padding: 12,
+            cornerRadius: 8,
+            caretSize: 6,
             displayColors: false,
             callbacks: {
               title: (context) => {
-                return `${context[0].label}`;
+                return `Year ${context[0].label}`;
               },
               label: (context) => {
                 const volume = context.parsed.y;
@@ -2495,7 +2642,7 @@ map.on("load", async () => {
           },
           y: {
             grid: {
-              color: 'rgba(59, 130, 246, 0.08)',
+              color: 'rgba(99, 102, 241, 0.08)',
               lineWidth: 1
             },
             ticks: {
@@ -2514,13 +2661,9 @@ map.on("load", async () => {
               }
             },
             border: {
-              color: 'rgba(59, 130, 246, 0.2)'
+              color: 'rgba(99, 102, 241, 0.2)'
             }
           }
-        },
-        animation: {
-          duration: 1000,
-          easing: 'easeInOutQuart'
         }
       }
     });
@@ -2641,7 +2784,7 @@ map.on("load", async () => {
   function fetchFutureDevelopment(locationId) {
     console.log('fetchFutureDevelopment called with locationId:', locationId);
     const container = document.getElementById('future-dev-container');
-    
+
     if (!container) {
       console.error('future-dev-container element not found!');
       return;
@@ -2656,7 +2799,7 @@ map.on("load", async () => {
 
     // Use the configured API URL from config.js
     const PYTHON_API_URL = window.API_BASE_URL;
-    
+
     const futureDevUrl = `${PYTHON_API_URL}/api/v1/future-development/${locationId}`;
     console.log('🔍 Fetching future development from:', futureDevUrl);
 
@@ -2680,7 +2823,7 @@ map.on("load", async () => {
         const developmentsHtml = data.developments.map(dev => {
           const publishedDate = dev.published_at ? new Date(dev.published_at).toLocaleDateString() : 'Date unknown';
           const yearMentioned = dev.year_mentioned ? ` (${dev.year_mentioned})` : '';
-          
+
           return `
             <div class="future-dev-item" style="margin-bottom:12px; padding:14px; background:rgba(255,255,255,0.03); border:1px solid var(--border-subtle); border-radius:12px; border-left:3px solid var(--blue); box-shadow:0 2px 8px rgba(0,0,0,0.1);">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
@@ -2727,430 +2870,16 @@ map.on("load", async () => {
       });
   }
 
-  // SHOW SMALL ROBOT ICON (COLLAPSED STATE)
-  function showFutureDevChatbot(locationData) {
-    console.log('🚀 showFutureDevChatbot called for:', locationData.location);
-    console.log('🔍 DEBUG: locationData received:', {
-      location: locationData.location,
-      location_id: locationData.location_id,
-      location_id_type: typeof locationData.location_id
-    });
-    
-    // Close any existing chatbot or robot
-    const existingChatbot = document.getElementById('future-dev-chatbot');
-    if (existingChatbot) {
-      existingChatbot.remove();
-    }
-    
-    const existingRobot = document.getElementById('chatbot-robot-icon');
-    if (existingRobot) {
-      existingRobot.remove();
-    }
-    
-    // Create small robot icon (collapsed state)
-    const robotIcon = document.createElement('div');
-    robotIcon.id = 'chatbot-robot-icon';
-    robotIcon.className = 'chatbot-robot-icon';
-    robotIcon.innerHTML = `
-      <div class="robot-icon-inner">
-        <span class="robot-emoji">🤖</span>
-        <div class="robot-pulse"></div>
-      </div>
-      <div class="robot-tooltip">Future Insights</div>
-    `;
-    
-    // Store location data for when robot is clicked
-    robotIcon.dataset.location = locationData.location;
-    robotIcon.dataset.locationId = locationData.location_id;
-    
-    // Click handler to expand chatbot
-    robotIcon.onclick = function() {
-      expandChatbot(locationData);
-    };
-    
-    document.body.appendChild(robotIcon);
-    
-    // Animate in
-    setTimeout(() => {
-      robotIcon.classList.add('robot-visible');
-    }, 100);
-  }
 
-  // EXPAND CHATBOT FROM ROBOT ICON - REPLACES PROPERTIES PANEL
-  function expandChatbot(locationData) {
-    console.log('🚀 Expanding chatbot for:', locationData.location);
-    
-    // Close properties panel completely and remember its state
-    const propertiesPanel = document.getElementById('properties-panel');
-    if (propertiesPanel && propertiesPanel.classList.contains('open')) {
-      propertiesPanel.classList.remove('open');
-      window.propertiesPanelWasOpen = true;
-    } else {
-      window.propertiesPanelWasOpen = false;
-    }
-    
-    // Remove robot icon
-    const robotIcon = document.getElementById('chatbot-robot-icon');
-    if (robotIcon) {
-      robotIcon.classList.remove('robot-visible');
-      setTimeout(() => robotIcon.remove(), 300);
-    }
-    
-    // Create chatbot in properties panel position
-    const chatbot = document.createElement('div');
-    chatbot.id = 'future-dev-chatbot';
-    chatbot.className = 'future-dev-chatbot chatbot-as-panel';
-    
-    chatbot.innerHTML = `
-      <div class="chatbot-header">
-        <div class="chatbot-avatar">🏗️</div>
-        <div class="chatbot-title">
-          <div class="chatbot-name">Future Insights</div>
-          <div class="chatbot-subtitle">${locationData.location}</div>
-        </div>
-        <button class="chatbot-close" onclick="closeFutureDevChatbot()">×</button>
-      </div>
-      <div class="chatbot-messages" id="chatbot-messages">
-        <div class="message bot-message">
-          <div class="message-avatar">🏗️</div>
-          <div class="message-content">
-            <div class="message-text">
-              Hi! I can help you explore future developments in ${locationData.location}. What would you like to know?
-            </div>
-          </div>
-        </div>
-        <div class="suggested-questions">
-          <button class="question-btn" onclick="askQuestion('${locationData.location}', ${locationData.location_id})">
-            What are the future developments?
-          </button>
-        </div>
-      </div>
-    `;
-    
-    document.body.appendChild(chatbot);
-    
-    // Animate in
-    setTimeout(() => {
-      chatbot.classList.add('chatbot-visible');
-    }, 100);
-  }
-
-  // CLOSE CHATBOT AND SHOW ROBOT ICON AGAIN
-  function closeFutureDevChatbot() {
-    const chatbot = document.getElementById('future-dev-chatbot');
-    
-    if (chatbot) {
-      chatbot.classList.remove('chatbot-visible');
-      setTimeout(() => {
-        if (chatbot) chatbot.remove();
-        
-        // Restore properties panel if it was open before chatbot
-        if (window.propertiesPanelWasOpen) {
-          const propertiesPanel = document.getElementById('properties-panel');
-          if (propertiesPanel) {
-            propertiesPanel.classList.add('open');
-          }
-          window.propertiesPanelWasOpen = false;
-        }
-        
-        // Show robot icon again
-        const robotIcon = document.getElementById('chatbot-robot-icon');
-        if (!robotIcon) {
-          // Recreate robot icon if it doesn't exist
-          const newRobot = document.createElement('div');
-          newRobot.id = 'chatbot-robot-icon';
-          newRobot.className = 'chatbot-robot-icon';
-          newRobot.innerHTML = `
-            <div class="robot-icon-inner">
-              <span class="robot-emoji">🤖</span>
-              <div class="robot-pulse"></div>
-            </div>
-            <div class="robot-tooltip">Future Insights</div>
-          `;
-          
-          // Get location data from chatbot before it's removed
-          const subtitle = chatbot.querySelector('.chatbot-subtitle');
-          if (subtitle) {
-            const locationName = subtitle.textContent;
-            newRobot.dataset.location = locationName;
-            
-            // Find location data from global insights
-            if (window.insightsData) {
-              const locationData = window.insightsData.find(d => d.location === locationName);
-              if (locationData) {
-                newRobot.dataset.locationId = locationData.location_id;
-                newRobot.onclick = function() {
-                  expandChatbot(locationData);
-                };
-              }
-            }
-          }
-          
-          document.body.appendChild(newRobot);
-          setTimeout(() => {
-            newRobot.classList.add('robot-visible');
-          }, 100);
-        }
-      }, 300);
-    }
-  }
-
-  // ASK QUESTION - User clicks on suggested question
-  window.askQuestion = function(locationName, locationId) {
-    console.log('🔍 DEBUG: askQuestion called with:', {
-      locationName: locationName,
-      locationId: locationId,
-      locationIdType: typeof locationId
-    });
-    
-    const messagesContainer = document.getElementById('chatbot-messages');
-    if (!messagesContainer) return;
-    
-    // Remove suggested questions
-    const suggestedQuestions = messagesContainer.querySelector('.suggested-questions');
-    if (suggestedQuestions) {
-      suggestedQuestions.remove();
-    }
-    
-    // Show user message (right-aligned)
-    const userMessage = document.createElement('div');
-    userMessage.className = 'message user-message';
-    userMessage.innerHTML = `
-      <div class="message-content user-content">
-        <div class="message-text">
-          What are the future developments?
-        </div>
-      </div>
-      <div class="message-avatar user-avatar">👤</div>
-    `;
-    messagesContainer.appendChild(userMessage);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
-    // Show typing indicator
-    setTimeout(() => {
-      const typingMessage = document.createElement('div');
-      typingMessage.className = 'message bot-message typing-message';
-      typingMessage.innerHTML = `
-        <div class="message-avatar">🏗️</div>
-        <div class="message-content">
-          <div class="typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-      `;
-      messagesContainer.appendChild(typingMessage);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      
-      // Fetch and display developments
-      setTimeout(() => {
-        fetchFutureDevForChatbot(locationId, locationName);
-      }, 1000);
-    }, 500);
-  };
-
-  // Make functions globally accessible
-  window.closeFutureDevChatbot = closeFutureDevChatbot;
-  window.loadMoreFutureDev = function() {
-    const chatbot = document.getElementById('future-dev-chatbot');
-    if (chatbot) {
-      const locationName = chatbot.querySelector('.chatbot-subtitle').textContent;
-      console.log('Load more clicked for:', locationName);
-    }
-  };
-
-  // Show full content for a specific development
-  window.showFullContent = function(devId) {
-    console.log('🔍 Expanding content for dev ID:', devId);
-    
-    const developments = window.currentChatbotDevelopments || [];
-    const dev = developments.find(d => d.id === devId);
-    
-    if (!dev) {
-      console.error('❌ Development not found:', devId);
-      return;
-    }
-    
-    console.log('✅ Found development:', dev);
-    
-    // Find the content element and message element
-    const contentEl = document.getElementById(`content-${devId}`);
-    const messageEl = document.querySelector(`[data-dev-id="${devId}"]`);
-    
-    if (!contentEl || !messageEl) {
-      console.error('❌ Could not find elements:', { 
-        contentEl: !!contentEl, 
-        messageEl: !!messageEl,
-        devId: devId 
-      });
-      return;
-    }
-    
-    console.log('✅ Found elements, expanding...');
-    
-    // Store current scroll position relative to the message element
-    const messagesContainer = document.getElementById('chatbot-messages');
-    const messageTop = messageEl.offsetTop;
-    const scrollBefore = messagesContainer.scrollTop;
-    
-    // Add expanding class for animation
-    contentEl.classList.add('expanding');
-    
-    // Replace content with full text
-    setTimeout(() => {
-      contentEl.innerHTML = dev.full_content || dev.content;
-      contentEl.classList.remove('expanding');
-      
-      // Keep scroll position at the same message (don't jump to bottom)
-      // Only adjust if content expanded below current view
-      const scrollAfter = messagesContainer.scrollTop;
-      if (scrollAfter === scrollBefore) {
-        // Content expanded, maintain view at the message
-        messagesContainer.scrollTop = messageTop - 20; // Small offset for better view
-      }
-    }, 150);
-    
-    // Remove the View More button with fade animation
-    const viewMoreBtn = messageEl.querySelector('.view-more-btn');
-    if (viewMoreBtn) {
-      viewMoreBtn.classList.add('removing');
-      setTimeout(() => {
-        viewMoreBtn.remove();
-      }, 300);
-    }
-  };
-
-  // FETCH FUTURE DEVELOPMENT FOR CHATBOT (CONVERSATIONAL RESPONSE)
-  function fetchFutureDevForChatbot(locationId, locationName) {
-    // Use the configured API URL from config.js
-    const PYTHON_API_URL = window.API_BASE_URL;
-    
-    console.log('🔍 DEBUG: fetchFutureDevForChatbot called with:', {
-      locationId: locationId,
-      locationName: locationName,
-      locationIdType: typeof locationId
-    });
-    
-    const futureDevUrl = `${PYTHON_API_URL}/api/v1/future-development/${locationId}`;
-    console.log('🔍 Fetching future development for chatbot:', futureDevUrl);
-
-    fetch(futureDevUrl)
-      .then(response => {
-        console.log('🔍 API Response status:', response.status);
-        return response.json();
-      })
-      .then(data => {
-        const messagesContainer = document.getElementById('chatbot-messages');
-        if (!messagesContainer) {
-          return;
-        }
-        
-        // Remove typing indicator
-        const typingMessage = messagesContainer.querySelector('.typing-message');
-        if (typingMessage) typingMessage.remove();
-        
-        if (!data.success || !data.developments || data.developments.length === 0) {
-          // Show no data message
-          const noDataMessage = document.createElement('div');
-          noDataMessage.className = 'message bot-message';
-          noDataMessage.innerHTML = `
-            <div class="message-avatar">🏗️</div>
-            <div class="message-content">
-              <div class="message-text">
-                I couldn't find any future development information for ${locationName}. 
-                This area might not have any upcoming projects in our database yet.
-              </div>
-            </div>
-          `;
-          messagesContainer.appendChild(noDataMessage);
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
-          return;
-        }
-
-        // Show conversational summary message first
-        const summaryMessage = document.createElement('div');
-        summaryMessage.className = 'message bot-message';
-        summaryMessage.innerHTML = `
-          <div class="message-avatar">🏗️</div>
-          <div class="message-content">
-            <div class="message-text">
-              Great question! I found <strong>${data.total_count} exciting future development projects</strong> planned for ${locationName}. Let me share the key developments with you:
-            </div>
-          </div>
-        `;
-        messagesContainer.appendChild(summaryMessage);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-        // Show developments as separate messages with complete content and View More
-        data.developments.forEach((dev, index) => {
-          setTimeout(() => {
-            const devMessage = document.createElement('div');
-            devMessage.className = 'message bot-message';
-            devMessage.setAttribute('data-dev-id', dev.id);
-            const yearMentioned = dev.year_mentioned ? ` (Expected: ${dev.year_mentioned})` : '';
-            const publishedDate = dev.published_at ? new Date(dev.published_at).toLocaleDateString() : '';
-            
-            // Check if there's more content to show (API already truncates content field)
-            const hasMoreContent = dev.full_content && dev.full_content.length > dev.content.length;
-            
-            devMessage.innerHTML = `
-              <div class="message-avatar">📰</div>
-              <div class="message-content">
-                <div class="message-header">
-                  <strong>${dev.source}</strong>${yearMentioned}
-                  ${publishedDate ? `<span style="font-size: 10px; color: #8a9fb5; margin-left: 8px;">${publishedDate}</span>` : ''}
-                </div>
-                <div class="message-text" id="content-${dev.id}">
-                  ${dev.content}
-                </div>
-                ${hasMoreContent ? `
-                  <button onclick="showFullContent(${dev.id})" class="view-more-btn">
-                    View More
-                  </button>
-                ` : ''}
-              </div>
-            `;
-            messagesContainer.appendChild(devMessage);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-          }, (index + 1) * 700);
-        });
-
-        // Store full development data globally for "View More" functionality
-        window.currentChatbotDevelopments = data.developments;
-      })
-      .catch(err => {
-        console.error("Future Development Chatbot Fetch Error:", err);
-        const messagesContainer = document.getElementById('chatbot-messages');
-        if (messagesContainer) {
-          // Remove typing indicator
-          const typingMessage = messagesContainer.querySelector('.typing-message');
-          if (typingMessage) typingMessage.remove();
-          
-          const errorMessage = document.createElement('div');
-          errorMessage.className = 'message bot-message';
-          errorMessage.innerHTML = `
-            <div class="message-avatar">⚠️</div>
-            <div class="message-content">
-              <div class="message-text">
-                Sorry, I encountered an error while fetching the development data. Please try again later.
-              </div>
-            </div>
-          `;
-          messagesContainer.appendChild(errorMessage);
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-      });
-  }
 
 
   // OPEN FUTURE DEVELOPMENT MODAL (called from popup click)
   function openFutureDevelopmentModal(locationName, locationId) {
     console.log('🚀 openFutureDevelopmentModal called for:', locationName);
-    
+
     // Close the small popup
     if (futureDevPopup) futureDevPopup.remove();
-    
+
     // Create modal if it doesn't exist
     let modal = document.getElementById('future-dev-modal');
     if (!modal) {
@@ -3159,7 +2888,7 @@ map.on("load", async () => {
       modal.className = 'future-dev-modal';
       document.body.appendChild(modal);
     }
-    
+
     // Show modal with loading state
     modal.innerHTML = `
       <div class="modal-overlay" onclick="closeFutureDevelopmentModal()">
@@ -3177,9 +2906,9 @@ map.on("load", async () => {
         </div>
       </div>
     `;
-    
+
     modal.style.display = 'flex';
-    
+
     // Fetch and display future development data
     fetchFutureDevelopmentForModal(locationId, locationName);
   }
@@ -3202,7 +2931,7 @@ map.on("load", async () => {
   function fetchFutureDevelopmentForModal(locationId, locationName) {
     // Use the configured API URL from config.js
     const PYTHON_API_URL = window.API_BASE_URL;
-    
+
     const futureDevUrl = `${PYTHON_API_URL}/api/v1/future-development/${locationId}`;
     console.log('🔍 Fetching future development for modal:', futureDevUrl);
 
@@ -3211,9 +2940,9 @@ map.on("load", async () => {
       .then(data => {
         const modal = document.getElementById('future-dev-modal');
         if (!modal) return; // Modal was closed
-        
+
         const modalBody = modal.querySelector('.modal-body');
-        
+
         if (!data.success || !data.developments || data.developments.length === 0) {
           modalBody.innerHTML = `
             <div class="no-data-state">
@@ -3229,7 +2958,7 @@ map.on("load", async () => {
         const developmentsHtml = data.developments.map(dev => {
           const publishedDate = dev.published_at ? new Date(dev.published_at).toLocaleDateString() : 'Date unknown';
           const yearMentioned = dev.year_mentioned ? ` (${dev.year_mentioned})` : '';
-          
+
           return `
             <div class="dev-item">
               <div class="dev-header">
@@ -3273,12 +3002,12 @@ map.on("load", async () => {
   }
 
   // Make expandDevelopment globally accessible
-  window.expandDevelopment = function(devId) {
+  window.expandDevelopment = function (devId) {
     const developments = window.currentFutureDevelopments || [];
     const dev = developments.find(d => d.id === devId);
-    
+
     if (!dev) return;
-    
+
     // Create modal or expand inline
     const modal = document.createElement('div');
     modal.style.cssText = `
@@ -3287,7 +3016,7 @@ map.on("load", async () => {
       display: flex; align-items: center; justify-content: center;
       padding: 20px;
     `;
-    
+
     modal.innerHTML = `
       <div style="background: var(--bg-card); border-radius: 16px; padding: 24px; max-width: 600px; max-height: 80vh; overflow-y: auto; border: 1px solid var(--border);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -3299,10 +3028,10 @@ map.on("load", async () => {
         </div>
       </div>
     `;
-    
+
     modal.className = 'modal';
     document.body.appendChild(modal);
-    
+
     // Close on backdrop click
     modal.addEventListener('click', (e) => {
       if (e.target === modal) modal.remove();
@@ -3318,7 +3047,7 @@ map.on("load", async () => {
     // Remove existing notification
     const existing = document.getElementById('notification-toast');
     if (existing) existing.remove();
-    
+
     // Create notification
     const notification = document.createElement('div');
     notification.id = 'notification-toast';
@@ -3336,19 +3065,19 @@ map.on("load", async () => {
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       transition: all 0.3s ease;
     `;
-    
+
     // Set color based on type
     const colors = {
       info: '#3b82f6',
-      warning: '#f59e0b', 
+      warning: '#f59e0b',
       error: '#ef4444',
       success: '#10b981'
     };
     notification.style.backgroundColor = colors[type] || colors.info;
     notification.textContent = message;
-    
+
     document.body.appendChild(notification);
-    
+
     // Auto remove after 3 seconds
     setTimeout(() => {
       if (notification.parentNode) {
@@ -3374,10 +3103,10 @@ map.on("load", async () => {
     });
 
     // Get location coordinates from the insights data
-    const locationData = Array.isArray(window.insightsData) 
+    const locationData = Array.isArray(window.insightsData)
       ? window.insightsData.find(d => d.location_id === locationId)
       : null;
-    
+
     if (!locationData) {
       console.log('ℹ️ Please select a location first');
       resetAmenityButtons(amenityType);
@@ -3386,14 +3115,14 @@ map.on("load", async () => {
 
     const lat = parseFloat(locationData.latitude);
     const lng = parseFloat(locationData.longitude);
-    
+
     // Lenient coordinate validation - just check if they exist and are numbers
     if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
       console.log('ℹ️ Location coordinates not available');
       resetAmenityButtons(amenityType);
       return;
     }
-    
+
     console.log('✅ Valid coordinates found:', { lat, lng, locationId });
 
     // ─── Column name map (amenityType → DB column) ───────────────────────────
@@ -3405,7 +3134,7 @@ map.on("load", async () => {
       hospitals: 'hospital_count', schools: 'school_count', malls: 'malls_count',
       restaurants: 'restaurants_count', banks: 'banks_count', parks: 'parks_count', metro: 'metro_count'
     };
-    const dataCol  = dbColumnMap[amenityType];
+    const dataCol = dbColumnMap[amenityType];
     const countCol = dbCountMap[amenityType];
 
     // ─── Helper: read cached amenity data from Supabase locations table ──────
@@ -3453,31 +3182,31 @@ map.on("load", async () => {
         showDbStatus(`✅ Saved ${amenities.length} ${amenityType} to DB (loc ${locationId})`, 'green');
       }
 
-    function showDbStatus(msg, color) {
-      const el = document.createElement('div');
-      el.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:${color === 'green' ? '#166534' : '#7f1d1d'};color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;z-index:99999;max-width:90vw;word-break:break-all`;
-      el.textContent = msg;
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 6000);
-    }
+      function showDbStatus(msg, color) {
+        const el = document.createElement('div');
+        el.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:${color === 'green' ? '#166534' : '#7f1d1d'};color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;z-index:99999;max-width:90vw;word-break:break-all`;
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 6000);
+      }
     }
 
     // ─── Overpass fetch (parallel mirror race + in-memory cache) ─────────────
     const overpassTagMap = {
-      hospitals:   '[amenity=hospital]',
-      schools:     '[amenity=school]',
-      malls:       '[shop=mall]',
+      hospitals: '[amenity=hospital]',
+      schools: '[amenity=school]',
+      malls: '[shop=mall]',
       restaurants: '[amenity=restaurant]',
-      banks:       '[amenity=bank]',
-      parks:       '[leisure=park]',
-      metro:       '[railway=station]'
+      banks: '[amenity=bank]',
+      parks: '[leisure=park]',
+      metro: '[railway=station]'
     };
     const colorMap = {
       hospitals: '#ef4444', schools: '#3b82f6', malls: '#a855f7',
       restaurants: '#f97316', banks: '#22c55e', parks: '#14b8a6', metro: '#eab308'
     };
     const tag = overpassTagMap[amenityType] || `[amenity=${amenityType}]`;
-    const radius = 1500; // 1.5 km radius for faster query
+    const radius = 4000; // 4 km radius
     const overpassQuery = `[out:json][timeout:10][maxsize:500000];(node${tag}(around:${radius},${lat},${lng});way${tag}(around:${radius},${lat},${lng}););out center 8;`;
     const encodedQuery = encodeURIComponent(overpassQuery);
 
@@ -3491,8 +3220,8 @@ map.on("load", async () => {
     // Haversine distance in km
     function haversine(lat1, lng1, lat2, lng2) {
       const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLng = (lng2 - lng1) * Math.PI / 180;
-      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     // Fetch from one mirror with a per-mirror timeout
@@ -3635,7 +3364,7 @@ map.on("load", async () => {
           source: 'amenity-data',
           layout: {
             'icon-image': customIconId,
-            'icon-size': 0.08,  // Adjust size for custom PNG icons
+            'icon-size': 0.05,  // Reduced size for custom PNG icons
             'icon-anchor': 'bottom',
             'icon-allow-overlap': true,
             'icon-ignore-placement': false
@@ -3743,23 +3472,23 @@ map.on("load", async () => {
 
             // Click to Fly - Enhanced with debugging and better event handling
             item.style.cursor = 'pointer';
-            item.addEventListener('click', function(e) {
+            item.addEventListener('click', function (e) {
               e.preventDefault();
               e.stopPropagation();
-              
+
               console.log('🔍 Amenity clicked:', amenity.name);
               console.log('🔍 Coordinates:', amenity.longitude, amenity.latitude);
-              
+
               if (!amenity.longitude || !amenity.latitude) {
                 console.error('❌ Missing coordinates for:', amenity.name);
                 return;
               }
 
               console.log('🚀 Flying to amenity location...');
-              
+
               // Use the navigateToAmenity function which is proven to work
               navigateToAmenity(amenity.longitude, amenity.latitude, amenity.name);
-              
+
               console.log('✅ Navigation should be complete');
             });
 
@@ -3770,10 +3499,10 @@ map.on("load", async () => {
           listCard.style.display = 'flex';
           console.log('✅ Amenities list card should now be visible');
         } else {
-          console.error('❌ Amenities list elements not found:', { 
-            listCard: !!listCard, 
-            listContent: !!listContent, 
-            listTitle: !!listTitle 
+          console.error('❌ Amenities list elements not found:', {
+            listCard: !!listCard,
+            listContent: !!listContent,
+            listTitle: !!listTitle
           });
         }
 
@@ -3836,44 +3565,44 @@ map.on("load", async () => {
   // Helper functions for the amenities panel
   function getAmenityConfig(amenityType) {
     const configs = {
-      hospitals: { 
-        icon: '🏥', 
+      hospitals: {
+        icon: '🏥',
         label: 'Healthcare Centers',
         gradient: 'linear-gradient(135deg, #ff6b6b, #ee5a52)'
       },
-      schools: { 
-        icon: '🎓', 
+      schools: {
+        icon: '🎓',
         label: 'Educational Institutions',
         gradient: 'linear-gradient(135deg, #4ecdc4, #44a08d)'
       },
-      parks: { 
-        icon: '🌳', 
+      parks: {
+        icon: '🌳',
         label: 'Parks & Recreation',
         gradient: 'linear-gradient(135deg, #a8e6cf, #7fcdcd)'
       },
-      malls: { 
-        icon: '🛍️', 
+      malls: {
+        icon: '🛍️',
         label: 'Shopping Centers',
         gradient: 'linear-gradient(135deg, #ffd93d, #ff6b6b)'
       },
-      restaurants: { 
-        icon: '🍽️', 
+      restaurants: {
+        icon: '🍽️',
         label: 'Restaurants & Dining',
         gradient: 'linear-gradient(135deg, #ff9a9e, #fecfef)'
       },
-      banks: { 
-        icon: '🏦', 
+      banks: {
+        icon: '🏦',
         label: 'Banks & ATMs',
         gradient: 'linear-gradient(135deg, #667eea, #764ba2)'
       },
-      metro: { 
-        icon: '🚇', 
+      metro: {
+        icon: '🚇',
         label: 'Metro Stations',
         gradient: 'linear-gradient(135deg, #f093fb, #f5576c)'
       }
     };
-    return configs[amenityType] || { 
-      icon: '📍', 
+    return configs[amenityType] || {
+      icon: '📍',
       label: 'Amenities',
       gradient: 'linear-gradient(135deg, #a8edea, #fed6e3)'
     };
@@ -3887,7 +3616,7 @@ map.on("load", async () => {
 
   function navigateToAmenity(longitude, latitude, name) {
     console.log(`🧭 Navigating to: ${name} at [${longitude}, ${latitude}]`);
-    
+
     // Fly to the amenity location
     map.flyTo({
       center: [longitude, latitude],
@@ -3895,10 +3624,10 @@ map.on("load", async () => {
       duration: 1500,
       essential: true
     });
-    
+
     // Show notification
     showNotification(`📍 Navigating to ${name}`, 'success');
-    
+
     // Optional: Add a temporary marker
     setTimeout(() => {
       const popup = new maplibregl.Popup({ closeOnClick: true })
@@ -3910,7 +3639,7 @@ map.on("load", async () => {
           </div>
         `)
         .addTo(map);
-      
+
       // Auto-close popup after 3 seconds
       setTimeout(() => popup.remove(), 3000);
     }, 1500);
@@ -3941,10 +3670,10 @@ map.on("load", async () => {
 
     // Sort amenities by distance
     const sortedAmenities = amenities.sort((a, b) => parseFloat(a.distance_km) - parseFloat(b.distance_km));
-    
+
     // Get amenity configuration
     const amenityConfig = getAmenityConfig(amenityType);
-    
+
     // Create compact amenities list
     const amenitiesList = sortedAmenities.map((amenity, index) => `
       <div class="amenity-item-compact" onclick="navigateToAmenity(${amenity.longitude}, ${amenity.latitude}, '${amenity.name.replace(/'/g, "\\'")}')">
@@ -4045,13 +3774,13 @@ map.on("load", async () => {
     const amenityBtn = e.target.closest('.amenity-btn');
     if (amenityBtn) {
       const amenityType = amenityBtn.dataset.amenity;
-      
+
       // Check if insights data is loaded
       if (!window.insightsData || !Array.isArray(window.insightsData)) {
         console.log('ℹ️ Location data still loading...');
         return;
       }
-      
+
       if (currentLocationId) {
         // Double-check that we have valid location data before proceeding
         const locationData = window.insightsData.find(d => d.location_id === currentLocationId);
@@ -4059,7 +3788,7 @@ map.on("load", async () => {
           console.log('ℹ️ Please select a location on the map first');
           return;
         }
-        
+
         displayAmenitiesOnMap(currentLocationId, amenityType);
       } else {
         console.log('ℹ️ Please select a location on the map first');
@@ -4320,8 +4049,27 @@ function createProjectGroupCard(project) {
       </div>
     `;
 
-  // Click handler to show all configurations
-  card.onclick = () => showProjectConfigurations(project);
+  // Click handler to show all configurations and navigate to property on map with 3D view
+  card.onclick = () => {
+    showProjectConfigurations(project);
+    
+    // Navigate map to property location with 3D front-side view
+    if (project.properties && project.properties.length > 0) {
+      const prop = project.properties[0];
+      const coords = extractCoordinates(prop.google_place_location || prop.google_maps_location);
+      
+      if (coords && map) {
+        map.flyTo({
+          center: [coords.lng, coords.lat],
+          zoom: 15, // Neighborhood level zoom
+          pitch: 60, // Tilt to see buildings in 3D (0-85 degrees)
+          bearing: 0, // Face north (adjust based on property orientation)
+          duration: 2000,
+          essential: true
+        });
+      }
+    }
+  };
 
   return card;
 }
@@ -4359,6 +4107,14 @@ function showPropertyDetails(property) {
   const listContainer = document.getElementById('prop-list');
   const countEl = document.getElementById('prop-panel-count');
 
+  // Store the current property for commute calculator
+  window.currentPropertyDetails = property;
+  
+  // Debug: Log property structure
+  console.log('🏠 showPropertyDetails called with property:', property);
+  console.log('🏠 property.id:', property.id);
+  console.log('🏠 property.full_details:', property.full_details);
+
   // Store the current configurations list for back navigation
   if (!window.currentConfigsList) {
     window.currentConfigsList = {
@@ -4368,6 +4124,9 @@ function showPropertyDetails(property) {
   }
 
   const details = property.full_details;
+  
+  // Get property ID - could be at top level or in full_details
+  const propertyId = property.id || (details && details.id) || 'unknown';
 
   // Update header with back button — goes straight to projects list
   countEl.innerHTML = `<button onclick="window.goBackToProjects()" style="background:none;border:none;color:var(--gold-mid);cursor:pointer;font-size:0.9rem;font-weight:600;">← Back to Projects</button>`;
@@ -4455,7 +4214,25 @@ function showPropertyDetails(property) {
   const detailsHTML = `
         <div class="property-detail-inline">
           <h2>${details.projectname || 'Unnamed Project'}</h2>
-          <p style="color:var(--t2);margin:0 0 16px 0;">by ${details.buildername || 'Builder not specified'}</p>
+          <p style="color:var(--t2);margin:0 0 12px 0;">by ${details.buildername || 'Builder not specified'}</p>
+          
+          <!-- Inline Commute Calculator -->
+          <div class="commute-inline-section" style="background:rgba(166,138,61,0.08);border:1px solid rgba(166,138,61,0.2);border-radius:10px;padding:16px;margin-bottom:16px;">
+            <h3 style="margin:0 0 12px 0;font-size:14px;color:var(--gold-mid);display:flex;align-items:center;gap:8px;">
+              🚗 Calculate Commute
+            </h3>
+            <input 
+              type="text" 
+              id="commute-inline-search-${propertyId}"
+              placeholder="Search for your office location..."
+              style="width:100%;padding:10px;border:1px solid rgba(166,138,61,0.3);border-radius:8px;background:white;font-size:13px;margin-bottom:8px;"
+              oninput="searchOfficeInline(${propertyId}, this.value)"
+              autocomplete="off"
+            />
+            <div id="commute-inline-suggestions-${propertyId}" class="office-suggestions-inline"></div>
+            <div id="commute-inline-routes-${propertyId}" class="commute-routes-inline" style="display:none;margin-top:12px;"></div>
+          </div>
+          
           ${bhkNote}
           ${galleryHTML}
           
@@ -4743,3 +4520,1075 @@ window.addEventListener('message', (event) => {
     if (locationProjects) renderInjectedProperties(locationProjects);
   }
 });
+
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FUTURE INSIGHTS FEATURE
+// ═══════════════════════════════════════════════════════════════════════════
+
+let locationDevelopmentsData = null;
+let currentFILocation = null;
+let currentFIYear = null;
+
+// Load location developments data
+async function loadLocationDevelopments() {
+  if (locationDevelopmentsData) return locationDevelopmentsData;
+  
+  try {
+    const response = await fetch('location_developments.json');
+    locationDevelopmentsData = await response.json();
+    console.log('✅ Loaded location developments:', Object.keys(locationDevelopmentsData).length, 'locations');
+    return locationDevelopmentsData;
+  } catch (error) {
+    console.error('❌ Error loading location developments:', error);
+    return {};
+  }
+}
+
+// Show Future Insights modal
+async function showFutureInsights(locationId, locationName) {
+  await loadLocationDevelopments();
+  currentFILocation = locationId;
+  
+  const locationData = locationDevelopmentsData[locationId];
+  if (!locationData || !locationData.developments) {
+    alert('No development data available for this location');
+    return;
+  }
+  
+  // Update modal title
+  document.getElementById('fi-modal-subtitle').textContent = locationName || locationData.location_name;
+  
+  // Extract all unique years
+  const years = new Set();
+  locationData.developments.forEach(dev => {
+    if (dev.timeline && Array.isArray(dev.timeline)) {
+      dev.timeline.forEach(timeRange => {
+        const yearMatches = timeRange.match(/\d{4}/g);
+        if (yearMatches) {
+          yearMatches.forEach(year => years.add(parseInt(year)));
+        }
+      });
+    }
+  });
+  
+  const sortedYears = Array.from(years).sort();
+  
+  // Populate year timeline
+  const timelineYears = document.getElementById('fi-timeline-years');
+  timelineYears.innerHTML = '';
+  
+  sortedYears.forEach(year => {
+    const count = countDevelopmentsForYear(locationData.developments, year);
+    const yearItem = document.createElement('div');
+    yearItem.className = 'fi-year-item';
+    yearItem.textContent = year;
+    yearItem.dataset.year = year;
+    
+    if (count > 0) {
+      const countBadge = document.createElement('span');
+      countBadge.className = 'fi-year-count';
+      countBadge.textContent = count;
+      yearItem.appendChild(countBadge);
+    }
+    
+    yearItem.addEventListener('click', () => selectFIYear(year));
+    timelineYears.appendChild(yearItem);
+  });
+  
+  // Auto-select current year or first year
+  const currentYear = new Date().getFullYear();
+  const yearToSelect = sortedYears.includes(currentYear) ? currentYear : sortedYears[0];
+  if (yearToSelect) {
+    selectFIYear(yearToSelect);
+  }
+  
+  // Show modal
+  document.getElementById('fi-modal-overlay').style.display = 'flex';
+}
+
+// Count developments for a specific year
+function countDevelopmentsForYear(developments, year) {
+  return developments.filter(dev => {
+    if (!dev.timeline) return false;
+    return dev.timeline.some(timeRange => {
+      const yearMatches = timeRange.match(/\d{4}/g);
+      return yearMatches && yearMatches.some(y => parseInt(y) === year);
+    });
+  }).length;
+}
+
+// Select a year and show developments
+function selectFIYear(year) {
+  if (!currentFILocation || !locationDevelopmentsData) return;
+  
+  const locationData = locationDevelopmentsData[currentFILocation];
+  if (!locationData) return;
+  
+  currentFIYear = year;
+  
+  // Update active year button
+  document.querySelectorAll('.fi-year-item').forEach(item => {
+    if (parseInt(item.dataset.year) === year) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+  
+  // Filter developments for this year
+  const developments = locationData.developments.filter(dev => {
+    if (!dev.timeline) return false;
+    return dev.timeline.some(timeRange => {
+      const yearMatches = timeRange.match(/\d{4}/g);
+      return yearMatches && yearMatches.some(y => parseInt(y) === year);
+    });
+  });
+  
+  // Update stats
+  const highCert = developments.filter(d => d.certainty === 'High').length;
+  const mediumCert = developments.filter(d => d.certainty === 'Medium' || d.certainty === 'Medium-High').length;
+  
+  document.getElementById('fi-stat-total').textContent = developments.length;
+  document.getElementById('fi-stat-high').textContent = highCert;
+  document.getElementById('fi-stat-medium').textContent = mediumCert;
+  
+  // Render development cards
+  const content = document.getElementById('fi-modal-content');
+  content.innerHTML = '';
+  
+  if (developments.length === 0) {
+    content.innerHTML = `
+      <div class="fi-empty-state">
+        <h4>No developments found</h4>
+        <p>No projects planned for ${year}</p>
+      </div>
+    `;
+  } else {
+    developments.forEach(dev => {
+      const card = createFIDevCard(dev);
+      content.appendChild(card);
+    });
+  }
+}
+
+// Create development card
+function createFIDevCard(dev) {
+  const card = document.createElement('div');
+  card.className = 'fi-dev-card';
+  
+  const certClass = dev.certainty ? `fi-cert-${dev.certainty.toLowerCase().replace(/-/g, '-')}` : 'fi-cert-medium';
+  
+  card.innerHTML = `
+    <div class="fi-dev-card-header">
+      <h5 class="fi-dev-card-title">${dev.title || 'Untitled Development'}</h5>
+      <div class="fi-dev-card-certainty">
+        <span class="fi-cert-badge ${certClass}">${dev.certainty || 'Medium'}</span>
+      </div>
+    </div>
+    
+    <div class="fi-dev-card-timeline">
+      ${dev.timeline && dev.timeline.length > 0 ? dev.timeline.map(t => {
+        const years = t.match(/\d{4}/g);
+        return `<span class="fi-timeline-chip">${years ? years.join('-') : t}</span>`;
+      }).join('') : '<span class="fi-timeline-chip">Timeline TBD</span>'}
+    </div>
+    
+    <div class="fi-dev-card-details">
+      ${dev.context ? `
+        <div class="fi-detail-section">
+          <div class="fi-detail-label">📋 Context</div>
+          <div class="fi-detail-text">${dev.context}</div>
+        </div>
+      ` : ''}
+      
+      ${dev.impact ? `
+        <div class="fi-detail-section">
+          <div class="fi-detail-label">💡 Impact</div>
+          <div class="fi-detail-text">${dev.impact}</div>
+        </div>
+      ` : ''}
+      
+      ${dev.source ? `
+        <div class="fi-detail-section">
+          <div class="fi-detail-label">🔗 Source</div>
+          <a href="https://${dev.source}" target="_blank" class="fi-source-link">
+            ${dev.source}
+          </a>
+        </div>
+      ` : ''}
+    </div>
+  `;
+  
+  // Toggle expand on click
+  card.addEventListener('click', () => {
+    card.classList.toggle('expanded');
+  });
+  
+  return card;
+}
+
+// Hide Future Insights modal
+function hideFutureInsights() {
+  document.getElementById('fi-modal-overlay').style.display = 'none';
+  currentFILocation = null;
+  currentFIYear = null;
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+  // Sidebar toggle functionality
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const sidebar = document.getElementById('sidebar');
+  
+  if (sidebarToggle && sidebar) {
+    // Restore sidebar state from localStorage (default is open/visible)
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    if (savedState === 'true') {
+      sidebar.classList.add('collapsed');
+    }
+    // If savedState is null or 'false', sidebar stays open (default)
+    
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      
+      // Store preference in localStorage
+      const isCollapsed = sidebar.classList.contains('collapsed');
+      localStorage.setItem('sidebarCollapsed', isCollapsed);
+    });
+  }
+  
+  // Close modal button
+  const modalClose = document.getElementById('fi-modal-close');
+  if (modalClose) {
+    modalClose.addEventListener('click', hideFutureInsights);
+  }
+  
+  // Close on overlay click
+  const overlay = document.getElementById('fi-modal-overlay');
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        hideFutureInsights();
+      }
+    });
+  }
+  
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('fi-modal-overlay').style.display === 'flex') {
+      hideFutureInsights();
+    }
+  });
+});
+
+// Export
+window.showFutureInsights = showFutureInsights;
+window.hideFutureInsights = hideFutureInsights;
+
+
+// ===============================
+// COMMUTE CALCULATOR
+// ===============================
+
+let currentPropertyLocation = null;
+let currentRoutes = {};
+let routeLayers = {};
+
+window.openCommuteCalculator = function(lat, lng, propertyName) {
+  console.log('🚗 Opening commute calculator for:', propertyName, 'at', lat, lng);
+  currentPropertyLocation = { lat, lng, name: propertyName };
+  
+  const overlay = document.getElementById('commute-modal-overlay');
+  const propertyNameEl = document.getElementById('commute-property-name');
+  const routesSection = document.getElementById('commute-routes-section');
+  const searchInput = document.getElementById('office-search-input');
+  
+  propertyNameEl.textContent = `From: ${propertyName}`;
+  overlay.style.display = 'flex';
+  routesSection.style.display = 'none';
+  searchInput.value = '';
+  
+  // Clear previous routes
+  clearRoutes();
+};
+
+// Helper function to open commute calculator from project card
+window.openCommuteCalculatorFromProject = function(buttonEl, projectName) {
+  // Find the project data
+  const projects = window._propertyPinProjects || window.allLocationProperties || [];
+  const project = projects.find(p => p.projectname === projectName);
+  
+  if (!project || !project.properties || project.properties.length === 0) {
+    alert('Location coordinates not available for this property');
+    return;
+  }
+  
+  // Extract coordinates from first property
+  const prop = project.properties[0];
+  const coords = extractCoordinates(prop.google_place_location || prop.google_maps_location);
+  
+  if (!coords) {
+    alert('Location coordinates not available for this property');
+    return;
+  }
+  
+  openCommuteCalculator(coords.lat, coords.lng, projectName);
+};
+
+// Helper function to open commute calculator from property details
+window.openCommuteCalculatorFromProperty = function(propertyId, projectName) {
+  // Find the property in allLocationProperties
+  const properties = window.allLocationProperties || [];
+  const property = properties.find(p => p.id === propertyId);
+  
+  if (!property) {
+    alert('Property not found');
+    return;
+  }
+  
+  // Extract coordinates
+  const coords = extractCoordinates(property.google_place_location || property.google_maps_location);
+  
+  if (!coords) {
+    alert('Location coordinates not available for this property');
+    return;
+  }
+  
+  openCommuteCalculator(coords.lat, coords.lng, projectName);
+};
+
+// Inline commute calculator functions
+window.searchOfficeInline = async function(propertyId, query) {
+  if (!query || query.length < 3) {
+    document.getElementById(`commute-inline-suggestions-${propertyId}`).innerHTML = '';
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${window.API_BASE_URL}/api/search-place?query=${encodeURIComponent(query)}`);
+    const data = await response.json();
+    
+    if (data.success && data.suggestions.length > 0) {
+      const suggestionsHTML = data.suggestions.map(s => `
+        <div class="suggestion-item-inline" onclick="selectOfficeInline(${propertyId}, '${s.place_id}', '${s.description.replace(/'/g, "\\'")}')">
+          <div style="font-weight:600;font-size:13px;">${s.main_text}</div>
+          <div style="font-size:11px;color:var(--t3);">${s.secondary_text}</div>
+        </div>
+      `).join('');
+      document.getElementById(`commute-inline-suggestions-${propertyId}`).innerHTML = suggestionsHTML;
+    }
+  } catch (error) {
+    console.error('Error searching:', error);
+  }
+};
+
+window.selectOfficeInline = async function(propertyId, placeId, description) {
+  console.log('🔍 ========== selectOfficeInline START ==========');
+  console.log('🔍 propertyId:', propertyId, 'type:', typeof propertyId);
+  console.log('🔍 placeId:', placeId);
+  console.log('🔍 description:', description);
+  
+  // First try to get property from stored currentPropertyDetails
+  let property = window.currentPropertyDetails;
+  console.log('📦 window.currentPropertyDetails:', property);
+  
+  // If not available or ID doesn't match, search in allLocationProperties
+  if (!property || property.id !== propertyId) {
+    console.log('⚠️ Property not in currentPropertyDetails or ID mismatch');
+    const properties = window.allLocationProperties || [];
+    console.log('📦 Searching in allLocationProperties, count:', properties.length);
+    property = properties.find(p => p.id === propertyId);
+    console.log('📦 Found in allLocationProperties:', !!property);
+  }
+  
+  if (!property) {
+    console.error('❌ Property not found with ID:', propertyId);
+    console.log('Available properties:', window.allLocationProperties?.map(p => ({id: p.id, name: p.projectname})));
+    document.getElementById(`commute-inline-routes-${propertyId}`).innerHTML = 
+      '<div style="text-align:center;padding:12px;color:red;">Property not found (ID: ' + propertyId + ')</div>';
+    return;
+  }
+  
+  console.log('✅ Property found:', {
+    id: property.id,
+    projectname: property.projectname,
+    google_place_location: property.google_place_location,
+    google_maps_location: property.google_maps_location,
+    full_details: property.full_details ? 'exists' : 'null'
+  });
+  
+  // Extract coordinates - check both property and full_details
+  let coords = null;
+  const locInfo = property.google_place_location || 
+                  property.google_maps_location ||
+                  (property.full_details && property.full_details.google_place_location) ||
+                  (property.full_details && property.full_details.google_maps_location);
+  
+  console.log('📍 locInfo:', locInfo);
+  console.log('📍 locInfo type:', typeof locInfo);
+  
+  if (locInfo) {
+    if (typeof locInfo === 'object' && locInfo !== null) {
+      console.log('📍 locInfo is object, keys:', Object.keys(locInfo));
+      if (locInfo.lat !== undefined && locInfo.lng !== undefined) {
+        coords = { lat: parseFloat(locInfo.lat), lng: parseFloat(locInfo.lng) };
+        console.log('📍 Extracted from object (lat/lng):', coords);
+      } else if (locInfo.latitude !== undefined && locInfo.longitude !== undefined) {
+        coords = { lat: parseFloat(locInfo.latitude), lng: parseFloat(locInfo.longitude) };
+        console.log('📍 Extracted from object (latitude/longitude):', coords);
+      }
+    } else if (typeof locInfo === 'string') {
+      console.log('📍 locInfo is string, attempting to parse');
+      try {
+        const parsed = JSON.parse(locInfo.replace(/'/g, '"'));
+        console.log('📍 Parsed JSON:', parsed);
+        if (parsed.lat !== undefined && parsed.lng !== undefined) {
+          coords = { lat: parseFloat(parsed.lat), lng: parseFloat(parsed.lng) };
+          console.log('📍 Extracted from parsed string (lat/lng):', coords);
+        } else if (parsed.latitude !== undefined && parsed.longitude !== undefined) {
+          coords = { lat: parseFloat(parsed.latitude), lng: parseFloat(parsed.longitude) };
+          console.log('📍 Extracted from parsed string (latitude/longitude):', coords);
+        }
+      } catch (e) {
+        console.error('❌ Error parsing coordinates:', e);
+      }
+    }
+  }
+  
+  console.log('📍 Final extracted coords:', coords);
+  
+  if (!coords || !coords.lat || !coords.lng) {
+    console.error('❌ No valid coordinates found');
+    console.error('❌ coords object:', coords);
+    document.getElementById(`commute-inline-routes-${propertyId}`).innerHTML = 
+      '<div style="text-align:center;padding:12px;color:red;">Property location not available</div>';
+    return;
+  }
+  
+  console.log('✅ Using coordinates:', coords);
+  
+  // Clear suggestions
+  document.getElementById(`commute-inline-suggestions-${propertyId}`).innerHTML = '';
+  document.getElementById(`commute-inline-search-${propertyId}`).value = description;
+  
+  // Show loading
+  const routesDiv = document.getElementById(`commute-inline-routes-${propertyId}`);
+  routesDiv.style.display = 'block';
+  routesDiv.innerHTML = '<div style="text-align:center;padding:12px;color:var(--t3);">Calculating routes...</div>';
+  
+  try {
+    const url = `${window.API_BASE_URL}/api/directions?origin_lat=${coords.lat}&origin_lng=${coords.lng}&dest_place_id=${placeId}`;
+    console.log('🌐 Fetching directions from:', url);
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    console.log('📦 Directions response:', data);
+    
+    if (data.success && data.routes) {
+      window.currentRoutes = data.routes;
+      window.currentPropertyLocation = coords;
+      console.log('✅ Routes received, calling displayRoutesInline');
+      displayRoutesInline(propertyId, data.routes);
+    } else {
+      console.error('❌ No routes in response');
+      routesDiv.innerHTML = `<div style="text-align:center;padding:12px;color:red;">Could not calculate routes: ${data.error || 'Unknown error'}</div>`;
+    }
+  } catch (error) {
+    console.error('❌ Error fetching directions:', error);
+    routesDiv.innerHTML = `<div style="text-align:center;padding:12px;color:red;">Error: ${error.message}</div>`;
+  }
+  
+  console.log('🔍 ========== selectOfficeInline END ==========');
+};
+
+function displayRoutesInline(propertyId, routes) {
+  const cardsHTML = [];
+  
+  if (routes.driving) {
+    cardsHTML.push(`
+      <div class="route-card-inline" onclick="drawRoute('driving')" style="cursor:pointer;">
+        <div style="font-size:20px;">🚗</div>
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:12px;">Car</div>
+          <div style="font-size:11px;color:var(--t3);">${routes.driving.distance} • ${routes.driving.duration_in_traffic}</div>
+        </div>
+      </div>
+    `);
+  }
+  
+  if (routes.transit) {
+    cardsHTML.push(`
+      <div class="route-card-inline" onclick="drawRoute('transit')" style="cursor:pointer;">
+        <div style="font-size:20px;">🚇</div>
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:12px;">Transit</div>
+          <div style="font-size:11px;color:var(--t3);">${routes.transit.distance} • ${routes.transit.duration}</div>
+        </div>
+      </div>
+    `);
+  }
+  
+  if (routes.bus) {
+    cardsHTML.push(`
+      <div class="route-card-inline" onclick="drawRoute('bus')" style="cursor:pointer;">
+        <div style="font-size:20px;">🚌</div>
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:12px;">Bus</div>
+          <div style="font-size:11px;color:var(--t3);">${routes.bus.distance} • ${routes.bus.duration}</div>
+        </div>
+      </div>
+    `);
+  }
+  
+  document.getElementById(`commute-inline-routes-${propertyId}`).innerHTML = cardsHTML.join('');
+  
+  // Auto-draw driving route
+  drawRoute('driving');
+}
+
+// Helper function to extract coordinates
+function extractCoordinates(locInfo) {
+  if (!locInfo) return null;
+  
+  if (typeof locInfo === 'object') {
+    if (locInfo.lat !== undefined && locInfo.lng !== undefined) 
+      return { lat: parseFloat(locInfo.lat), lng: parseFloat(locInfo.lng) };
+    if (locInfo.latitude !== undefined && locInfo.longitude !== undefined) 
+      return { lat: parseFloat(locInfo.latitude), lng: parseFloat(locInfo.longitude) };
+    return null;
+  }
+  
+  const str = String(locInfo).trim();
+  
+  if (str.startsWith('{')) {
+    try {
+      const validJson = str.replace(/'/g, '"');
+      const parsed = JSON.parse(validJson);
+      if (parsed.lat !== undefined && parsed.lng !== undefined) 
+        return { lat: parseFloat(parsed.lat), lng: parseFloat(parsed.lng) };
+    } catch (e) { }
+  }
+  
+  const urlMatch = str.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || 
+                   str.match(/(?:q|query)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (urlMatch) return { lat: parseFloat(urlMatch[1]), lng: parseFloat(urlMatch[2]) };
+  
+  const rawMatch = str.match(/(-?\d+\.\d{3,})\s*,\s*(-?\d+\.\d{3,})/);
+  if (rawMatch) return { lat: parseFloat(rawMatch[1]), lng: parseFloat(rawMatch[2]) };
+  
+  return null;
+}
+
+document.getElementById('commute-close').addEventListener('click', function() {
+  document.getElementById('commute-modal-overlay').style.display = 'none';
+  clearRoutes();
+});
+
+// Office search with autocomplete
+let searchTimeout;
+document.getElementById('office-search-input').addEventListener('input', function(e) {
+  const query = e.target.value.trim();
+  
+  clearTimeout(searchTimeout);
+  
+  if (query.length < 3) {
+    document.getElementById('office-suggestions').innerHTML = '';
+    return;
+  }
+  
+  searchTimeout = setTimeout(() => {
+    searchOffice(query);
+  }, 300);
+});
+
+async function searchOffice(query) {
+  try {
+    const response = await fetch(`${window.API_BASE_URL}/api/search-place?query=${encodeURIComponent(query)}`);
+    const data = await response.json();
+    
+    if (data.success && data.suggestions.length > 0) {
+      displaySuggestions(data.suggestions);
+    } else {
+      document.getElementById('office-suggestions').innerHTML = '<div class="no-suggestions">No results found</div>';
+    }
+  } catch (error) {
+    console.error('Error searching office:', error);
+    document.getElementById('office-suggestions').innerHTML = '<div class="no-suggestions">Error searching</div>';
+  }
+}
+
+function displaySuggestions(suggestions) {
+  const suggestionsEl = document.getElementById('office-suggestions');
+  
+  suggestionsEl.innerHTML = suggestions.map(s => `
+    <div class="suggestion-item" onclick="selectOffice('${s.place_id}', '${s.description.replace(/'/g, "\\'")}')">
+      <div class="suggestion-main">${s.main_text}</div>
+      <div class="suggestion-secondary">${s.secondary_text}</div>
+    </div>
+  `).join('');
+}
+
+window.selectOffice = async function(placeId, description) {
+  console.log('🔍 Selecting office:', description, 'Place ID:', placeId);
+  console.log('📍 Property location:', currentPropertyLocation);
+  
+  if (!currentPropertyLocation || !currentPropertyLocation.lat || !currentPropertyLocation.lng) {
+    console.error('❌ No property location set!');
+    alert('Error: Property location not available');
+    return;
+  }
+  
+  document.getElementById('office-suggestions').innerHTML = '';
+  document.getElementById('office-search-input').value = description;
+  
+  // Store destination info
+  window.currentDestination = { placeId, description };
+  
+  // Show loading
+  const routesSection = document.getElementById('commute-routes-section');
+  routesSection.style.display = 'block';
+  document.getElementById('route-info-cards').innerHTML = '<div class="loading-routes">Calculating routes...</div>';
+  
+  try {
+    const url = `${window.API_BASE_URL}/api/directions?origin_lat=${currentPropertyLocation.lat}&origin_lng=${currentPropertyLocation.lng}&dest_place_id=${placeId}`;
+    console.log('🌐 Fetching directions from:', url);
+    console.log('🌐 API_BASE_URL:', window.API_BASE_URL);
+    
+    const response = await fetch(url);
+    console.log('📡 Response status:', response.status);
+    
+    const data = await response.json();
+    console.log('📦 Response data:', data);
+    
+    if (data.success && data.routes) {
+      console.log('✅ Routes received:', Object.keys(data.routes));
+      window.currentRoutes = data.routes;
+      
+      // Store destination coordinates from the route
+      if (data.routes.driving && data.routes.driving.end_address) {
+        window.currentDestination.address = data.routes.driving.end_address;
+      }
+      
+      displayRoutes(data.routes);
+      drawRoute('driving'); // Show driving route by default
+    } else {
+      console.error('❌ No routes in response:', data);
+      document.getElementById('route-info-cards').innerHTML = `<div class="error-routes">Could not calculate routes: ${data.error || 'Unknown error'}</div>`;
+    }
+  } catch (error) {
+    console.error('❌ Error getting directions:', error);
+    document.getElementById('route-info-cards').innerHTML = `<div class="error-routes">Error calculating routes: ${error.message}</div>`;
+  }
+};
+
+function displayRoutes(routes) {
+  const cardsHTML = [];
+  
+  if (routes.driving) {
+    cardsHTML.push(`
+      <div class="route-card" data-mode="driving" onclick="drawRoute('driving')" style="cursor: pointer;">
+        <div class="route-card-icon">🚗</div>
+        <div class="route-card-content">
+          <div class="route-card-title">Car (with traffic)</div>
+          <div class="route-card-stats">
+            <span class="route-stat"><strong>${routes.driving.distance}</strong></span>
+            <span class="route-stat"><strong>${routes.driving.duration_in_traffic}</strong></span>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+  
+  if (routes.transit) {
+    const modes = routes.transit.transit_modes.join(', ') || 'Metro/Bus';
+    cardsHTML.push(`
+      <div class="route-card" data-mode="transit" onclick="drawRoute('transit')" style="cursor: pointer;">
+        <div class="route-card-icon">🚇</div>
+        <div class="route-card-content">
+          <div class="route-card-title">Transit (${modes})</div>
+          <div class="route-card-stats">
+            <span class="route-stat"><strong>${routes.transit.distance}</strong></span>
+            <span class="route-stat"><strong>${routes.transit.duration}</strong></span>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+  
+  if (routes.bus) {
+    cardsHTML.push(`
+      <div class="route-card" data-mode="bus" onclick="drawRoute('bus')" style="cursor: pointer;">
+        <div class="route-card-icon">🚌</div>
+        <div class="route-card-content">
+          <div class="route-card-title">Bus</div>
+          <div class="route-card-stats">
+            <span class="route-stat"><strong>${routes.bus.distance}</strong></span>
+            <span class="route-stat"><strong>${routes.bus.duration}</strong></span>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+  
+  document.getElementById('route-info-cards').innerHTML = cardsHTML.join('');
+}
+
+window.toggleRoute = function(mode) {
+  // Update button states
+  document.querySelectorAll('.route-toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  
+  // Draw the selected route
+  drawRoute(mode);
+};
+
+function drawRoute(mode) {
+  console.log('🗺️ Drawing route for mode:', mode);
+  console.log('🗺️ Current routes available:', Object.keys(window.currentRoutes || {}));
+  console.log('🗺️ currentPropertyLocation:', window.currentPropertyLocation);
+  
+  // Clear existing route layers first
+  clearRoutes();
+  
+  const routes = window.currentRoutes;
+  if (!routes) {
+    console.error('❌ No routes available');
+    return;
+  }
+  
+  const route = routes[mode];
+  
+  if (!route) {
+    console.error('❌ No route found for mode:', mode);
+    console.error('❌ Available routes:', Object.keys(routes));
+    return;
+  }
+  
+  if (!route.polyline) {
+    console.error('❌ No polyline in route:', route);
+    return;
+  }
+  
+  console.log('📍 Polyline:', route.polyline.substring(0, 50) + '...');
+  
+  // Decode polyline
+  const coordinates = decodePolyline(route.polyline);
+  console.log('✅ Decoded coordinates:', coordinates.length, 'points');
+  
+  if (coordinates.length === 0) {
+    console.error('❌ No coordinates decoded');
+    return;
+  }
+  
+  console.log('🎨 Adding route to map...');
+  
+  // Always add fresh source and layers (since we cleared them above)
+  map.addSource('commute-route', {
+    type: 'geojson',
+    data: {
+      type: 'Feature',
+      geometry: {
+        type: 'LineString',
+        coordinates: coordinates
+      }
+    }
+  });
+  
+  console.log('✅ Source added');
+  
+  // Add white outline first (bottom layer)
+  map.addLayer({
+    id: 'commute-route-outline',
+    type: 'line',
+    source: 'commute-route',
+    paint: {
+      'line-color': '#FFFFFF',
+      'line-width': 8,
+      'line-opacity': 0.5
+    }
+  });
+  
+  console.log('✅ Outline layer added');
+  
+  // Add dark orange route line on top
+  map.addLayer({
+    id: 'commute-route-line',
+    type: 'line',
+    source: 'commute-route',
+    paint: {
+      'line-color': '#0004ffff',
+      'line-width': 6,
+      'line-opacity': 0.9,
+      'line-blur': 2
+    }
+  });
+  
+  console.log('✅ Route line layer added');
+  
+  // Add start and end markers using MapLibre Markers with inline styles
+  const endCoord = coordinates[coordinates.length - 1];
+  
+  // Remove old markers if they exist
+  if (window.commuteStartMarker) {
+    window.commuteStartMarker.remove();
+  }
+  if (window.commuteEndMarker) {
+    window.commuteEndMarker.remove();
+  }
+  
+  // Check if we have property location
+  if (!window.currentPropertyLocation) {
+    console.error('❌ No currentPropertyLocation set');
+    return;
+  }
+  
+  // Create start marker (property)
+  const startEl = document.createElement('div');
+  startEl.style.cssText = `
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+  `;
+  startEl.innerHTML = '🏠';
+  
+  window.commuteStartMarker = new maplibregl.Marker({ 
+    element: startEl,
+    anchor: 'center'
+  })
+    .setLngLat([window.currentPropertyLocation.lng, window.currentPropertyLocation.lat])
+    .addTo(map);
+  
+  // Create end marker (office)
+  const endEl = document.createElement('div');
+  endEl.style.cssText = `
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+  `;
+  endEl.innerHTML = '🏢';
+  
+  window.commuteEndMarker = new maplibregl.Marker({ 
+    element: endEl,
+    anchor: 'center'
+  })
+    .setLngLat(endCoord)
+    .addTo(map);
+  
+  console.log('✅ Route drawn on map with markers');
+  
+  // Fit map to show the route with proper padding
+  // Account for properties panel on the right (320px width)
+  const bounds = coordinates.reduce((bounds, coord) => {
+    return bounds.extend(coord);
+  }, new maplibregl.LngLatBounds(coordinates[0], coordinates[0]));
+  
+  map.fitBounds(bounds, { 
+    padding: {
+      top: 80,
+      bottom: 80,
+      left: 80,
+      right: 400  // Extra padding on right for properties panel
+    },
+    duration: 1000
+  });
+  console.log('✅ Map fitted to route bounds');
+}
+
+function clearRoutes() {
+  console.log('🧹 Clearing routes from map');
+  if (map.getLayer('commute-route-outline')) {
+    map.removeLayer('commute-route-outline');
+  }
+  if (map.getLayer('commute-route-line')) {
+    map.removeLayer('commute-route-line');
+  }
+  if (map.getSource('commute-route')) {
+    map.removeSource('commute-route');
+  }
+  
+  // Remove marker layers
+  if (map.getLayer('commute-markers-symbols')) {
+    map.removeLayer('commute-markers-symbols');
+  }
+  if (map.getLayer('commute-markers-layer')) {
+    map.removeLayer('commute-markers-layer');
+  }
+  if (map.getSource('commute-markers')) {
+    map.removeSource('commute-markers');
+  }
+  
+  // Remove markers
+  if (window.commuteStartMarker) {
+    window.commuteStartMarker.remove();
+    window.commuteStartMarker = null;
+  }
+  if (window.commuteEndMarker) {
+    window.commuteEndMarker.remove();
+    window.commuteEndMarker = null;
+  }
+}
+
+// Decode Google polyline format
+function decodePolyline(encoded) {
+  const coordinates = [];
+  let index = 0, len = encoded.length;
+  let lat = 0, lng = 0;
+  
+  while (index < len) {
+    let b, shift = 0, result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lat += dlat;
+    
+    shift = 0;
+    result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lng += dlng;
+    
+    coordinates.push([lng / 1e5, lat / 1e5]);
+  }
+  
+  return coordinates;
+}
+
+
+// Commute calculator in property detail drawer
+document.addEventListener('input', function(e) {
+  if (e.target.classList.contains('office-search-input-detail')) {
+    const input = e.target;
+    const query = input.value.trim();
+    const propId = input.id.replace('office-search-detail-', '');
+    const suggestionsEl = document.getElementById(`office-suggestions-detail-${propId}`);
+    
+    if (query.length < 3) {
+      suggestionsEl.innerHTML = '';
+      return;
+    }
+    
+    fetch(`${window.API_BASE_URL}/api/search-place?query=${encodeURIComponent(query)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.suggestions.length > 0) {
+          suggestionsEl.innerHTML = data.suggestions.map(s => `
+            <div class="suggestion-item" onclick="selectOfficeDetail('${propId}', '${s.place_id}', '${s.description.replace(/'/g, "\\'")}', this)">
+              <div class="suggestion-main">${s.main_text}</div>
+              <div class="suggestion-secondary">${s.secondary_text}</div>
+            </div>
+          `).join('');
+        } else {
+          suggestionsEl.innerHTML = '<div class="no-suggestions">No results found</div>';
+        }
+      })
+      .catch(error => {
+        console.error('Error searching:', error);
+        suggestionsEl.innerHTML = '<div class="no-suggestions">Error searching</div>';
+      });
+  }
+});
+
+window.selectOfficeDetail = async function(propId, placeId, description, element) {
+  const input = document.getElementById(`office-search-detail-${propId}`);
+  const suggestionsEl = document.getElementById(`office-suggestions-detail-${propId}`);
+  const routesEl = document.getElementById(`commute-routes-detail-${propId}`);
+  const routeCardsEl = routesEl.querySelector('.route-cards-detail');
+  
+  const propLat = parseFloat(input.dataset.propLat);
+  const propLng = parseFloat(input.dataset.propLng);
+  const propName = input.dataset.propName;
+  
+  input.value = description;
+  suggestionsEl.innerHTML = '';
+  
+  // Store for map drawing
+  window.currentPropertyLocation = { lat: propLat, lng: propLng, name: propName };
+  window.currentDestination = { placeId, description };
+  
+  // Show loading
+  routesEl.style.display = 'block';
+  routeCardsEl.innerHTML = '<div class="loading-routes">Calculating routes...</div>';
+  
+  try {
+    const url = `${window.API_BASE_URL}/api/directions?origin_lat=${propLat}&origin_lng=${propLng}&dest_place_id=${placeId}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.success && data.routes) {
+      window.currentRoutes = data.routes;
+      
+      const cardsHTML = [];
+      
+      if (data.routes.driving) {
+        cardsHTML.push(`
+          <div class="route-card-compact" onclick="drawRoute('driving')">
+            <div class="route-icon">🚗</div>
+            <div class="route-info">
+              <div class="route-mode">Car</div>
+              <div class="route-stats">${data.routes.driving.distance} • ${data.routes.driving.duration_in_traffic}</div>
+            </div>
+          </div>
+        `);
+      }
+      
+      if (data.routes.transit) {
+        cardsHTML.push(`
+          <div class="route-card-compact" onclick="drawRoute('transit')">
+            <div class="route-icon">🚇</div>
+            <div class="route-info">
+              <div class="route-mode">Transit</div>
+              <div class="route-stats">${data.routes.transit.distance} • ${data.routes.transit.duration}</div>
+            </div>
+          </div>
+        `);
+      }
+      
+      if (data.routes.bus) {
+        cardsHTML.push(`
+          <div class="route-card-compact" onclick="drawRoute('bus')">
+            <div class="route-icon">🚌</div>
+            <div class="route-info">
+              <div class="route-mode">Bus</div>
+              <div class="route-stats">${data.routes.bus.distance} • ${data.routes.bus.duration}</div>
+            </div>
+          </div>
+        `);
+      }
+      
+      routeCardsEl.innerHTML = cardsHTML.join('');
+      drawRoute('driving');
+    } else {
+      routeCardsEl.innerHTML = '<div class="error-routes">Could not calculate routes</div>';
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    routeCardsEl.innerHTML = '<div class="error-routes">Error calculating routes</div>';
+  }
+};

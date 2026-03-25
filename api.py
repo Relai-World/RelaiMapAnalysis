@@ -427,6 +427,211 @@ def get_distance_color(distance_km):
 # ===============================
 
 
+# ===============================
+# COMMUTE ANALYZER - GOOGLE MAPS API
+# ===============================
+
+@app.get("/api/search-place")
+def search_place(query: str):
+    """Search for places using Google Places Autocomplete API"""
+    try:
+        api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+        if not api_key:
+            return {"success": False, "error": "Google Maps API key not configured"}
+        
+        url = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
+        params = {
+            "input": query,
+            "key": api_key,
+            "components": "country:in",  # Restrict to India
+            "types": "establishment"  # Focus on businesses/offices
+        }
+        
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        if data.get("status") == "OK":
+            suggestions = []
+            for prediction in data.get("predictions", []):
+                suggestions.append({
+                    "place_id": prediction["place_id"],
+                    "description": prediction["description"],
+                    "main_text": prediction["structured_formatting"]["main_text"],
+                    "secondary_text": prediction["structured_formatting"].get("secondary_text", "")
+                })
+            return {"success": True, "suggestions": suggestions}
+        else:
+            return {"success": False, "error": data.get("status")}
+            
+    except Exception as e:
+        print(f"❌ Error in search_place: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/directions")
+def get_directions(origin_lat: float, origin_lng: float, dest_place_id: str):
+    """Get directions from property to office using Google Directions API"""
+    try:
+        print(f"🔍 Getting directions from ({origin_lat}, {origin_lng}) to place_id: {dest_place_id}")
+        
+        api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+        if not api_key:
+            print("❌ Google Maps API key not configured")
+            return {"success": False, "error": "Google Maps API key not configured"}
+        
+        origin = f"{origin_lat},{origin_lng}"
+        destination = f"place_id:{dest_place_id}"
+        
+        routes = {}
+        
+        # 1. Driving route (with traffic)
+        print("🚗 Fetching driving route...")
+        driving_url = "https://maps.googleapis.com/maps/api/directions/json"
+        driving_params = {
+            "origin": origin,
+            "destination": destination,
+            "mode": "driving",
+            "departure_time": "now",  # For traffic data
+            "key": api_key
+        }
+        driving_response = requests.get(driving_url, params=driving_params)
+        driving_data = driving_response.json()
+        print(f"🚗 Driving API status: {driving_data.get('status')}")
+        
+        if driving_data.get("status") == "OK":
+            route = driving_data["routes"][0]
+            leg = route["legs"][0]
+            
+            # Extract step-by-step directions
+            steps = []
+            for step in leg.get("steps", []):
+                steps.append({
+                    "instruction": step.get("html_instructions", ""),
+                    "distance": step.get("distance", {}).get("text", ""),
+                    "duration": step.get("duration", {}).get("text", ""),
+                    "maneuver": step.get("maneuver", "")
+                })
+            
+            routes["driving"] = {
+                "distance": leg["distance"]["text"],
+                "duration": leg["duration"]["text"],
+                "duration_in_traffic": leg.get("duration_in_traffic", {}).get("text", leg["duration"]["text"]),
+                "summary": route["summary"],
+                "polyline": route["overview_polyline"]["points"],
+                "steps": steps,
+                "start_address": leg.get("start_address", ""),
+                "end_address": leg.get("end_address", "")
+            }
+        
+        # 2. Transit route (Metro/Bus)
+        transit_url = "https://maps.googleapis.com/maps/api/directions/json"
+        transit_params = {
+            "origin": origin,
+            "destination": destination,
+            "mode": "transit",
+            "transit_mode": "rail|bus",  # Metro and bus
+            "key": api_key
+        }
+        transit_response = requests.get(transit_url, params=transit_params)
+        transit_data = transit_response.json()
+        
+        if transit_data.get("status") == "OK":
+            route = transit_data["routes"][0]
+            leg = route["legs"][0]
+            
+            # Determine if it's metro or bus based on transit details
+            transit_modes = set()
+            steps = []
+            for step in leg.get("steps", []):
+                step_info = {
+                    "instruction": step.get("html_instructions", ""),
+                    "distance": step.get("distance", {}).get("text", ""),
+                    "duration": step.get("duration", {}).get("text", ""),
+                    "travel_mode": step.get("travel_mode", "")
+                }
+                
+                if step.get("travel_mode") == "TRANSIT":
+                    transit_detail = step.get("transit_details", {})
+                    vehicle_type = transit_detail.get("line", {}).get("vehicle", {}).get("type", "")
+                    transit_modes.add(vehicle_type)
+                    
+                    step_info["transit"] = {
+                        "line": transit_detail.get("line", {}).get("name", ""),
+                        "vehicle": vehicle_type,
+                        "departure_stop": transit_detail.get("departure_stop", {}).get("name", ""),
+                        "arrival_stop": transit_detail.get("arrival_stop", {}).get("name", ""),
+                        "num_stops": transit_detail.get("num_stops", 0)
+                    }
+                
+                steps.append(step_info)
+            
+            routes["transit"] = {
+                "distance": leg["distance"]["text"],
+                "duration": leg["duration"]["text"],
+                "summary": route["summary"],
+                "polyline": route["overview_polyline"]["points"],
+                "transit_modes": list(transit_modes),
+                "steps": steps,
+                "start_address": leg.get("start_address", ""),
+                "end_address": leg.get("end_address", "")
+            }
+        
+        # 3. Bus-only route
+        bus_url = "https://maps.googleapis.com/maps/api/directions/json"
+        bus_params = {
+            "origin": origin,
+            "destination": destination,
+            "mode": "transit",
+            "transit_mode": "bus",
+            "key": api_key
+        }
+        bus_response = requests.get(bus_url, params=bus_params)
+        bus_data = bus_response.json()
+        
+        if bus_data.get("status") == "OK":
+            route = bus_data["routes"][0]
+            leg = route["legs"][0]
+            
+            # Extract steps for bus route
+            steps = []
+            for step in leg.get("steps", []):
+                step_info = {
+                    "instruction": step.get("html_instructions", ""),
+                    "distance": step.get("distance", {}).get("text", ""),
+                    "duration": step.get("duration", {}).get("text", ""),
+                    "travel_mode": step.get("travel_mode", "")
+                }
+                
+                if step.get("travel_mode") == "TRANSIT":
+                    transit_detail = step.get("transit_details", {})
+                    step_info["transit"] = {
+                        "line": transit_detail.get("line", {}).get("name", ""),
+                        "departure_stop": transit_detail.get("departure_stop", {}).get("name", ""),
+                        "arrival_stop": transit_detail.get("arrival_stop", {}).get("name", ""),
+                        "num_stops": transit_detail.get("num_stops", 0)
+                    }
+                
+                steps.append(step_info)
+            
+            routes["bus"] = {
+                "distance": leg["distance"]["text"],
+                "duration": leg["duration"]["text"],
+                "summary": route["summary"],
+                "polyline": route["overview_polyline"]["points"],
+                "steps": steps,
+                "start_address": leg.get("start_address", ""),
+                "end_address": leg.get("end_address", "")
+            }
+        
+        return {"success": True, "routes": routes}
+        
+    except Exception as e:
+        print(f"❌ Error in get_directions: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"success": False, "error": str(e)}
+
+
 # All endpoints now use Supabase REST API only - no direct database connections
 
 # Mount static files to serve the frontend (must be last)
