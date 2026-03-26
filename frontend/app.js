@@ -39,6 +39,40 @@ map.on('load', () => {
       }
     });
   });
+
+  // Add HMDA Master Plan 2031 image overlay
+  console.log('🗺️ Adding HMDA Master Plan 2031 layer...');
+  map.addSource('hmda-masterplan-2031', {
+    type: 'image',
+    url: 'data/hmda_masterplan.png',
+    coordinates: [
+      [78.00, 17.90],     // top-left [lng, lat] - matched to HMDA blue boundary
+      [79.05, 17.90],     // top-right
+      [79.05, 16.97],     // bottom-right
+      [78.00, 16.97]      // bottom-left
+    ]
+  });
+  console.log('✅ HMDA source added');
+
+  map.addLayer({
+    id: 'hmda-masterplan-layer',
+    type: 'raster',
+    source: 'hmda-masterplan-2031',
+    paint: {
+      'raster-opacity': 0,  // Start hidden with opacity 0
+      'raster-fade-duration': 300,
+      'raster-resampling': 'linear'  // Smooth rendering, no mosaic
+    }
+  });
+
+  console.log('✅ HMDA Master Plan 2031 layer added');
+  
+  // Debug: Check if image loads
+  map.on('error', (e) => {
+    if (e.source && e.source.id === 'hmda-masterplan-2031') {
+      console.error('❌ Failed to load HMDA image:', e);
+    }
+  });
 });
 
 // 🚀 SUPABASE DIRECT CONNECTION - No more API server needed!
@@ -857,6 +891,7 @@ map.on("load", async () => {
     "rrr-layer": 0.8,
     "schools-layer": 0.9,
     "hmda-layer": 0.6,
+    "hmda-masterplan-layer": 0.85,
   };
 
   document.querySelectorAll(".layer-toggle input").forEach(cb => {
