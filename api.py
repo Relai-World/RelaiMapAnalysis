@@ -35,8 +35,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Health Check Endpoint
-@app.get("/")
+# Health Check Endpoint - for UptimeRobot monitoring
+@app.get("/api/health")
 def health_check():
     return {"status": "ok", "message": "West Hyderabad Intelligence API is running"}
 
