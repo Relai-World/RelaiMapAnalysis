@@ -634,6 +634,49 @@ def get_directions(origin_lat: float, origin_lng: float, dest_place_id: str):
 
 # All endpoints now use Supabase REST API only - no direct database connections
 
+# Custom handler for PMTiles files to support HTTP Range requests
+from fastapi import Request, Response
+from fastapi.responses import FileResponse
+import os
+from pathlib import Path
+
+@app.get("/maptiles/{filename:path}")
+async def serve_pmtiles(filename: str, request: Request):
+    """Serve PMTiles files with Range request support"""
+    file_path = Path("frontend/maptiles") / filename
+    
+    if not file_path.exists():
+        return Response(status_code=404, content="File not found")
+    
+    file_size = file_path.stat().st_size
+    range_header = request.headers.get("range")
+    
+    if range_header:
+        # Parse range header (e.g., "bytes=0-1023")
+        range_match = range_header.replace("bytes=", "").split("-")
+        start = int(range_match[0]) if range_match[0] else 0
+        end = int(range_match[1]) if len(range_match) > 1 and range_match[1] else file_size - 1
+        
+        # Read the requested byte range
+        with open(file_path, "rb") as f:
+            f.seek(start)
+            data = f.read(end - start + 1)
+        
+        headers = {
+            "Content-Range": f"bytes {start}-{end}/{file_size}",
+            "Accept-Ranges": "bytes",
+            "Content-Length": str(len(data)),
+            "Content-Type": "application/octet-stream",
+        }
+        return Response(content=data, status_code=206, headers=headers)
+    else:
+        # Serve full file
+        return FileResponse(
+            file_path,
+            media_type="application/octet-stream",
+            headers={"Accept-Ranges": "bytes"}
+        )
+
 # Mount static files to serve the frontend (must be last)
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
