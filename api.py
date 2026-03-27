@@ -468,6 +468,100 @@ def search_place(query: str):
         return {"success": False, "error": str(e)}
 
 
+@app.get("/api/nearby-places")
+def nearby_places(lat: float, lng: float, keyword: str, radius: int = 50000, place_type: str = None):
+    """Search for nearby places - with proper filtering for railway vs metro"""
+    try:
+        api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+        if not api_key:
+            return {"success": False, "error": "Google Maps API key not configured"}
+        
+        url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+        params = {
+            "location": f"{lat},{lng}",
+            "rankby": "distance",
+            "keyword": keyword,
+            "key": api_key
+        }
+        
+        if place_type:
+            params["type"] = place_type
+        
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        print(f"🔍 Searching for '{keyword}' near ({lat:.4f}, {lng:.4f})")
+        print(f"   API Status: {data.get('status')}")
+        
+        if data.get("status") == "OK":
+            from math import radians, sin, cos, sqrt, atan2
+            
+            def calculate_distance(lat1, lng1, lat2, lng2):
+                R = 6371
+                dlat = radians(lat2 - lat1)
+                dlng = radians(lng2 - lng1)
+                a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng/2)**2
+                c = 2 * atan2(sqrt(a), sqrt(1-a))
+                return R * c
+            
+            places = []
+            
+            for place in data.get("results", []):
+                place_types = place.get("types", [])
+                place_name = place["name"].lower()
+                
+                # CRITICAL FILTERING: Distinguish railway from metro
+                is_metro = any(t in place_types for t in ["subway_station", "light_rail_station"]) or "metro" in place_name
+                is_railway = "train_station" in place_types and not is_metro
+                
+                # Skip based on what we're searching for
+                if keyword and "railway" in keyword.lower():
+                    # Looking for railway - skip metro stations
+                    if is_metro:
+                        print(f"   ❌ Skipping metro station: {place['name']}")
+                        continue
+                    if not is_railway:
+                        print(f"   ❌ Skipping non-railway: {place['name']} (types: {place_types})")
+                        continue
+                
+                elif keyword and "metro" in keyword.lower():
+                    # Looking for metro - skip railway stations
+                    if is_railway and not is_metro:
+                        print(f"   ❌ Skipping railway station: {place['name']}")
+                        continue
+                
+                place_lat = place["geometry"]["location"]["lat"]
+                place_lng = place["geometry"]["location"]["lng"]
+                distance = calculate_distance(lat, lng, place_lat, place_lng)
+                
+                places.append({
+                    "place_id": place["place_id"],
+                    "name": place["name"],
+                    "lat": place_lat,
+                    "lng": place_lng,
+                    "vicinity": place.get("vicinity", ""),
+                    "types": place_types,
+                    "distance_km": round(distance, 2)
+                })
+            
+            places.sort(key=lambda x: x["distance_km"])
+            
+            print(f"✅ Found {len(places)} valid places after filtering:")
+            for i, p in enumerate(places[:5]):
+                print(f"   {i+1}. {p['name']} - {p['distance_km']} km (types: {p['types'][:2]})")
+            
+            return {"success": True, "places": places}
+        else:
+            print(f"❌ API Error: {data.get('status')}")
+            return {"success": False, "error": data.get("status"), "places": []}
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"success": False, "error": str(e), "places": []}
+
+
 @app.get("/api/directions")
 def get_directions(origin_lat: float, origin_lng: float, dest_place_id: str):
     """Get directions from property to office using Google Directions API"""

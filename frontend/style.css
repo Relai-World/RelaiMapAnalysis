@@ -5168,3 +5168,38 @@ body:has(#sidebar.hidden) #map {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(166,138,61,0.1);
 }
+
+
+/* ===================================
+   CONNECTIVITY MARKER ANIMATIONS
+   =================================== */
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.connectivity-marker,
+.connectivity-origin-marker {
+  transition: transform 0.2s ease;
+}
+
+.connectivity-marker:hover,
+.connectivity-origin-marker:hover {
+  transform: scale(1.2);
+}

@@ -86,7 +86,7 @@ const insightsPromise = callSupabaseRPC('get_all_insights');
 // Store insights data globally for amenities
 window.insightsData = null;
 
-map.addControl(new maplibregl.NavigationControl(), 'top-right');
+// Navigation control removed - cleaner interface
 
 let activeMarker = null;
 let clickMarker = null; // lightweight marker for generic map clicks
@@ -1105,8 +1105,9 @@ map.on("load", async () => {
      COMMON LOCATION HANDLER
   =============================== */
   async function handleLocationSelect(p) {
-    // START CLEANUP: Remove previous amenities if they exist
+    // START CLEANUP: Remove previous amenities, routes, and markers
     clearAmenities();
+    clearRoutes();
 
     // RESET PROPERTIES PANEL: close drawer and clear stale content from previous location
     const propertiesPanel = document.getElementById('properties-panel');
@@ -4131,13 +4132,56 @@ function showPropertyDetails(property) {
   const listContainer = document.getElementById('prop-list');
   const countEl = document.getElementById('prop-panel-count');
 
+  // Clear any existing routes and markers from previous property
+  clearRoutes();
+  
   // Store the current property for commute calculator
   window.currentPropertyDetails = property;
+  
+  const details = property.full_details;
+  
+  // Store coordinates - try multiple sources
+  let lat = null, lng = null;
+  
+  // 1. Try latitude/longitude fields directly (if they exist in full_details)
+  if (details && details.latitude && details.longitude) {
+    lat = parseFloat(details.latitude);
+    lng = parseFloat(details.longitude);
+    console.log('✅ Got coordinates from latitude/longitude fields:', lat, lng);
+  }
+  
+  // 2. Try extracting from google_place_location or google_maps_location
+  if (!lat || !lng) {
+    const locationStr = property.google_place_location || property.google_maps_location || 
+                       details?.google_place_location || details?.google_maps_location;
+    if (locationStr) {
+      const coords = extractCoordinates(locationStr);
+      if (coords) {
+        lat = coords.lat;
+        lng = coords.lng;
+        console.log('✅ Extracted coordinates from location string:', lat, lng);
+      }
+    }
+  }
+  
+  // Store coordinates if we found them
+  if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+    window.currentPropertyLocation = { lat, lng };
+    console.log('✅ Stored property coordinates:', window.currentPropertyLocation);
+  } else {
+    window.currentPropertyLocation = null;
+    console.warn('⚠️ No valid coordinates found for property');
+    console.warn('⚠️ property.google_place_location:', property.google_place_location);
+    console.warn('⚠️ property.google_maps_location:', property.google_maps_location);
+    console.warn('⚠️ details:', details);
+  }
   
   // Debug: Log property structure
   console.log('🏠 showPropertyDetails called with property:', property);
   console.log('🏠 property.id:', property.id);
   console.log('🏠 property.full_details:', property.full_details);
+  console.log('🏠 property.full_details.latitude:', property.full_details?.latitude);
+  console.log('🏠 property.full_details.longitude:', property.full_details?.longitude);
 
   // Store the current configurations list for back navigation
   if (!window.currentConfigsList) {
@@ -4146,8 +4190,6 @@ function showPropertyDetails(property) {
       count: countEl.innerHTML
     };
   }
-
-  const details = property.full_details;
   
   // Get property ID - could be at top level or in full_details
   const propertyId = property.id || (details && details.id) || 'unknown';
@@ -4261,7 +4303,7 @@ function showPropertyDetails(property) {
           <div class="connectivity-section" style="background:rgba(65,105,225,0.08);border:1px solid rgba(65,105,225,0.2);border-radius:10px;padding:16px;margin-bottom:16px;">
             <button 
               id="connectivity-btn-${propertyId}"
-              onclick="showConnectivity(${propertyId}, ${details.latitude}, ${details.longitude})"
+              onclick="window.showConnectivityForProperty('${propertyId}')"
               style="width:100%;padding:12px;background:linear-gradient(135deg,#4169E1,#1E90FF);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"
             >
               🚉 Show Connectivity
@@ -4384,6 +4426,9 @@ window.goBackToConfigurations = function () {
 };
 
 function closePropertyDetail() {
+  // Clear routes and markers when closing property details
+  clearRoutes();
+  
   document.getElementById('property-detail-drawer').classList.remove('open');
   document.getElementById('properties-panel').classList.remove('detail-open');
 }
@@ -5121,42 +5166,124 @@ function extractCoordinates(locInfo) {
 // ===================================================
 //  CONNECTIVITY FUNCTION - Show nearest transport hubs
 // ===================================================
-window.showConnectivity = async function(propertyId, lat, lng) {
+window.showConnectivityForProperty = async function(propertyId) {
+  console.log('🚉 showConnectivityForProperty called for propertyId:', propertyId);
+  
   const resultsDiv = document.getElementById(`connectivity-results-${propertyId}`);
   const btn = document.getElementById(`connectivity-btn-${propertyId}`);
   
+  if (!btn || !resultsDiv) {
+    console.error('❌ Button or results div not found');
+    return;
+  }
+  
+  // Get coordinates from window.currentPropertyLocation (set by showPropertyDetails)
+  if (!window.currentPropertyLocation || !window.currentPropertyLocation.lat || !window.currentPropertyLocation.lng) {
+    console.error('❌ No property coordinates available');
+    console.error('❌ window.currentPropertyLocation:', window.currentPropertyLocation);
+    resultsDiv.innerHTML = '<p style="color:#f44336;font-size:13px;">Property coordinates not available.</p>';
+    resultsDiv.style.display = 'block';
+    return;
+  }
+  
+  const lat = window.currentPropertyLocation.lat;
+  const lng = window.currentPropertyLocation.lng;
+  
+  console.log('✅ Using coordinates:', lat, lng);
+  
+  // Clear previous connectivity routes and markers
+  if (window.connectivityAnimations) {
+    window.connectivityAnimations.forEach(interval => clearInterval(interval));
+    window.connectivityAnimations = [];
+  }
+  if (window.connectivityMarkers) {
+    window.connectivityMarkers.forEach(marker => marker.remove());
+    window.connectivityMarkers = [];
+  }
+  
   btn.disabled = true;
-  btn.innerHTML = '⏳ Loading...';
+  btn.innerHTML = '⏳ Finding routes...';
+  
+  // Show loading state in results
+  resultsDiv.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;padding:20px;color:#666;">
+      <div style="text-align:center;">
+        <div style="font-size:24px;margin-bottom:8px;">🔍</div>
+        <div style="font-size:13px;">Searching for connectivity options...</div>
+      </div>
+    </div>
+  `;
+  resultsDiv.style.display = 'block';
   
   try {
-    // Search for nearest railway station, metro station, and airport
+    // Define search types with VERY specific keywords to differentiate railway vs metro
     const searches = [
-      { type: 'railway', query: 'railway station near me', color: '#FF6B00', icon: '🚂' },
-      { type: 'metro', query: 'metro station near me', color: '#9C27B0', icon: '🚇' },
-      { type: 'airport', query: 'airport near me', color: '#2196F3', icon: '✈️' }
+      { type: 'railway', keyword: 'indian railway station junction', color: '#FF4500', icon: '🚂', label: 'Railway Station', placeType: 'train_station' },
+      { type: 'metro', keyword: 'hyderabad metro station', color: '#8B00FF', icon: '🚇', label: 'Metro Station', placeType: 'subway_station' },
+      { type: 'airport', keyword: 'international airport', color: '#0080FF', icon: '✈️', label: 'Airport', placeType: 'airport' }
     ];
     
+    console.log('🔍 Searching for connectivity options...');
+    
+    // Fetch all places in parallel for better performance
     const results = await Promise.all(
       searches.map(async (search) => {
-        const response = await fetch(
-          `${window.API_BASE_URL}/api/search-place?query=${encodeURIComponent(search.query)}&location=${lat},${lng}`
-        );
-        const data = await response.json();
-        
-        if (data.success && data.suggestions.length > 0) {
-          const nearest = data.suggestions[0];
-          return {
-            ...search,
-            place: nearest,
-            distance: calculateDistance(lat, lng, nearest.lat, nearest.lng)
-          };
+        try {
+          const url = `${window.API_BASE_URL}/api/nearby-places?lat=${lat}&lng=${lng}&keyword=${encodeURIComponent(search.keyword)}&radius=50000&place_type=${search.placeType}`;
+          console.log(`🔍 Fetching ${search.type}:`, url);
+          
+          const response = await fetch(url);
+          
+          if (!response.ok) {
+            console.error(`❌ ${search.type} HTTP error:`, response.status, response.statusText);
+            return null;
+          }
+          
+          const data = await response.json();
+          console.log(`✅ ${search.type} response:`, data);
+          
+          if (data.success && data.places && data.places.length > 0) {
+            // Calculate distance for ALL returned places
+            const placesWithDistance = data.places.map(place => ({
+              ...place,
+              distance: calculateDistance(lat, lng, place.lat, place.lng)
+            }));
+            
+            // Sort by distance and pick the nearest one
+            placesWithDistance.sort((a, b) => a.distance - b.distance);
+            const nearest = placesWithDistance[0];
+            
+            console.log(`✅ ${search.type} - Found ${placesWithDistance.length} options`);
+            console.log(`   🎯 NEAREST: ${nearest.name} at ${nearest.distance.toFixed(2)} km`);
+            console.log(`   📍 Property coords: (${lat}, ${lng})`);
+            console.log(`   📍 ${nearest.name} coords: (${nearest.lat}, ${nearest.lng})`);
+            if (placesWithDistance.length > 1) {
+              console.log(`   Other options:`);
+              placesWithDistance.slice(1, 5).forEach((p, i) => {
+                console.log(`      ${i+2}. ${p.name} - ${p.distance.toFixed(2)} km`);
+              });
+            }
+            
+            return {
+              ...search,
+              place: nearest,
+              distance: nearest.distance
+            };
+          } else {
+            console.warn(`⚠️ ${search.type} no results:`, data);
+          }
+        } catch (error) {
+          console.error(`❌ Error searching for ${search.type}:`, error);
         }
         return null;
       })
     );
     
+    console.log('📊 All results:', results);
+    
     // Filter out nulls
     const validResults = results.filter(r => r !== null);
+    console.log('✅ Valid results:', validResults);
     
     if (validResults.length === 0) {
       resultsDiv.innerHTML = '<p style="color:#999;font-size:13px;">No connectivity options found nearby.</p>';
@@ -5166,17 +5293,19 @@ window.showConnectivity = async function(propertyId, lat, lng) {
       return;
     }
     
-    // Display results
-    let html = '<div style="display:flex;flex-direction:column;gap:10px;">';
+    // Display results with enhanced styling
+    let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
     validResults.forEach(result => {
       html += `
-        <div style="background:white;border:1px solid ${result.color};border-radius:8px;padding:12px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="font-size:20px;">${result.icon}</span>
-            <strong style="color:${result.color};font-size:13px;">${result.type.toUpperCase()}</strong>
+        <div style="background:linear-gradient(135deg, white, ${result.color}08);border:2px solid ${result.color};border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <span style="font-size:24px;">${result.icon}</span>
+            <strong style="color:${result.color};font-size:14px;text-transform:uppercase;letter-spacing:0.5px;">${result.label}</strong>
           </div>
-          <div style="font-size:12px;color:#333;margin-bottom:4px;">${result.place.name}</div>
-          <div style="font-size:11px;color:#666;">${result.distance.toFixed(2)} km away</div>
+          <div style="font-size:13px;color:#333;margin-bottom:6px;font-weight:500;">${result.place.name}</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:12px;color:#666;">📍 ${result.distance.toFixed(2)} km away</span>
+          </div>
         </div>
       `;
     });
@@ -5185,14 +5314,15 @@ window.showConnectivity = async function(propertyId, lat, lng) {
     resultsDiv.innerHTML = html;
     resultsDiv.style.display = 'block';
     
-    // Draw routes on map
-    drawConnectivityRoutes(lat, lng, validResults);
+    // Draw routes on map with animation
+    await drawConnectivityRoutes(lat, lng, validResults);
     
     btn.disabled = false;
-    btn.innerHTML = '✓ Connectivity Shown';
+    btn.innerHTML = '✓ Routes Shown';
+    btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
     
   } catch (error) {
-    console.error('Connectivity error:', error);
+    console.error('❌ Connectivity error:', error);
     resultsDiv.innerHTML = '<p style="color:#f44336;font-size:13px;">Failed to load connectivity data.</p>';
     resultsDiv.style.display = 'block';
     btn.disabled = false;
@@ -5212,57 +5342,198 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
-// Draw connectivity routes on map
+// Draw connectivity routes on map with animation
 async function drawConnectivityRoutes(originLat, originLng, results) {
-  // Clear existing routes
-  clearRoutes();
+  console.log('🎨 Drawing connectivity routes with animation...');
   
-  // Draw routes for each connectivity option
-  for (const result of results) {
+  // Clear existing connectivity routes
+  results.forEach(result => {
+    if (map.getLayer(`connectivity-route-${result.type}-outline`)) {
+      map.removeLayer(`connectivity-route-${result.type}-outline`);
+    }
+    if (map.getLayer(`connectivity-route-${result.type}`)) {
+      map.removeLayer(`connectivity-route-${result.type}`);
+    }
+    if (map.getSource(`connectivity-route-${result.type}`)) {
+      map.removeSource(`connectivity-route-${result.type}`);
+    }
+  });
+  
+  // Fetch all routes in parallel for better performance
+  const routePromises = results.map(async (result) => {
     try {
       const response = await fetch(
-        `${window.API_BASE_URL}/api/directions?origin=${originLat},${originLng}&destination=${result.place.lat},${result.place.lng}&mode=driving`
+        `${window.API_BASE_URL}/api/directions?origin_lat=${originLat}&origin_lng=${originLng}&dest_place_id=${result.place.place_id}`
       );
       const data = await response.json();
       
-      if (data.success && data.routes && data.routes.length > 0) {
-        const route = data.routes[0];
-        const coordinates = decodePolyline(route.polyline);
-        
-        // Add route line to map
-        if (map.getSource(`connectivity-route-${result.type}`)) {
-          map.removeLayer(`connectivity-route-${result.type}`);
-          map.removeSource(`connectivity-route-${result.type}`);
-        }
-        
-        map.addSource(`connectivity-route-${result.type}`, {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            geometry: {
-              type: 'LineString',
-              coordinates: coordinates
-            }
-          }
-        });
-        
-        map.addLayer({
-          id: `connectivity-route-${result.type}`,
-          type: 'line',
-          source: `connectivity-route-${result.type}`,
-          paint: {
-            'line-color': result.color,
-            'line-width': 4,
-            'line-opacity': 0.8
-          }
-        });
+      if (data.success && data.routes && data.routes.driving) {
+        return {
+          result,
+          route: data.routes.driving,
+          coordinates: decodePolyline(data.routes.driving.polyline)
+        };
       }
     } catch (error) {
-      console.error(`Failed to draw ${result.type} route:`, error);
+      console.error(`Failed to fetch ${result.type} route:`, error);
     }
+    return null;
+  });
+  
+  const routeData = (await Promise.all(routePromises)).filter(r => r !== null);
+  
+  // Draw all routes with enhanced styling
+  routeData.forEach(({ result, route, coordinates }) => {
+    // Add source
+    map.addSource(`connectivity-route-${result.type}`, {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: coordinates
+        },
+        properties: {
+          type: result.type,
+          name: result.place.name,
+          distance: result.distance
+        }
+      }
+    });
+    
+    // Add outline layer for better visibility (darker/thicker)
+    map.addLayer({
+      id: `connectivity-route-${result.type}-outline`,
+      type: 'line',
+      source: `connectivity-route-${result.type}`,
+      paint: {
+        'line-color': '#000000',
+        'line-width': 5,
+        'line-opacity': 0.25
+      }
+    });
+    
+    // Add main route layer - SOLID, BRIGHT, THINNER
+    map.addLayer({
+      id: `connectivity-route-${result.type}`,
+      type: 'line',
+      source: `connectivity-route-${result.type}`,
+      paint: {
+        'line-color': result.color,
+        'line-width': 4,
+        'line-opacity': 1.0  // Full opacity for maximum brightness
+      }
+    });
+    
+    console.log(`✅ Drew ${result.type} route with solid bright line`);
+  });
+  
+  // Hide property pins for cleaner view
+  if (map.getLayer('property-pins-layer')) {
+    map.setLayoutProperty('property-pins-layer', 'visibility', 'none');
+  }
+  if (map.getLayer('property-pins-labels')) {
+    map.setLayoutProperty('property-pins-labels', 'visibility', 'none');
   }
   
-  // Adjust map view to show all routes
+  // Add markers for origin and destinations
+  results.forEach(result => {
+    // Create a compact destination marker - MUCH SMALLER
+    const el = document.createElement('div');
+    el.className = 'connectivity-marker';
+    el.style.cssText = `
+      width: 28px;
+      height: 28px;
+      background: ${result.color};
+      border: 2px solid white;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: bounce 2s infinite;
+    `;
+    
+    const iconSpan = document.createElement('span');
+    iconSpan.innerHTML = result.icon;
+    iconSpan.style.cssText = `
+      font-size: 14px;
+      transform: rotate(45deg);
+      display: block;
+    `;
+    el.appendChild(iconSpan);
+    
+    const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+      .setLngLat([result.place.lng, result.place.lat])
+      .setPopup(
+        new maplibregl.Popup({ offset: 20, closeButton: false })
+          .setHTML(`
+            <div style="padding:8px;min-width:160px;">
+              <strong style="color:${result.color};font-size:13px;display:flex;align-items:center;gap:6px;">
+                ${result.icon} ${result.label}
+              </strong>
+              <div style="margin-top:4px;font-size:12px;font-weight:500;">${result.place.name}</div>
+              <div style="margin-top:2px;font-size:11px;color:#666;">📍 ${result.distance.toFixed(2)} km away</div>
+            </div>
+          `)
+      )
+      .addTo(map);
+    
+    // Auto-show popup for better visibility
+    marker.togglePopup();
+    
+    if (!window.connectivityMarkers) {
+      window.connectivityMarkers = [];
+    }
+    window.connectivityMarkers.push(marker);
+  });
+  
+  // Origin marker - MUCH SMALLER
+  const originEl = document.createElement('div');
+  originEl.className = 'connectivity-origin-marker';
+  originEl.style.cssText = `
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #10B981, #059669);
+    border: 2px solid white;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s infinite;
+  `;
+  
+  const originIconSpan = document.createElement('span');
+  originIconSpan.innerHTML = '🏠';
+  originIconSpan.style.cssText = `
+    font-size: 15px;
+    transform: rotate(45deg);
+    display: block;
+  `;
+  originEl.appendChild(originIconSpan);
+  
+  const originMarker = new maplibregl.Marker({ element: originEl, anchor: 'bottom' })
+    .setLngLat([originLng, originLat])
+    .setPopup(
+      new maplibregl.Popup({ offset: 20, closeButton: false })
+        .setHTML('<div style="padding:8px;"><strong style="font-size:13px;">🏠 Property Location</strong></div>')
+    )
+    .addTo(map);
+  
+  // Auto-show popup
+  originMarker.togglePopup();
+  
+  if (!window.connectivityMarkers) {
+    window.connectivityMarkers = [];
+  }
+  window.connectivityMarkers.push(originMarker);
+  
+  // Adjust map view to show all routes with smooth animation
   const allCoords = results.map(r => [r.place.lng, r.place.lat]);
   allCoords.push([originLng, originLat]);
   
@@ -5272,7 +5543,8 @@ async function drawConnectivityRoutes(originLat, originLng, results) {
   
   map.fitBounds(bounds, {
     padding: { top: 100, bottom: 100, left: 100, right: 450 },
-    maxZoom: 13
+    maxZoom: 13,
+    duration: 1500 // Smooth animation
   });
 }
 
@@ -5610,6 +5882,8 @@ function drawRoute(mode) {
 
 function clearRoutes() {
   console.log('🧹 Clearing routes from map');
+  
+  // Clear commute routes
   if (map.getLayer('commute-route-outline')) {
     map.removeLayer('commute-route-outline');
   }
@@ -5620,8 +5894,11 @@ function clearRoutes() {
     map.removeSource('commute-route');
   }
   
-  // Remove connectivity routes
+  // Clear connectivity routes and animations
   ['railway', 'metro', 'airport'].forEach(type => {
+    if (map.getLayer(`connectivity-route-${type}-outline`)) {
+      map.removeLayer(`connectivity-route-${type}-outline`);
+    }
     if (map.getLayer(`connectivity-route-${type}`)) {
       map.removeLayer(`connectivity-route-${type}`);
     }
@@ -5629,6 +5906,26 @@ function clearRoutes() {
       map.removeSource(`connectivity-route-${type}`);
     }
   });
+  
+  // Clear connectivity animations
+  if (window.connectivityAnimations) {
+    window.connectivityAnimations.forEach(interval => clearInterval(interval));
+    window.connectivityAnimations = [];
+  }
+  
+  // Clear connectivity markers
+  if (window.connectivityMarkers) {
+    window.connectivityMarkers.forEach(marker => marker.remove());
+    window.connectivityMarkers = [];
+  }
+  
+  // Restore property pins visibility
+  if (map.getLayer('property-pins-layer')) {
+    map.setLayoutProperty('property-pins-layer', 'visibility', 'visible');
+  }
+  if (map.getLayer('property-pins-labels')) {
+    map.setLayoutProperty('property-pins-labels', 'visibility', 'visible');
+  }
   
   // Remove marker layers
   if (map.getLayer('commute-markers-symbols')) {
