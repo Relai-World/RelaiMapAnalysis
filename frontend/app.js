@@ -4256,6 +4256,18 @@ function showPropertyDetails(property) {
             <div id="commute-inline-suggestions-${propertyId}" class="office-suggestions-inline"></div>
             <div id="commute-inline-routes-${propertyId}" class="commute-routes-inline" style="display:none;margin-top:12px;"></div>
           </div>
+
+          <!-- Connectivity Button -->
+          <div class="connectivity-section" style="background:rgba(65,105,225,0.08);border:1px solid rgba(65,105,225,0.2);border-radius:10px;padding:16px;margin-bottom:16px;">
+            <button 
+              id="connectivity-btn-${propertyId}"
+              onclick="showConnectivity(${propertyId}, ${details.latitude}, ${details.longitude})"
+              style="width:100%;padding:12px;background:linear-gradient(135deg,#4169E1,#1E90FF);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"
+            >
+              🚉 Show Connectivity
+            </button>
+            <div id="connectivity-results-${propertyId}" style="display:none;margin-top:12px;"></div>
+          </div>
           
           ${bhkNote}
           ${galleryHTML}
@@ -5106,6 +5118,164 @@ function extractCoordinates(locInfo) {
   return null;
 }
 
+// ===================================================
+//  CONNECTIVITY FUNCTION - Show nearest transport hubs
+// ===================================================
+window.showConnectivity = async function(propertyId, lat, lng) {
+  const resultsDiv = document.getElementById(`connectivity-results-${propertyId}`);
+  const btn = document.getElementById(`connectivity-btn-${propertyId}`);
+  
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Loading...';
+  
+  try {
+    // Search for nearest railway station, metro station, and airport
+    const searches = [
+      { type: 'railway', query: 'railway station near me', color: '#FF6B00', icon: '🚂' },
+      { type: 'metro', query: 'metro station near me', color: '#9C27B0', icon: '🚇' },
+      { type: 'airport', query: 'airport near me', color: '#2196F3', icon: '✈️' }
+    ];
+    
+    const results = await Promise.all(
+      searches.map(async (search) => {
+        const response = await fetch(
+          `${window.API_BASE_URL}/api/search-place?query=${encodeURIComponent(search.query)}&location=${lat},${lng}`
+        );
+        const data = await response.json();
+        
+        if (data.success && data.suggestions.length > 0) {
+          const nearest = data.suggestions[0];
+          return {
+            ...search,
+            place: nearest,
+            distance: calculateDistance(lat, lng, nearest.lat, nearest.lng)
+          };
+        }
+        return null;
+      })
+    );
+    
+    // Filter out nulls
+    const validResults = results.filter(r => r !== null);
+    
+    if (validResults.length === 0) {
+      resultsDiv.innerHTML = '<p style="color:#999;font-size:13px;">No connectivity options found nearby.</p>';
+      resultsDiv.style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = '🚉 Show Connectivity';
+      return;
+    }
+    
+    // Display results
+    let html = '<div style="display:flex;flex-direction:column;gap:10px;">';
+    validResults.forEach(result => {
+      html += `
+        <div style="background:white;border:1px solid ${result.color};border-radius:8px;padding:12px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="font-size:20px;">${result.icon}</span>
+            <strong style="color:${result.color};font-size:13px;">${result.type.toUpperCase()}</strong>
+          </div>
+          <div style="font-size:12px;color:#333;margin-bottom:4px;">${result.place.name}</div>
+          <div style="font-size:11px;color:#666;">${result.distance.toFixed(2)} km away</div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    
+    resultsDiv.innerHTML = html;
+    resultsDiv.style.display = 'block';
+    
+    // Draw routes on map
+    drawConnectivityRoutes(lat, lng, validResults);
+    
+    btn.disabled = false;
+    btn.innerHTML = '✓ Connectivity Shown';
+    
+  } catch (error) {
+    console.error('Connectivity error:', error);
+    resultsDiv.innerHTML = '<p style="color:#f44336;font-size:13px;">Failed to load connectivity data.</p>';
+    resultsDiv.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = '🚉 Show Connectivity';
+  }
+}
+
+// Calculate distance between two points (Haversine formula)
+function calculateDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Draw connectivity routes on map
+async function drawConnectivityRoutes(originLat, originLng, results) {
+  // Clear existing routes
+  clearRoutes();
+  
+  // Draw routes for each connectivity option
+  for (const result of results) {
+    try {
+      const response = await fetch(
+        `${window.API_BASE_URL}/api/directions?origin=${originLat},${originLng}&destination=${result.place.lat},${result.place.lng}&mode=driving`
+      );
+      const data = await response.json();
+      
+      if (data.success && data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        const coordinates = decodePolyline(route.polyline);
+        
+        // Add route line to map
+        if (map.getSource(`connectivity-route-${result.type}`)) {
+          map.removeLayer(`connectivity-route-${result.type}`);
+          map.removeSource(`connectivity-route-${result.type}`);
+        }
+        
+        map.addSource(`connectivity-route-${result.type}`, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates: coordinates
+            }
+          }
+        });
+        
+        map.addLayer({
+          id: `connectivity-route-${result.type}`,
+          type: 'line',
+          source: `connectivity-route-${result.type}`,
+          paint: {
+            'line-color': result.color,
+            'line-width': 4,
+            'line-opacity': 0.8
+          }
+        });
+      }
+    } catch (error) {
+      console.error(`Failed to draw ${result.type} route:`, error);
+    }
+  }
+  
+  // Adjust map view to show all routes
+  const allCoords = results.map(r => [r.place.lng, r.place.lat]);
+  allCoords.push([originLng, originLat]);
+  
+  const bounds = allCoords.reduce((bounds, coord) => {
+    return bounds.extend(coord);
+  }, new maplibregl.LngLatBounds(allCoords[0], allCoords[0]));
+  
+  map.fitBounds(bounds, {
+    padding: { top: 100, bottom: 100, left: 100, right: 450 },
+    maxZoom: 13
+  });
+}
+
 document.getElementById('commute-close').addEventListener('click', function() {
   document.getElementById('commute-modal-overlay').style.display = 'none';
   clearRoutes();
@@ -5449,6 +5619,16 @@ function clearRoutes() {
   if (map.getSource('commute-route')) {
     map.removeSource('commute-route');
   }
+  
+  // Remove connectivity routes
+  ['railway', 'metro', 'airport'].forEach(type => {
+    if (map.getLayer(`connectivity-route-${type}`)) {
+      map.removeLayer(`connectivity-route-${type}`);
+    }
+    if (map.getSource(`connectivity-route-${type}`)) {
+      map.removeSource(`connectivity-route-${type}`);
+    }
+  });
   
   // Remove marker layers
   if (map.getLayer('commute-markers-symbols')) {
