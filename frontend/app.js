@@ -39,29 +39,6 @@ map.on('load', () => {
       }
     });
   });
-
-  // Add HMDA Master Plan 2031 image overlay
-  map.addSource('hmda-masterplan-2031', {
-    type: 'image',
-    url: 'data/hmda_masterplan.png',
-    coordinates: [
-      [78.00, 17.90],     // top-left [lng, lat]
-      [79.05, 17.90],     // top-right
-      [79.05, 16.97],     // bottom-right
-      [78.00, 16.97]      // bottom-left
-    ]
-  });
-
-  map.addLayer({
-    id: 'hmda-masterplan-layer',
-    type: 'raster',
-    source: 'hmda-masterplan-2031',
-    paint: {
-      'raster-opacity': 0,
-      'raster-fade-duration': 300,
-      'raster-resampling': 'linear'
-    }
-  });
 });
 
 // 🚀 SUPABASE DIRECT CONNECTION - No more API server needed!
@@ -523,6 +500,29 @@ map.on("load", async () => {
     },
     minzoom: 0,
     maxzoom: 24
+  });
+
+  // 6.5. HMDA Master Plan 2031 Image Overlay
+  map.addSource('hmda-masterplan-2031', {
+    type: 'image',
+    url: 'data/hmda_masterplan.png',
+    coordinates: [
+      [78.00, 17.90],     // top-left [lng, lat]
+      [79.05, 17.90],     // top-right
+      [79.05, 16.97],     // bottom-right
+      [78.00, 16.97]      // bottom-left
+    ]
+  });
+
+  map.addLayer({
+    id: 'hmda-masterplan-layer',
+    type: 'raster',
+    source: 'hmda-masterplan-2031',
+    paint: {
+      'raster-opacity': 0,
+      'raster-fade-duration': 300,
+      'raster-resampling': 'linear'
+    }
   });
 
   // 1. Lakes (Moved to end)
