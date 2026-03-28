@@ -40,6 +40,68 @@ app.add_middleware(
 def health_check():
     return {"status": "ok", "message": "West Hyderabad Intelligence API is running"}
 
+# INTELLIGENCE SCORES WITH BENCHMARKING
+@app.get("/api/v1/intelligence-scores/{location_id}")
+def get_intelligence_scores(location_id: int):
+    """Get intelligence scores with city-wide benchmarking for a location"""
+    try:
+        supabase = get_supabase()
+        
+        if not supabase:
+            return {
+                'success': False,
+                'error': 'Supabase configuration missing'
+            }
+        
+        # Call the SQL function
+        response = supabase.rpc('get_location_intelligence_scores', {'loc_id': location_id}).execute()
+        
+        if not response.data or len(response.data) == 0:
+            return {
+                'success': False,
+                'error': 'Location not found'
+            }
+        
+        data = response.data[0]
+        
+        return {
+            'success': True,
+            'location_id': data['location_id'],
+            'location_name': data['location_name'],
+            'scores': {
+                'sentiment': {
+                    'score': data['sentiment_score'],
+                    'percentile': data['sentiment_percentile'],
+                    'city_avg': data['city_avg_sentiment'],
+                    'label': data['sentiment_label']
+                },
+                'growth': {
+                    'score': data['growth_score'],
+                    'percentile': data['growth_percentile'],
+                    'city_avg': data['city_avg_growth'],
+                    'label': data['growth_label']
+                },
+                'investment': {
+                    'score': data['investment_score'],
+                    'percentile': data['investment_percentile'],
+                    'city_avg': data['city_avg_investment'],
+                    'label': data['investment_label']
+                }
+            },
+            'benchmark': {
+                'total_locations': data['total_locations']
+            }
+        }
+        
+    except Exception as e:
+        print(f"❌ Error fetching intelligence scores: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
 # FUTURE DEVELOPMENT ENDPOINT - Fixed encoding issue
 @app.get("/api/v1/future-development/{location_id}")
 def get_future_development(location_id: int):

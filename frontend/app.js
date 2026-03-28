@@ -219,6 +219,44 @@ function expandMetric(clickedBox) {
 
 window.expandMetric = expandMetric;
 
+// Helper function to generate comparison bar HTML
+function generateComparisonBar(localityScore, cityAvg, percentile) {
+  if (!cityAvg || percentile === null || percentile === undefined) return '';
+  
+  const localityPos = Math.min(Math.max(localityScore, 0), 100);
+  const cityAvgPos = Math.min(Math.max(cityAvg, 0), 100);
+  
+  // Better percentile wording: if percentile is 94, they beat 94% of locations
+  const percentileText = percentile >= 90 ? `Top 10%` : 
+                         percentile >= 75 ? `Top 25%` :
+                         percentile >= 50 ? `Top 50%` :
+                         percentile >= 25 ? `Top 75%` : `Bottom 25%`;
+  
+  return `
+    <div class="comparison-section">
+      <div class="comparison-bars-container">
+        <!-- Single Bar with Both Labels -->
+        <div class="comparison-row">
+          <div class="comparison-labels-top">
+            <span class="comparison-label">This locality</span>
+            <span class="comparison-label-right">City avg: ${cityAvg}</span>
+          </div>
+          <div class="comparison-bar-track">
+            <div class="comparison-bar-fill locality-bar" style="width: ${localityPos}%"></div>
+            <div class="comparison-marker" style="left: ${cityAvgPos}%">
+              <div class="marker-line"></div>
+              <div class="avg-marker-label">avg</div>
+            </div>
+          </div>
+          <div style="height: 16px;"></div>
+        </div>
+      </div>
+      
+      <div class="percentile-badge">${percentileText} of Hyderabad</div>
+    </div>
+  `;
+}
+
 // 2. THE INTELLIGENCE ENGINE (Fetches Deep Data)
 // 2. THE INTELLIGENCE ENGINE (Moved to Backend: aggregation/generate_smart_facts.py)
 // Logic simplified to consume API response directly.
@@ -1162,9 +1200,34 @@ map.on("load", async () => {
     // Store current location ID for amenity buttons
     currentLocationId = p.location_id;
 
-    const sentimentScore = Math.min(Math.max(((p.avg_sentiment + 1) / 2) * 100, 0), 100).toFixed(0);
-    const growthVal = Math.min(Math.max(p.growth_score * 100, 0), 100).toFixed(0);
-    const investVal = Math.min(Math.max(p.investment_score * 100, 0), 100).toFixed(0);
+    // Fetch intelligence scores with benchmarking
+    let intelligenceData = null;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/intelligence-scores/${p.location_id}`);
+      if (response.ok) {
+        intelligenceData = await response.json();
+      }
+    } catch (error) {
+      console.warn('Failed to fetch intelligence scores:', error);
+    }
+
+    // Use intelligence data (no fallback - must have data)
+    const sentimentScore = intelligenceData?.success ? intelligenceData.scores.sentiment.score : 0;
+    const growthVal = intelligenceData?.success ? intelligenceData.scores.growth.score : 0;
+    const investVal = intelligenceData?.success ? intelligenceData.scores.investment.score : 0;
+
+    // Extract benchmarking data
+    const sentimentPercentile = intelligenceData?.scores.sentiment.percentile || null;
+    const growthPercentile = intelligenceData?.scores.growth.percentile || null;
+    const investPercentile = intelligenceData?.scores.investment.percentile || null;
+    
+    const cityAvgSentiment = intelligenceData?.scores.sentiment.city_avg || null;
+    const cityAvgGrowth = intelligenceData?.scores.growth.city_avg || null;
+    const cityAvgInvest = intelligenceData?.scores.investment.city_avg || null;
+    
+    const sentimentLabel = intelligenceData?.scores.sentiment.label || 'N/A';
+    const growthLabel = intelligenceData?.scores.growth.label || 'N/A';
+    const investLabel = intelligenceData?.scores.investment.label || 'N/A';
 
     card.innerHTML = `
       <!-- HERO WITH SMART FALLBACK -->
@@ -1206,11 +1269,12 @@ map.on("load", async () => {
               </div>
               <div class="metric-data">
                 <span class="metric-name">SENTIMENT</span>
-                <span class="metric-score">${sentimentScore}</span>
-                <span class="metric-badge">${sentimentScore >= 60 ? 'Optimistic' : sentimentScore >= 35 ? 'Stable' : 'Cautious'}</span>
+                <span class="metric-score">${sentimentScore}<span class="score-suffix">/100</span></span>
+                <span class="metric-badge">${sentimentLabel}</span>
               </div>
             </div>
             <div class="metric-expanded">
+              ${generateComparisonBar(sentimentScore, cityAvgSentiment, sentimentPercentile)}
               <div class="expanded-content">${formatMarkdownText(p.sentiment_summary) || 'Analyzing community sentiment and market perception...'}</div>
             </div>
           </div>
@@ -1225,11 +1289,12 @@ map.on("load", async () => {
               </div>
               <div class="metric-data">
                 <span class="metric-name">GROWTH</span>
-                <span class="metric-score">${growthVal}</span>
-                <span class="metric-badge">${parseFloat(growthVal) >= 70 ? 'Accelerating' : parseFloat(growthVal) >= 45 ? 'Developing' : 'Emerging'}</span>
+                <span class="metric-score">${growthVal}<span class="score-suffix">/100</span></span>
+                <span class="metric-badge">${growthLabel}</span>
               </div>
             </div>
             <div class="metric-expanded">
+              ${generateComparisonBar(growthVal, cityAvgGrowth, growthPercentile)}
               <div class="expanded-content">${formatMarkdownText(p.growth_summary) || 'Evaluating infrastructure development and expansion potential...'}</div>
             </div>
           </div>
@@ -1245,18 +1310,17 @@ map.on("load", async () => {
               </div>
               <div class="metric-data">
                 <span class="metric-name">INVESTMENT</span>
-                <span class="metric-score">${investVal}</span>
-                <span class="metric-badge">${parseFloat(investVal) >= 70 ? 'Premium' : parseFloat(investVal) >= 45 ? 'Solid' : 'Speculative'}</span>
+                <span class="metric-score">${investVal}<span class="score-suffix">/100</span></span>
+                <span class="metric-badge">${investLabel}</span>
               </div>
             </div>
             <div class="metric-expanded">
+              ${generateComparisonBar(investVal, cityAvgInvest, investPercentile)}
               <div class="expanded-content">${formatMarkdownText(p.invest_summary) || 'Calculating investment potential and return projections...'}</div>
             </div>
           </div>
         </div>
       </div>
-
-
 
       <!-- PROPERTY COSTS (fetched dynamically) -->
       <div id="property-costs-container">
@@ -1855,14 +1919,6 @@ map.on("load", async () => {
       { label: 'Operating Cities', value: proj.builder_operating_locations },
       { label: 'Headquarters', value: proj.builder_origin_city }
     ])}
-          
-          ${buildDetailSection('📞 Point of Contact', [
-      { label: 'Contact Name', value: proj.poc_name },
-      { label: 'Phone', value: proj.poc_contact },
-      { label: 'Role', value: proj.poc_role },
-      { label: 'Alt. Contact', value: proj.alternative_contact },
-      { label: 'Email', value: proj.useremail }
-    ])}
         </div>
       </div>
     `;
@@ -2084,14 +2140,6 @@ map.on("load", async () => {
       { label: 'Total Projects', value: prop.builder_total_properties },
       { label: 'Operating Cities', value: prop.builder_operating_locations },
       { label: 'Headquarters', value: prop.builder_origin_city }
-    ])}
-          
-          ${buildDetailSection('📞 Point of Contact', [
-      { label: 'Contact Name', value: prop.poc_name },
-      { label: 'Phone', value: prop.poc_contact },
-      { label: 'Role', value: prop.poc_role },
-      { label: 'Alt. Contact', value: prop.alternative_contact },
-      { label: 'Email', value: prop.useremail }
     ])}
         </div>
       </div>
@@ -2894,6 +2942,7 @@ map.on("load", async () => {
         `;
       });
   }
+
 
 
 
@@ -4391,14 +4440,6 @@ function showPropertyDetails(property) {
     renderField('Total Projects', details.builder_total_properties),
     renderField('Operating Cities', details.builder_operating_locations),
     renderField('Headquarters', details.builder_origin_city)
-  ])}
-          
-          ${renderSection('📞 Point of Contact', [
-    renderField('Contact Name', details.poc_name),
-    renderField('Phone', details.poc_contact),
-    renderField('Role', details.poc_role),
-    renderField('Alt. Contact', details.alternative_contact),
-    renderField('Email', details.useremail)
   ])}
         </div>
       `;

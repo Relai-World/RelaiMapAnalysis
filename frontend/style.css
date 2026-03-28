@@ -5203,3 +5203,121 @@ body:has(#sidebar.hidden) #map {
 .connectivity-origin-marker:hover {
   transform: scale(1.2);
 }
+
+/* ===============================
+   COMPARISON BAR STYLES - REFERENCE DESIGN
+=============================== */
+.comparison-section {
+  padding: 16px 16px 12px;
+  background: transparent;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 8px;
+}
+
+.comparison-bars-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.comparison-row {
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.comparison-labels-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.comparison-label {
+  font-size: 11px;
+  color: #1F2937;
+  font-weight: 600;
+}
+
+.comparison-label-right {
+  font-size: 11px;
+  color: #1F2937;
+  font-weight: 600;
+}
+
+.comparison-bar-track {
+  position: relative;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: visible;
+  margin-bottom: 20px;
+}
+
+.comparison-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.locality-bar {
+  background: currentColor;
+}
+
+.sentiment-metric .locality-bar {
+  background: linear-gradient(90deg, #F59E0B, #FBBF24);
+}
+
+.growth-metric .locality-bar {
+  background: linear-gradient(90deg, #3B82F6, #60A5FA);
+}
+
+.investment-metric .locality-bar {
+  background: linear-gradient(90deg, #8B5CF6, #A78BFA);
+}
+
+.comparison-marker {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  z-index: 2;
+}
+
+.marker-line {
+  width: 2px;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 1px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.avg-marker-label {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #1F2937;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.percentile-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 10px;
+  font-size: 10px;
+  color: #4ADE80;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  margin-top: 4px;
+}
+
+.score-suffix {
+  font-size: 0.45em;
+  opacity: 0.5;
+  font-weight: 400;
+  margin-left: 1px;
+}
