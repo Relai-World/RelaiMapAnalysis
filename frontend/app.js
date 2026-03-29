@@ -41,9 +41,27 @@ map.on('load', () => {
   });
 });
 
-// 🚀 SUPABASE DIRECT CONNECTION - No more API server needed!
-const SUPABASE_URL = "https://ihraowxbduhlichzszgk.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocmFvd3hiZHVobGljaHpzemdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5MDU5OTEsImV4cCI6MjA2NTQ4MTk5MX0.9SGeXWpk4_OI2qMPyfCfVtUqar6q62-ZFifaA3lc3BE";
+// 🚀 SUPABASE CONNECTION - Load from config.js (which reads from .env via backend)
+// SECURITY: Never hardcode credentials in frontend files
+let SUPABASE_URL = '';
+let SUPABASE_KEY = '';
+
+// Wait for Supabase config to load before initializing
+function waitForSupabaseConfig() {
+  return new Promise((resolve) => {
+    if (window.SUPABASE_CONFIG?.url && window.SUPABASE_CONFIG?.key) {
+      SUPABASE_URL = window.SUPABASE_CONFIG.url;
+      SUPABASE_KEY = window.SUPABASE_CONFIG.key;
+      resolve();
+    } else {
+      window.addEventListener('supabase-config-loaded', () => {
+        SUPABASE_URL = window.SUPABASE_CONFIG.url;
+        SUPABASE_KEY = window.SUPABASE_CONFIG.key;
+        resolve();
+      }, { once: true });
+    }
+  });
+}
 
 // Google Places API Key is handled by the backend API
 // No API key needed in frontend - all requests go through Python API
@@ -80,8 +98,58 @@ async function callSupabaseRPC(functionName, params = {}) {
   }
 }
 
+// 🚀 BROWSER CACHE: Check localStorage first for instant load
+const CACHE_KEY = 'hyderabad_locations_cache';
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
+function getCachedLocations() {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+    
+    const { data, timestamp } = JSON.parse(cached);
+    const age = Date.now() - timestamp;
+    
+    if (age > CACHE_DURATION) {
+      console.log('🗑️ Cache expired, will fetch fresh data');
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    
+    console.log(`✅ Cache hit! Data age: ${Math.round(age / 1000 / 60)} minutes`);
+    return data;
+  } catch (e) {
+    console.error('❌ Cache read error:', e);
+    return null;
+  }
+}
+
+function setCachedLocations(data) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      data: data,
+      timestamp: Date.now()
+    }));
+    console.log('💾 Locations cached for 24 hours');
+  } catch (e) {
+    console.error('❌ Cache write error:', e);
+  }
+}
+
 // 🚀 EARLY FETCH: Start getting data immediately while map initializes
-const insightsPromise = callSupabaseRPC('get_all_insights');
+// Wait for Supabase config first, then check cache or fetch
+const insightsPromise = waitForSupabaseConfig().then(() => {
+  const cachedData = getCachedLocations();
+  if (cachedData) {
+    console.log('⚡ Using cached data');
+    return cachedData;
+  }
+  console.log('🌐 Fetching fresh data from Supabase');
+  return callSupabaseRPC('get_all_insights').then(data => {
+    setCachedLocations(data);
+    return data;
+  });
+});
 
 // Store insights data globally for amenities
 window.insightsData = null;
@@ -733,6 +801,14 @@ map.on("load", async () => {
     if (Array.isArray(data) && data.length > 0) {
       console.log("🔍 DEBUG: First location:", data[0]);
       console.log("🔍 DEBUG: Coordinates:", data[0].longitude, data[0].latitude);
+      
+      // Show cache status to user
+      const isCached = getCachedLocations() !== null;
+      if (isCached) {
+        console.log('⚡ Loaded from cache - instant!');
+      } else {
+        console.log('🌐 Loaded from server - cached for next time');
+      }
     }
 
     const searchInput = document.getElementById("location-search");
