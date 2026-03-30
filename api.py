@@ -27,9 +27,10 @@ def get_supabase() -> Client:
 
 app = FastAPI(title="Real Estate Intelligence API")
 
-# CORS Configuration - Restrict to specific origins in production
+# CORS Configuration - Allow both GitHub Pages and custom domain
 # Load allowed origins from environment variable
-allowed_origins = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000").split(",")
+frontend_origin_env = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
+allowed_origins = [origin.strip() for origin in frontend_origin_env.split(",")]
 
 # Add common development ports for local testing
 if os.getenv("ENVIRONMENT", "production") == "development":
@@ -38,6 +39,18 @@ if os.getenv("ENVIRONMENT", "production") == "development":
         "http://localhost:5500", "http://127.0.0.1:5500",  # Live Server
         "http://localhost:3000", "http://127.0.0.1:3000"   # Common dev port
     ])
+
+# Always allow both production domains (GitHub Pages and custom domain)
+production_domains = [
+    "https://analytics.relai.world",
+    "https://relai-world.github.io"
+]
+
+for domain in production_domains:
+    if domain not in allowed_origins:
+        allowed_origins.append(domain)
+
+print(f"🌐 CORS allowed origins: {allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,
