@@ -25,6 +25,9 @@
   <!-- Cache Manager -->
   <script src="cache-manager.js"></script>
   
+  <!-- City Layer Manager -->
+  <script src="city-layers.js"></script>
+  
   <!-- Supabase Configuration (loads from backend API) -->
   <script src="supabase-config.js"></script>
   
@@ -36,6 +39,7 @@
   <script src="https://unpkg.com/tippy.js@6"></script>
 
   <link rel="stylesheet" href="style.css?v=6.0" />
+  <link rel="stylesheet" href="style-mobile.css?v=1.0" />
 </head>
 
 <body>
@@ -49,16 +53,25 @@
     <div id="sidebar-brand">
       <div class="brand-block">
         <div class="brand-name">Relai<em>Analytics</em></div>
-        <div class="brand-sub">Hyderabad Elite</div>
+        <div class="brand-sub" id="city-subtitle">Hyderabad Elite</div>
       </div>
       <div class="live-badge">
         <span class="pulse-dot"></span> Live
       </div>
     </div>
 
+    <!-- City Selector -->
+    <div class="city-selector">
+      <span class="city-label">City</span>
+      <div class="city-toggle">
+        <button class="city-toggle-option active" data-city="hyderabad">Hyderabad</button>
+        <button class="city-toggle-option" data-city="bangalore">Bangalore</button>
+      </div>
+    </div>
+
     <!-- Search -->
     <div class="search-container">
-      <input type="text" id="location-search" placeholder="Search elite locations…" autocomplete="off"
+      <input type="text" id="location-search" placeholder="Search locations & properties across cities…" autocomplete="off"
         spellcheck="false" />
       <div id="search-results"></div>
     </div>
@@ -276,6 +289,17 @@
       <button id="close-properties-panel" class="prop-panel-close">✕</button>
     </div>
     
+    <div class="prop-search-container">
+      <input 
+        type="text" 
+        id="property-search-input" 
+        class="property-search-input" 
+        placeholder="🔍 Search properties..."
+        autocomplete="off"
+      />
+      <button id="clear-property-search" class="clear-search-btn" style="display: none;">✕</button>
+    </div>
+    
     <div id="prop-panel-body">
       <div class="prop-loading" id="prop-loading">
         <div class="prop-spinner"></div>
@@ -310,6 +334,42 @@
   </div>
 
   <script src="app.js?v=6.2"></script>
+  <script src="mobile-enhancements.js?v=1.0"></script>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    // Register service worker for caching static assets
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(registration => {
+            console.log('✅ Service Worker registered successfully:', registration.scope);
+            
+            // Check for updates
+            registration.addEventListener('updatefound', () => {
+              const newWorker = registration.installing;
+              console.log('🔄 Service Worker update found');
+              
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('✨ New Service Worker available, will activate on next page load');
+                }
+              });
+            });
+          })
+          .catch(error => {
+            console.warn('⚠️ Service Worker registration failed:', error);
+          });
+      });
+      
+      // Listen for messages from service worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'CACHE_CLEARED') {
+          console.log('🗑️ Service Worker cache cleared');
+        }
+      });
+    }
+  </script>
 </body>
 
 </html>

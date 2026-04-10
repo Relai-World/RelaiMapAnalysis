@@ -1,0 +1,761 @@
+/* ============================================================
+   MOBILE OPTIMIZATIONS — Progressive Enhancement
+   Responsive design for tablets and mobile devices
+   ============================================================ */
+
+/* ============================================================
+   TABLET OPTIMIZATIONS (768px and below)
+   ============================================================ */
+@media (max-width: 768px) {
+  
+  /* ── Root Variables for Mobile ─────────────── */
+  :root {
+    --sidebar-w: 280px; /* Slightly narrower on tablet */
+  }
+
+  /* ── Sidebar Adjustments ─────────────────────── */
+  #sidebar {
+    width: var(--sidebar-w);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Sidebar starts collapsed on mobile */
+  #sidebar.mobile-init {
+    transform: translateX(calc(-1 * var(--sidebar-w)));
+  }
+
+  /* ── Map Adjustments ─────────────────────── */
+  #map {
+    left: 0; /* Full width by default on mobile */
+  }
+
+  #sidebar:not(.collapsed) ~ #map {
+    left: var(--sidebar-w);
+  }
+
+  /* ── Layer Controls — Scrollable Horizontal ─────── */
+  .layer-controls {
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    transform: none;
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px 10px;
+    gap: 6px;
+    scrollbar-width: none;
+  }
+
+  .layer-controls::-webkit-scrollbar {
+    display: none;
+  }
+
+  .layer-card {
+    min-width: 48px;
+    width: 48px;
+    padding: 6px 10px;
+  }
+
+  .layer-card img {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Disable hover expansion on mobile */
+  .layer-toggle:hover .layer-card,
+  .layer-toggle:focus .layer-card {
+    width: 48px;
+  }
+
+  .layer-card span {
+    display: none; /* Hide labels on mobile for space */
+  }
+
+  /* ── Properties Panel — Full Width ─────────── */
+  #properties-panel {
+    width: 100%;
+    right: -100%;
+    box-shadow: none;
+    border-left: none;
+    border-top: 1px solid rgba(166, 138, 61, 0.18);
+  }
+
+  #properties-panel.open {
+    right: 0;
+  }
+
+  /* When detail drawer opens, hide properties panel */
+  #properties-panel.detail-open {
+    right: -100%;
+  }
+
+  /* ── Property Detail Drawer — Full Width ─────── */
+  #property-detail-drawer {
+    width: 100%;
+    right: -100%;
+  }
+
+  #property-detail-drawer.open {
+    right: 0;
+  }
+
+  /* ── Amenities Panel — Full Width Bottom Sheet ─── */
+  #amenities-list-card {
+    top: auto;
+    bottom: -100%;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 70vh;
+    border-radius: 20px 20px 0 0;
+    border: none;
+    border-top: 1px solid var(--border);
+    transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #amenities-list-card.open {
+    bottom: 0;
+  }
+
+  /* ── Future Insights Modal — Better Mobile Sizing ─── */
+  .fi-modal {
+    width: 95%;
+    max-width: 500px;
+    max-height: 85vh;
+  }
+
+  .fi-modal-header {
+    padding: 16px;
+  }
+
+  .fi-timeline-section {
+    padding: 12px 16px;
+  }
+
+  .fi-scrollable-wrapper {
+    max-height: calc(85vh - 180px);
+  }
+
+  /* ── Commute Modal — Full Width ─────────── */
+  .commute-modal {
+    width: 95%;
+    max-width: 500px;
+    max-height: 85vh;
+  }
+
+  /* ── MapLibre Controls — Better Positioning ─── */
+  .maplibregl-ctrl-top-right {
+    top: 12px !important;
+    right: 12px !important;
+  }
+
+  .maplibregl-ctrl-bottom-right {
+    bottom: 80px !important; /* Above layer controls */
+    right: 12px !important;
+  }
+
+  .maplibregl-ctrl-bottom-left {
+    bottom: 80px !important;
+    left: 12px !important;
+  }
+
+  /* ── Sidebar Toggle — Better Mobile Position ─── */
+  .sidebar-toggle-btn {
+    top: 16px;
+    left: auto;
+    right: 16px;
+    transform: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 250;
+  }
+
+  #sidebar.collapsed ~ .sidebar-toggle-btn {
+    left: auto;
+    right: 16px;
+  }
+
+  .toggle-icon {
+    font-size: 20px;
+  }
+
+  /* ── Touch Target Improvements ─────────── */
+  .amenity-btn,
+  .city-btn,
+  .bhk-filter-btn,
+  .config-tab {
+    min-height: 44px; /* iOS recommended touch target */
+    padding: 10px 14px;
+  }
+
+  .metric-card {
+    min-height: 80px;
+  }
+
+  /* ── Typography Adjustments ─────────── */
+  .brand-name {
+    font-size: 1.4rem;
+  }
+
+  .location-hero-name {
+    font-size: 1.3rem;
+  }
+
+  /* ── Grid Adjustments ─────────── */
+  .amenity-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .detail-key-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  /* ── Popup Adjustments ─────────── */
+  .maplibregl-popup-content {
+    max-width: calc(100vw - 40px);
+  }
+}
+
+/* ============================================================
+   MOBILE PHONE OPTIMIZATIONS (480px and below)
+   ============================================================ */
+@media (max-width: 480px) {
+  
+  /* ── Root Variables for Small Mobile ─────────── */
+  :root {
+    --sidebar-w: 100%; /* Full width sidebar on phones */
+  }
+
+  /* ── Sidebar — Full Screen Overlay ─────────── */
+  #sidebar {
+    width: 100%;
+    transform: translateX(-100%);
+    z-index: 300;
+  }
+
+  #sidebar:not(.collapsed) {
+    transform: translateX(0);
+  }
+
+  /* Add overlay backdrop when sidebar is open */
+  #sidebar:not(.collapsed)::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* ── Map — Always Full Width ─────────── */
+  #map {
+    left: 0 !important;
+    right: 0 !important;
+  }
+
+  /* ── Sidebar Toggle — Floating Action Button Style ─── */
+  .sidebar-toggle-btn {
+    top: auto;
+    bottom: 100px;
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    background: var(--gold);
+    color: white;
+    border: none;
+  }
+
+  .sidebar-toggle-btn:hover {
+    background: var(--gold-light);
+    box-shadow: 0 8px 24px rgba(166, 138, 61, 0.4);
+  }
+
+  .toggle-icon {
+    font-size: 24px;
+  }
+
+  #sidebar.collapsed ~ .sidebar-toggle-btn .toggle-icon::before {
+    content: '☰';
+  }
+
+  #sidebar:not(.collapsed) ~ .sidebar-toggle-btn .toggle-icon::before {
+    content: '✕';
+  }
+
+  /* ── Brand Section — Compact ─────────── */
+  #sidebar-brand {
+    padding: 16px;
+  }
+
+  .brand-name {
+    font-size: 1.3rem;
+  }
+
+  .brand-sub {
+    font-size: 8px;
+    letter-spacing: 2px;
+  }
+
+  .live-badge {
+    font-size: 9px;
+    padding: 4px 9px;
+  }
+
+  /* ── City Selector — Stacked ─────────── */
+  .city-selector {
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .city-btn {
+    width: 100%;
+    padding: 12px;
+    justify-content: flex-start;
+  }
+
+  /* ── Search — Full Width ─────────── */
+  .search-container {
+    padding: 12px;
+  }
+
+  #location-search {
+    height: 48px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  /* ── Intel Card — Optimized Spacing ─────────── */
+  #intel-card {
+    padding: 12px;
+  }
+
+  .location-hero {
+    height: 160px;
+    border-radius: 16px;
+  }
+
+  .location-hero-name {
+    font-size: 1.2rem;
+  }
+
+  /* ── Market Intelligence — Single Column ─────── */
+  .metrics-container {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .metric-card {
+    min-height: 70px;
+  }
+
+  .metric-card.expanded {
+    grid-column: 1;
+  }
+
+  .metric-card.collapsed {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  /* ── Amenities Grid — Single Column ─────────── */
+  .amenity-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .amenity-btn {
+    min-height: 60px;
+    padding: 12px;
+  }
+
+  /* ── Layer Controls — Compact Icons Only ─────── */
+  .layer-controls {
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  .layer-card {
+    min-width: 42px;
+    width: 42px;
+    padding: 6px;
+  }
+
+  .layer-card img {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ── Properties Panel — Full Screen ─────────── */
+  #properties-panel {
+    top: 0;
+    height: 100vh;
+  }
+
+  .prop-panel-header {
+    padding: 16px;
+  }
+
+  .prop-card {
+    margin-bottom: 12px;
+  }
+
+  .prop-card-thumb,
+  .prop-card-thumb-placeholder {
+    height: 140px;
+  }
+
+  /* ── Property Detail Drawer — Full Screen ─────── */
+  #property-detail-drawer {
+    top: 0;
+    height: 100vh;
+  }
+
+  .detail-gallery img {
+    height: 200px;
+    min-width: 100%;
+  }
+
+  .detail-hero {
+    padding: 16px;
+  }
+
+  .detail-proj-name {
+    font-size: 1.3rem;
+  }
+
+  .detail-key-stats {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .detail-sections {
+    padding: 12px;
+  }
+
+  /* ── Amenities Panel — Bottom Sheet ─────────── */
+  #amenities-list-card {
+    max-height: 80vh;
+    padding: 16px;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .amenity-header {
+    margin-bottom: 12px;
+  }
+
+  .amenity-item {
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  /* ── Modals — Full Screen on Small Phones ─────── */
+  .fi-modal-overlay,
+  .commute-modal-overlay {
+    padding: 0;
+  }
+
+  .fi-modal,
+  .commute-modal {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .fi-modal-header,
+  .commute-modal-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .fi-scrollable-wrapper {
+    max-height: calc(100vh - 200px);
+  }
+
+  /* ── Typography — Better Readability ─────────── */
+  body {
+    font-size: 15px;
+  }
+
+  .intelligence-title {
+    font-size: 14px;
+  }
+
+  .metric-name {
+    font-size: 9px;
+  }
+
+  .metric-score {
+    font-size: 22px;
+  }
+
+  .expanded-content {
+    font-size: 11px;
+    line-height: 1.7;
+  }
+
+  /* ── Download Button — Sticky Bottom ─────────── */
+  #download-report {
+    position: sticky;
+    bottom: 0;
+    width: calc(100% - 24px);
+    margin: 12px;
+    padding: 14px;
+    font-size: 13px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* ── MapLibre Controls — Better Mobile Position ─── */
+  .maplibregl-ctrl-top-right {
+    top: 8px !important;
+    right: 8px !important;
+  }
+
+  .maplibregl-ctrl-bottom-right {
+    bottom: 90px !important;
+    right: 8px !important;
+  }
+
+  .maplibregl-ctrl-bottom-left {
+    bottom: 90px !important;
+    left: 8px !important;
+  }
+
+  .maplibregl-ctrl-group button {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  /* ── Popup — Better Mobile Sizing ─────────── */
+  .maplibregl-popup-content {
+    max-width: calc(100vw - 32px);
+    padding: 0;
+  }
+
+  .popup-container {
+    padding: 12px 14px;
+  }
+
+  .popup-title {
+    font-size: 14px;
+  }
+
+  /* ── Configuration Cards — Single Column ─────── */
+  .config-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .config-card {
+    padding: 14px;
+  }
+
+  /* ── Tables — Responsive Scroll ─────────── */
+  .configurations-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .configurations-table {
+    min-width: 500px;
+    font-size: 12px;
+  }
+
+  .configurations-table th,
+  .configurations-table td {
+    padding: 10px 6px;
+  }
+
+  /* ── Future Development Timeline — Scrollable ─── */
+  .fi-timeline-years {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .fi-timeline-years::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ── Commute Routes — Stacked ─────────── */
+  .route-toggle-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .route-toggle-btn {
+    width: 100%;
+    padding: 12px;
+  }
+
+  /* ── Better Touch Feedback ─────────── */
+  .amenity-btn:active,
+  .city-btn:active,
+  .bhk-filter-btn:active,
+  .prop-card:active,
+  .amenity-item:active,
+  .metric-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+
+  /* ── Prevent Text Selection on Touch ─────────── */
+  .layer-card,
+  .city-btn,
+  .amenity-btn,
+  .metric-card,
+  .sidebar-toggle-btn {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+
+  /* ── Improve Scrolling Performance ─────────── */
+  #intel-card,
+  #prop-panel-body,
+  .detail-content,
+  #amenities-list-content {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* ============================================================
+   LANDSCAPE MOBILE OPTIMIZATIONS
+   ============================================================ */
+@media (max-width: 768px) and (orientation: landscape) {
+  
+  /* Reduce heights in landscape mode */
+  .location-hero {
+    height: 120px;
+  }
+
+  .detail-gallery img {
+    height: 140px;
+  }
+
+  #amenities-list-card {
+    max-height: 60vh;
+  }
+
+  .fi-modal,
+  .commute-modal {
+    max-height: 90vh;
+  }
+
+  /* Sidebar takes less space in landscape */
+  #sidebar {
+    width: 320px;
+  }
+
+  :root {
+    --sidebar-w: 320px;
+  }
+}
+
+/* ============================================================
+   VERY SMALL SCREENS (360px and below)
+   ============================================================ */
+@media (max-width: 360px) {
+  
+  .brand-name {
+    font-size: 1.2rem;
+  }
+
+  .location-hero {
+    height: 140px;
+  }
+
+  .location-hero-name {
+    font-size: 1.1rem;
+  }
+
+  .metric-score {
+    font-size: 20px;
+  }
+
+  .layer-card {
+    min-width: 38px;
+    width: 38px;
+  }
+
+  .layer-card img {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sidebar-toggle-btn {
+    width: 52px;
+    height: 52px;
+    bottom: 90px;
+  }
+}
+
+/* ============================================================
+   ACCESSIBILITY IMPROVEMENTS FOR MOBILE
+   ============================================================ */
+@media (max-width: 768px) {
+  
+  /* Larger focus indicators for keyboard navigation */
+  *:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  /* Better contrast for small text */
+  .metric-name,
+  .section-label,
+  .amenity-badge,
+  .prop-tag {
+    font-weight: 700;
+  }
+
+  /* Ensure minimum font size for readability */
+  .detail-row-label,
+  .prop-detail-label,
+  .config-label {
+    font-size: 11px;
+  }
+}
+
+/* ============================================================
+   PRINT STYLES (Bonus)
+   ============================================================ */
+@media print {
+  #sidebar,
+  .sidebar-toggle-btn,
+  .layer-controls,
+  #properties-panel,
+  #property-detail-drawer,
+  #amenities-list-card,
+  .maplibregl-ctrl-group {
+    display: none !important;
+  }
+
+  #map {
+    left: 0 !important;
+    position: relative !important;
+    height: 400px !important;
+  }
+}

@@ -1,176 +1,264 @@
 /**
- * Browser Cache Manager
- * Handles localStorage caching for locations and amenities
+ * Enhanced Cache Manager for Relai Map Analysis
+ * Handles persistent caching for amenities and static assets
  */
 
-const CacheManager = {
-  // Cache durations
-  DURATIONS: {
-    LOCATIONS: 24 * 60 * 60 * 1000,  // 24 hours
-    AMENITIES: 7 * 24 * 60 * 60 * 1000,  // 7 days (amenities don't change often)
-    PROPERTIES: 6 * 60 * 60 * 1000   // 6 hours (properties update more frequently)
-  },
+class CacheManager {
+  constructor() {
+    this.CACHE_VERSION = 'v1';
+    this.AMENITY_CACHE_KEY = 'relai_amenity_cache';
+    this.CACHE_EXPIRY_DAYS = 7; // Cache expires after 7 days
+  }
 
   /**
-   * Get cached data
-   * @param {string} key - Cache key
-   * @param {number} maxAge - Maximum age in milliseconds
-   * @returns {any|null} Cached data or null if expired/missing
+   * Get cached amenities from localStorage
+   * @param {string} cacheKey - Unique key for location+amenity type
+   * @returns {Array|null} - Cached amenities or null
    */
-  get(key, maxAge) {
+  getAmenityCache(cacheKey) {
     try {
-      const cached = localStorage.getItem(key);
-      if (!cached) return null;
+      const cache = localStorage.getItem(this.AMENITY_CACHE_KEY);
+      if (!cache) return null;
 
-      const { data, timestamp } = JSON.parse(cached);
-      const age = Date.now() - timestamp;
+      const parsed = JSON.parse(cache);
+      const entry = parsed[cacheKey];
 
-      if (age > maxAge) {
-        console.log(`🗑️ Cache expired for ${key} (age: ${Math.round(age / 1000 / 60)} min)`);
-        localStorage.removeItem(key);
+      if (!entry) return null;
+
+      // Check if cache is expired
+      const now = Date.now();
+      const expiryTime = entry.timestamp + (this.CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+
+      if (now > expiryTime) {
+        console.log(`🗑️ Cache expired for ${cacheKey}`);
+        this.removeAmenityCache(cacheKey);
         return null;
       }
 
-      console.log(`✅ Cache hit for ${key} (age: ${Math.round(age / 1000 / 60)} min)`);
-      return data;
-    } catch (e) {
-      console.error(`❌ Cache read error for ${key}:`, e);
+      console.log(`💾 LocalStorage cache hit for ${cacheKey}`);
+      return entry.data;
+    } catch (error) {
+      console.error('Error reading from localStorage:', error);
       return null;
     }
-  },
+  }
 
   /**
-   * Set cached data
-   * @param {string} key - Cache key
-   * @param {any} data - Data to cache
+   * Save amenities to localStorage
+   * @param {string} cacheKey - Unique key for location+amenity type
+   * @param {Array} amenities - Amenities data to cache
    */
-  set(key, data) {
+  setAmenityCache(cacheKey, amenities) {
     try {
-      localStorage.setItem(key, JSON.stringify({
-        data: data,
+      const cache = localStorage.getItem(this.AMENITY_CACHE_KEY);
+      const parsed = cache ? JSON.parse(cache) : {};
+
+      parsed[cacheKey] = {
+        data: amenities,
         timestamp: Date.now()
-      }));
-      console.log(`💾 Cached ${key}`);
-    } catch (e) {
-      console.error(`❌ Cache write error for ${key}:`, e);
-      // If quota exceeded, clear old caches
-      if (e.name === 'QuotaExceededError') {
+      };
+
+      localStorage.setItem(this.AMENITY_CACHE_KEY, JSON.stringify(parsed));
+      console.log(`💾 Saved ${amenities.length} amenities to localStorage for ${cacheKey}`);
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+      // If quota exceeded, clear old entries
+      if (error.name === 'QuotaExceededError') {
         this.clearOldCaches();
         // Try again
         try {
-          localStorage.setItem(key, JSON.stringify({
-            data: data,
+          const parsed = {};
+          parsed[cacheKey] = {
+            data: amenities,
             timestamp: Date.now()
-          }));
-        } catch (e2) {
-          console.error('❌ Still failed after clearing old caches');
+          };
+          localStorage.setItem(this.AMENITY_CACHE_KEY, JSON.stringify(parsed));
+        } catch (e) {
+          console.error('Failed to save after clearing:', e);
         }
       }
     }
-  },
+  }
 
   /**
-   * Clear specific cache
-   * @param {string} key - Cache key to clear
+   * Remove specific amenity cache
+   * @param {string} cacheKey - Cache key to remove
    */
-  clear(key) {
-    localStorage.removeItem(key);
-    console.log(`🗑️ Cleared cache: ${key}`);
-  },
+  removeAmenityCache(cacheKey) {
+    try {
+      const cache = localStorage.getItem(this.AMENITY_CACHE_KEY);
+      if (!cache) return;
+
+      const parsed = JSON.parse(cache);
+      delete parsed[cacheKey];
+      localStorage.setItem(this.AMENITY_CACHE_KEY, JSON.stringify(parsed));
+    } catch (error) {
+      console.error('Error removing cache:', error);
+    }
+  }
 
   /**
-   * Clear all app caches
-   */
-  clearAll() {
-    const keys = Object.keys(localStorage);
-    const appKeys = keys.filter(k => 
-      k.startsWith('hyderabad_') || 
-      k.startsWith('amenity_') ||
-      k.startsWith('property_')
-    );
-    
-    appKeys.forEach(key => localStorage.removeItem(key));
-    console.log(`🗑️ Cleared ${appKeys.length} cache entries`);
-  },
-
-  /**
-   * Clear caches older than their max age
+   * Clear old cache entries (older than expiry days)
    */
   clearOldCaches() {
-    const keys = Object.keys(localStorage);
-    let cleared = 0;
+    try {
+      const cache = localStorage.getItem(this.AMENITY_CACHE_KEY);
+      if (!cache) return;
 
-    keys.forEach(key => {
-      try {
-        const cached = localStorage.getItem(key);
-        if (!cached) return;
+      const parsed = JSON.parse(cache);
+      const now = Date.now();
+      const expiryMs = this.CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
 
-        const { timestamp } = JSON.parse(cached);
-        const age = Date.now() - timestamp;
-
-        // Clear if older than 30 days
-        if (age > 30 * 24 * 60 * 60 * 1000) {
-          localStorage.removeItem(key);
+      let cleared = 0;
+      Object.keys(parsed).forEach(key => {
+        if (now - parsed[key].timestamp > expiryMs) {
+          delete parsed[key];
           cleared++;
         }
-      } catch (e) {
-        // Invalid cache entry, remove it
-        localStorage.removeItem(key);
-        cleared++;
-      }
-    });
+      });
 
-    if (cleared > 0) {
-      console.log(`🗑️ Cleared ${cleared} old cache entries`);
+      localStorage.setItem(this.AMENITY_CACHE_KEY, JSON.stringify(parsed));
+      console.log(`🗑️ Cleared ${cleared} expired cache entries`);
+    } catch (error) {
+      console.error('Error clearing old caches:', error);
     }
-  },
+  }
+
+  /**
+   * Clear all amenity caches
+   */
+  clearAllCaches() {
+    try {
+      localStorage.removeItem(this.AMENITY_CACHE_KEY);
+      console.log('🗑️ Cleared all amenity caches');
+    } catch (error) {
+      console.error('Error clearing all caches:', error);
+    }
+  }
 
   /**
    * Get cache statistics
-   * @returns {object} Cache stats
+   * @returns {Object} - Cache stats
    */
-  getStats() {
-    const keys = Object.keys(localStorage);
-    const appKeys = keys.filter(k => 
-      k.startsWith('hyderabad_') || 
-      k.startsWith('amenity_') ||
-      k.startsWith('property_')
-    );
+  getCacheStats() {
+    try {
+      const cache = localStorage.getItem(this.AMENITY_CACHE_KEY);
+      if (!cache) return { entries: 0, size: 0 };
 
-    let totalSize = 0;
-    const entries = [];
+      const parsed = JSON.parse(cache);
+      const entries = Object.keys(parsed).length;
+      const size = new Blob([cache]).size;
 
-    appKeys.forEach(key => {
-      try {
-        const value = localStorage.getItem(key);
-        const size = new Blob([value]).size;
-        totalSize += size;
+      return {
+        entries,
+        size: (size / 1024).toFixed(2) + ' KB',
+        sizeBytes: size
+      };
+    } catch (error) {
+      console.error('Error getting cache stats:', error);
+      return { entries: 0, size: 0 };
+    }
+  }
+}
 
-        const { timestamp } = JSON.parse(value);
-        const age = Date.now() - timestamp;
+// Create global instance
+window.cacheManager = new CacheManager();
 
-        entries.push({
-          key,
-          size: (size / 1024).toFixed(2) + ' KB',
-          age: Math.round(age / 1000 / 60) + ' min'
-        });
-      } catch (e) {
-        // Skip invalid entries
+// Clear old caches on page load
+window.addEventListener('load', () => {
+  window.cacheManager.clearOldCaches();
+});
+
+
+/**
+ * Global cache control functions for debugging
+ * Access these from browser console
+ */
+window.cacheControl = {
+  /**
+   * Get cache statistics
+   */
+  stats: () => {
+    const stats = window.cacheManager.getCacheStats();
+    console.log('📊 Cache Statistics:');
+    console.log(`   Entries: ${stats.entries}`);
+    console.log(`   Size: ${stats.size}`);
+    return stats;
+  },
+
+  /**
+   * Clear all amenity caches
+   */
+  clear: () => {
+    window.cacheManager.clearAllCaches();
+    window._amenityCache = {}; // Clear in-memory cache too
+    console.log('✅ All caches cleared (localStorage + in-memory)');
+  },
+
+  /**
+   * Clear service worker cache
+   */
+  clearServiceWorker: async () => {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+      console.log('✅ Service Worker cache clear requested');
+    } else {
+      console.warn('⚠️ No active Service Worker found');
+    }
+  },
+
+  /**
+   * View all cached keys
+   */
+  list: () => {
+    try {
+      const cache = localStorage.getItem(window.cacheManager.AMENITY_CACHE_KEY);
+      if (!cache) {
+        console.log('📭 No cached amenities');
+        return [];
       }
-    });
 
-    return {
-      totalEntries: appKeys.length,
-      totalSize: (totalSize / 1024).toFixed(2) + ' KB',
-      entries: entries
-    };
+      const parsed = JSON.parse(cache);
+      const keys = Object.keys(parsed);
+      
+      console.log(`📋 Cached Amenity Keys (${keys.length}):`);
+      keys.forEach((key, index) => {
+        const entry = parsed[key];
+        const age = Math.floor((Date.now() - entry.timestamp) / (1000 * 60 * 60 * 24));
+        console.log(`   ${index + 1}. ${key} (${entry.data.length} items, ${age} days old)`);
+      });
+      
+      return keys;
+    } catch (error) {
+      console.error('Error listing cache:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Remove specific cache entry
+   */
+  remove: (cacheKey) => {
+    window.cacheManager.removeAmenityCache(cacheKey);
+    delete window._amenityCache[cacheKey];
+    console.log(`✅ Removed cache for: ${cacheKey}`);
+  },
+
+  /**
+   * Help message
+   */
+  help: () => {
+    console.log(`
+🔧 Cache Control Commands:
+   cacheControl.stats()              - View cache statistics
+   cacheControl.list()               - List all cached keys
+   cacheControl.clear()              - Clear all amenity caches
+   cacheControl.clearServiceWorker() - Clear service worker cache
+   cacheControl.remove(key)          - Remove specific cache entry
+   cacheControl.help()               - Show this help message
+    `);
   }
 };
 
-// Expose globally
-window.CacheManager = CacheManager;
-
-// Clear old caches on load
-CacheManager.clearOldCaches();
-
-console.log('💾 Cache Manager initialized');
+// Show help on load
+console.log('💡 Cache Manager loaded. Type "cacheControl.help()" for available commands.');

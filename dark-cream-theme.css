@@ -1,0 +1,241 @@
+/* ============================================================
+   DARK CREAM THEME - Reusable Color Palette
+   Professional dark header with cream content area
+   ============================================================ */
+
+:root {
+  /* ── Primary Colors ─────────────────────────── */
+  --dark-primary: #1A1C1E;        /* Deep charcoal - headers, nav */
+  --dark-secondary: #2C2E30;      /* Lighter dark - cards on dark bg */
+  --dark-tertiary: #3A3C3E;       /* Medium gray - borders, dividers */
+  
+  --cream-primary: #FFFDF5;       /* Light cream - main background */
+  --cream-secondary: #F5F1E8;     /* Darker cream - cards, panels */
+  --cream-tertiary: #EBE7DD;      /* Even darker cream - hover states */
+  
+  /* ── Accent Colors ──────────────────────────── */
+  --gold: #A68A3D;                /* Muted gold - primary accent */
+  --gold-light: #C9A24A;          /* Light gold - hover states */
+  --gold-dark: #8B7330;           /* Dark gold - active states */
+  --gold-pale: #F3EAD3;           /* Pale gold - subtle backgrounds */
+  
+  /* ── Text Colors ────────────────────────────── */
+  --text-on-dark: #FFFFFF;        /* White text on dark backgrounds */
+  --text-on-light: #1A1C1E;       /* Dark text on light backgrounds */
+  --text-muted: #5F6368;          /* Muted text - secondary info */
+  --text-subtle: #80868B;         /* Subtle text - tertiary info */
+  
+  /* ── Semantic Colors ────────────────────────── */
+  --success: #15803D;             /* Green - success states */
+  --warning: #B45309;             /* Amber - warning states */
+  --error: #B91C1C;               /* Red - error states */
+  --info: #1E40AF;                /* Blue - info states */
+  
+  /* ── Borders & Shadows ──────────────────────── */
+  --border-light: rgba(166, 138, 61, 0.15);
+  --border-medium: rgba(166, 138, 61, 0.25);
+  --border-dark: rgba(166, 138, 61, 0.35);
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.2);
+  
+  /* ── Glassmorphism ──────────────────────────── */
+  --glass-dark: rgba(26, 28, 30, 0.85);
+  --glass-light: rgba(255, 255, 255, 0.85);
+  --glass-blur: blur(10px);
+}
+
+/* ============================================================
+   USAGE EXAMPLES
+   ============================================================ */
+
+/* Example: Dark Header/Navigation */
+.header {
+  background: var(--dark-primary);
+  color: var(--text-on-dark);
+  border-bottom: 1px solid var(--dark-tertiary);
+  box-shadow: var(--shadow-md);
+}
+
+/* Example: Cream Content Area */
+.content {
+  background: var(--cream-primary);
+  color: var(--text-on-light);
+}
+
+/* Example: Card on Cream Background */
+.card {
+  background: var(--cream-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.card:hover {
+  background: var(--cream-tertiary);
+  box-shadow: var(--shadow-md);
+}
+
+/* Example: Card on Dark Background */
+.card-dark {
+  background: var(--dark-secondary);
+  color: var(--text-on-dark);
+  border: 1px solid var(--dark-tertiary);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+/* Example: Primary Button */
+.btn-primary {
+  background: var(--gold);
+  color: var(--text-on-dark);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: var(--gold-light);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:active {
+  background: var(--gold-dark);
+}
+
+/* Example: Secondary Button */
+.btn-secondary {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--gold-pale);
+}
+
+/* Example: Input Field */
+.input {
+  background: var(--cream-primary);
+  color: var(--text-on-light);
+  border: 1px solid var(--border-light);
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-pale);
+}
+
+/* Example: Badge/Tag */
+.badge {
+  background: var(--gold-pale);
+  color: var(--gold-dark);
+  border: 1px solid var(--border-medium);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Example: Success/Warning/Error States */
+.alert-success {
+  background: rgba(21, 128, 61, 0.1);
+  color: var(--success);
+  border: 1px solid var(--success);
+  padding: 12px 16px;
+  border-radius: 6px;
+}
+
+.alert-warning {
+  background: rgba(180, 83, 9, 0.1);
+  color: var(--warning);
+  border: 1px solid var(--warning);
+  padding: 12px 16px;
+  border-radius: 6px;
+}
+
+.alert-error {
+  background: rgba(185, 28, 28, 0.1);
+  color: var(--error);
+  border: 1px solid var(--error);
+  padding: 12px 16px;
+  border-radius: 6px;
+}
+
+/* Example: Glassmorphism Effect */
+.glass-panel {
+  background: var(--glass-light);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Example: Divider */
+.divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 20px 0;
+}
+
+/* Example: Text Styles */
+.text-primary {
+  color: var(--text-on-light);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-subtle {
+  color: var(--text-subtle);
+}
+
+/* ============================================================
+   QUICK REFERENCE
+   ============================================================
+   
+   BACKGROUNDS:
+   - Dark header/nav: var(--dark-primary)
+   - Light content: var(--cream-primary)
+   - Cards on light: var(--cream-secondary)
+   - Cards on dark: var(--dark-secondary)
+   
+   TEXT:
+   - On dark bg: var(--text-on-dark)
+   - On light bg: var(--text-on-light)
+   - Secondary: var(--text-muted)
+   
+   ACCENTS:
+   - Primary: var(--gold)
+   - Hover: var(--gold-light)
+   - Active: var(--gold-dark)
+   
+   BORDERS:
+   - Light: var(--border-light)
+   - Medium: var(--border-medium)
+   - Dark: var(--border-dark)
+   
+   SHADOWS:
+   - Small: var(--shadow-sm)
+   - Medium: var(--shadow-md)
+   - Large: var(--shadow-lg)
+   
+   ============================================================ */

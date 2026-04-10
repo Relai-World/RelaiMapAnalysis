@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cache System Test</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+    }
+    h2 {
+      color: #666;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button.danger {
+      background: #f44336;
+    }
+    button.danger:hover {
+      background: #da190b;
+    }
+    .result {
+      background: #f9f9f9;
+      padding: 15px;
+      margin: 10px 0;
+      border-left: 4px solid #4CAF50;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 4px;
+      margin: 5px 0;
+      font-weight: bold;
+    }
+    .status.success {
+      background: #4CAF50;
+      color: white;
+    }
+    .status.error {
+      background: #f44336;
+      color: white;
+    }
+    .status.info {
+      background: #2196F3;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 Cache System Test Page</h1>
+  
+  <div class="test-section">
+    <h2>1. Cache Manager Status</h2>
+    <div id="cache-status"></div>
+    <button onclick="checkCacheManager()">Check Cache Manager</button>
+  </div>
+
+  <div class="test-section">
+    <h2>2. Service Worker Status</h2>
+    <div id="sw-status"></div>
+    <button onclick="checkServiceWorker()">Check Service Worker</button>
+  </div>
+
+  <div class="test-section">
+    <h2>3. Cache Statistics</h2>
+    <div id="cache-stats"></div>
+    <button onclick="showStats()">Show Statistics</button>
+    <button onclick="listCaches()">List All Caches</button>
+  </div>
+
+  <div class="test-section">
+    <h2>4. Test Cache Operations</h2>
+    <div id="test-results"></div>
+    <button onclick="testCacheWrite()">Test Write</button>
+    <button onclick="testCacheRead()">Test Read</button>
+    <button class="danger" onclick="testCacheClear()">Clear Test Cache</button>
+  </div>
+
+  <div class="test-section">
+    <h2>5. Cache Management</h2>
+    <button class="danger" onclick="clearAllCaches()">Clear All Amenity Caches</button>
+    <button class="danger" onclick="clearServiceWorkerCache()">Clear Service Worker Cache</button>
+  </div>
+
+  <script src="cache-manager.js"></script>
+  <script>
+    // Check if cache manager is loaded
+    function checkCacheManager() {
+      const statusDiv = document.getElementById('cache-status');
+      if (window.cacheManager) {
+        statusDiv.innerHTML = '<span class="status success">✅ Cache Manager Loaded</span>';
+      } else {
+        statusDiv.innerHTML = '<span class="status error">❌ Cache Manager Not Found</span>';
+      }
+    }
+
+    // Check service worker status
+    function checkServiceWorker() {
+      const statusDiv = document.getElementById('sw-status');
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(registration => {
+          if (registration) {
+            statusDiv.innerHTML = `
+              <span class="status success">✅ Service Worker Registered</span>
+              <div class="result">Scope: ${registration.scope}
+State: ${registration.active ? 'Active' : 'Not Active'}</div>
+            `;
+          } else {
+            statusDiv.innerHTML = '<span class="status info">ℹ️ Service Worker Not Registered (Register from main app)</span>';
+          }
+        });
+      } else {
+        statusDiv.innerHTML = '<span class="status error">❌ Service Worker Not Supported</span>';
+      }
+    }
+
+    // Show cache statistics
+    function showStats() {
+      const statsDiv = document.getElementById('cache-stats');
+      if (window.cacheManager) {
+        const stats = window.cacheManager.getCacheStats();
+        statsDiv.innerHTML = `
+          <div class="result">Entries: ${stats.entries}
+Size: ${stats.size}
+Size (bytes): ${stats.sizeBytes}</div>
+        `;
+      } else {
+        statsDiv.innerHTML = '<span class="status error">❌ Cache Manager Not Available</span>';
+      }
+    }
+
+    // List all caches
+    function listCaches() {
+      const statsDiv = document.getElementById('cache-stats');
+      if (window.cacheControl) {
+        const keys = window.cacheControl.list();
+        if (keys.length === 0) {
+          statsDiv.innerHTML = '<div class="result">No cached entries found</div>';
+        }
+      } else {
+        statsDiv.innerHTML = '<span class="status error">❌ Cache Control Not Available</span>';
+      }
+    }
+
+    // Test cache write
+    function testCacheWrite() {
+      const resultsDiv = document.getElementById('test-results');
+      if (window.cacheManager) {
+        const testData = [
+          { name: 'Test School 1', distance_km: 0.5 },
+          { name: 'Test School 2', distance_km: 1.2 },
+          { name: 'Test School 3', distance_km: 2.0 }
+        ];
+        window.cacheManager.setAmenityCache('test_location_schools', testData);
+        resultsDiv.innerHTML = '<span class="status success">✅ Test data written to cache</span>';
+      } else {
+        resultsDiv.innerHTML = '<span class="status error">❌ Cache Manager Not Available</span>';
+      }
+    }
+
+    // Test cache read
+    function testCacheRead() {
+      const resultsDiv = document.getElementById('test-results');
+      if (window.cacheManager) {
+        const data = window.cacheManager.getAmenityCache('test_location_schools');
+        if (data) {
+          resultsDiv.innerHTML = `
+            <span class="status success">✅ Test data read from cache</span>
+            <div class="result">${JSON.stringify(data, null, 2)}</div>
+          `;
+        } else {
+          resultsDiv.innerHTML = '<span class="status info">ℹ️ No test data found (write first)</span>';
+        }
+      } else {
+        resultsDiv.innerHTML = '<span class="status error">❌ Cache Manager Not Available</span>';
+      }
+    }
+
+    // Clear test cache
+    function testCacheClear() {
+      const resultsDiv = document.getElementById('test-results');
+      if (window.cacheManager) {
+        window.cacheManager.removeAmenityCache('test_location_schools');
+        resultsDiv.innerHTML = '<span class="status success">✅ Test cache cleared</span>';
+      } else {
+        resultsDiv.innerHTML = '<span class="status error">❌ Cache Manager Not Available</span>';
+      }
+    }
+
+    // Clear all caches
+    function clearAllCaches() {
+      if (window.cacheControl && confirm('Are you sure you want to clear all amenity caches?')) {
+        window.cacheControl.clear();
+        alert('All amenity caches cleared!');
+        showStats();
+      }
+    }
+
+    // Clear service worker cache
+    function clearServiceWorkerCache() {
+      if (window.cacheControl && confirm('Are you sure you want to clear the service worker cache?')) {
+        window.cacheControl.clearServiceWorker();
+        alert('Service worker cache clear requested!');
+      }
+    }
+
+    // Auto-check on load
+    window.addEventListener('load', () => {
+      checkCacheManager();
+      checkServiceWorker();
+      showStats();
+    });
+  </script>
+</body>
+</html>

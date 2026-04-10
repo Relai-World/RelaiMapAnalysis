@@ -8,7 +8,7 @@ const map = new maplibregl.Map({
   // Neutral, slightly desaturated light basemap to match luxury UI
   style: 'https://tiles.openfreemap.org/styles/liberty',
 
-  center: [78.38, 17.44],
+  center: [78.4744, 17.4065],
   zoom: 11,
   minZoom: 4,
   maxZoom: 18
@@ -24,7 +24,9 @@ map.on('load', () => {
     'malls': 'images/mall.png',
     'restaurants': 'images/dinner.png',
     'banks': 'images/bank.png',
-    'metro': 'images/metro.png'
+    'metro': 'images/metro.png',
+    'train': 'assets/train.png',
+    'property': 'assets/R_with_Home.png'
   };
 
   // Load each icon
@@ -100,6 +102,7 @@ async function callSupabaseRPC(functionName, params = {}) {
 
 // 🚀 BROWSER CACHE: Check localStorage first for instant load
 const CACHE_KEY = 'hyderabad_locations_cache';
+const CACHE_VERSION = 2; // Increment this to invalidate old caches
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 function getCachedLocations() {
@@ -107,7 +110,15 @@ function getCachedLocations() {
     const cached = localStorage.getItem(CACHE_KEY);
     if (!cached) return null;
     
-    const { data, timestamp } = JSON.parse(cached);
+    const { data, timestamp, version } = JSON.parse(cached);
+    
+    // Check version first - invalidate if outdated
+    if (version !== CACHE_VERSION) {
+      console.log('🗑️ Cache version mismatch, clearing old cache');
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+    
     const age = Date.now() - timestamp;
     
     if (age > CACHE_DURATION) {
@@ -128,7 +139,8 @@ function setCachedLocations(data) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify({
       data: data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      version: CACHE_VERSION
     }));
     console.log('💾 Locations cached for 24 hours');
   } catch (e) {
@@ -481,7 +493,10 @@ map.on("load", async () => {
   const BASE_TILES_URL = "maptiles";
 
   // SNAPPY LOADING: Pre-fetch headers for all PMTiles files
-  const pmtilesLayers = ["highways", "metro", "orr", "lakes"];
+  const pmtilesLayers = [
+    "highways", "metro", "orr", "lakes", "bangalore_water_accumulation",
+    "bangalore_highways", "bangalore_lakes", "bangalore_prr", "bangalore_bbmp"
+  ];
   pmtilesLayers.forEach(name => {
     const p = new pmtiles.PMTiles(`${BASE_TILES_URL}/${name}.pmtiles`);
     p.getHeader().then(() => console.log(`✓ Warm-up: ${name} data ready`))
@@ -522,11 +537,10 @@ map.on("load", async () => {
     source: "highways-source",
     "source-layer": "highways",
     layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
-    paint: { "line-color": "#64008fff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 4.8], "line-blur": 1, "line-opacity": 0 }, // Ghost state - visible at all zooms when activated
+    paint: { "line-color": "#fa7203ff", "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 4.8], "line-blur": 1, "line-opacity": 0 }, // Ghost state - visible at all zooms when activated
     minzoom: 0,
     maxzoom: 24
   });
-
   // 4. Metro (Using GeoJSON directly to ensure LineStrings are rendered)
   map.addSource("metro-source", {
     type: "geojson",
@@ -611,7 +625,7 @@ map.on("load", async () => {
   // 6.5. HMDA Master Plan 2031 Image Overlay
   map.addSource('hmda-masterplan-2031', {
     type: 'image',
-    url: 'data/hmda_masterplan.png',
+    url: 'data/hmda_test_300dpi.png',
     coordinates: [
       [78.00, 17.90],     // top-left [lng, lat]
       [79.05, 17.90],     // top-right
@@ -785,6 +799,236 @@ map.on("load", async () => {
     }
   });
 
+  /* =====================================================
+     🏙️ BANGALORE LAYERS (Initially hidden)
+  ===================================================== */
+
+  // Bangalore Highways
+  map.addSource("blr-highways-source", {
+    type: "vector",
+    url: `pmtiles://${BASE_TILES_URL}/bangalore_highways.pmtiles`,
+    minzoom: 0,
+    maxzoom: 24
+  });
+  map.addLayer({
+    id: "blr-highways-layer",
+    type: "line",
+    source: "blr-highways-source",
+    "source-layer": "banglore_highways",
+    layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
+    paint: { 
+      "line-color": "#fa7203ff", 
+      "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.2, 18, 4.8], 
+      "line-blur": 1, 
+      "line-opacity": 0 
+    },
+    minzoom: 0,
+    maxzoom: 24
+  });
+
+  // Bangalore Metro (Lines + Stations) - Using GeoJSON for mixed geometry support
+  map.addSource("blr-metro-source", {
+    type: "geojson",
+    data: "data/metro-lines-stations.geojson"
+  });
+  
+  // Metro Lines (red color like Hyderabad)
+  map.addLayer({
+    id: "blr-metro-layer",
+    type: "line",
+    source: "blr-metro-source",
+    filter: ["==", ["geometry-type"], "LineString"],
+    layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
+    paint: {
+      "line-color": "#ef0000",
+      "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.5, 12, 3, 18, 6],
+      "line-opacity": 0
+    },
+    minzoom: 0,
+    maxzoom: 24
+  });
+  
+  // Metro Stations (points)
+  map.addLayer({
+    id: "blr-metro-stations-layer",
+    type: "circle",
+    source: "blr-metro-source",
+    filter: ["==", ["geometry-type"], "Point"],
+    layout: { visibility: "visible" },
+    paint: {
+      "circle-radius": ["interpolate", ["linear"], ["zoom"], 7, 2, 12, 4, 18, 8],
+      "circle-color": "#ffffff",
+      "circle-stroke-width": 2,
+      "circle-stroke-color": "#2c3e50",
+      "circle-opacity": 0,
+      "circle-stroke-opacity": 0
+    },
+    minzoom: 0,
+    maxzoom: 24
+  });
+  
+  // Metro Station Labels
+  map.addLayer({
+    id: "blr-metro-stations-labels",
+    type: "symbol",
+    source: "blr-metro-source",
+    filter: ["==", ["geometry-type"], "Point"],
+    layout: {
+      visibility: "visible",
+      "text-field": ["get", "Name"],
+      "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+      "text-size": ["interpolate", ["linear"], ["zoom"], 10, 8, 14, 11, 18, 14],
+      "text-offset": [0, 1.5],
+      "text-anchor": "top"
+    },
+    paint: {
+      "text-color": "#2c3e50",
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.5,
+      "text-opacity": 0
+    },
+    minzoom: 12,
+    maxzoom: 24
+  });
+
+  // Bangalore ORR (using same source as Hyderabad ORR - contains both cities)
+  map.addLayer({
+    id: "blr-orr-layer",
+    type: "line",
+    source: "orr-source",  // Reusing Hyderabad ORR source
+    "source-layer": "orr",
+    layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
+    paint: { 
+      "line-color": "#000000ff", 
+      "line-width": ["interpolate", ["linear"], ["zoom"], 7, 1.5, 18, 6], 
+      "line-blur": 1, 
+      "line-opacity": 0 
+    },
+    minzoom: 0,
+    maxzoom: 24
+  });
+
+  // Bangalore Lakes
+  map.addSource("blr-lakes-source", {
+    type: "vector",
+    url: `pmtiles://${BASE_TILES_URL}/bangalore_lakes.pmtiles`,
+    minzoom: 0,
+    maxzoom: 24
+  });
+  map.addLayer({
+    id: "blr-lakes-layer",
+    type: "fill",
+    source: "blr-lakes-source",
+    "source-layer": "bangalore_lakes",
+    layout: { visibility: "visible" },
+    paint: {
+      "fill-color": "#0077ff",
+      "fill-opacity": 0
+    },
+    minzoom: 0,
+    maxzoom: 24
+  });
+
+  // Bangalore PRR (Peripheral Ring Road)
+  map.addSource("blr-prr-source", {
+    type: "vector",
+    url: `pmtiles://${BASE_TILES_URL}/bangalore_prr.pmtiles`,
+    minzoom: 0,
+    maxzoom: 24
+  });
+  map.addLayer({
+    id: "blr-prr-layer",
+    type: "line",
+    source: "blr-prr-source",
+    "source-layer": "PRR",
+    layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
+    paint: {
+      "line-color": "#ff8c00",
+      "line-width": 3,
+      "line-opacity": 0
+    },
+    minzoom: 0,
+    maxzoom: 24
+  });
+
+  // Bangalore BBMP Boundary
+  map.addSource("blr-bbmp-source", {
+    type: "vector",
+    url: `pmtiles://${BASE_TILES_URL}/bangalore_bbmp.pmtiles`,
+    minzoom: 0,
+    maxzoom: 24
+  });
+  map.addLayer({
+    id: "blr-bbmp-layer",
+    type: "line",
+    source: "blr-bbmp-source",
+    "source-layer": "Bangalore_bbmp1",
+    layout: { visibility: "visible", "line-join": "round", "line-cap": "round" },
+    paint: {
+      "line-color": "#4169E1",
+      "line-width": 2,
+      "line-dasharray": [4, 2],
+      "line-opacity": 0
+    },
+    minzoom: 0,
+    maxzoom: 24
+  });
+
+  // Bangalore Floods (PMTiles - Water Accumulation Data)
+  // Source: diagram-chasing/blr-water-log repository (local file)
+  // Layer shows stream influence and water accumulation patterns
+  map.addSource("blr-floods-source", {
+    type: "vector",
+    url: `pmtiles://${BASE_TILES_URL}/bangalore_water_accumulation.pmtiles`,
+    minzoom: 0,
+    maxzoom: 14
+  });
+  
+  // Main fill layer with teal color scheme matching original
+  map.addLayer({
+    id: "blr-floods-layer",
+    type: "fill",
+    source: "blr-floods-source",
+    "source-layer": "stream_influence_water_difference",
+    layout: { visibility: "visible" },
+    paint: {
+      "fill-color": [
+        "step",
+        ["get", "VALUE"],
+        "#b8e6e3",  // VALUE 2 - Low water accumulation (very light teal)
+        2.5, "#6dd5c3",  // VALUE 3 - Medium accumulation (bright turquoise)
+        3.5, "#3db39e"   // VALUE 4 - High accumulation (deep teal/cyan)
+      ],
+      "fill-opacity": 0
+    },
+    minzoom: 0,
+    maxzoom: 22  // Allow overzooming beyond source maxzoom
+  });
+  
+  // Add outline layer for better definition
+  map.addLayer({
+    id: "blr-floods-outline",
+    type: "line",
+    source: "blr-floods-source",
+    "source-layer": "stream_influence_water_difference",
+    layout: { visibility: "visible" },
+    paint: {
+      "line-color": [
+        "step",
+        ["get", "VALUE"],
+        "#8dd4cf",
+        2.5, "#4dbfb0",
+        3.5, "#2a9d8f"
+      ],
+      "line-width": 0.5,
+      "line-opacity": 0
+    },
+    minzoom: 0,
+    maxzoom: 22  // Allow overzooming beyond source maxzoom
+  });
+
+  console.log("✅ Bangalore layers added successfully");
+
 
 
   // MAP INIT (USING LOCALLY HOSTED PMTILES) - removed to avoid conflict
@@ -820,7 +1064,7 @@ map.on("load", async () => {
         // but we should ensure the UI state is consistent.
       });
 
-      // Input Event (searches news_balanced_corpus_1 via API)
+      // Global Search - searches locations AND properties across both cities
       let searchDebounceTimer = null;
       searchInput.addEventListener("input", (e) => {
         const val = e.target.value;
@@ -843,21 +1087,42 @@ map.on("load", async () => {
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = setTimeout(async () => {
           try {
-            const matches = await callSupabaseRPC('search_locations_func', { search_query: val });
-            searchResults.innerHTML = "";
+            console.log('🔍 Searching for:', val);
+            
+            // Search both locations and properties in parallel
+            const [locationMatches, propertyMatches] = await Promise.all([
+              callSupabaseRPC('search_locations_func', { search_query: val }).catch(err => {
+                console.error('Location search error:', err);
+                return [];
+              }),
+              callSupabaseRPC('search_properties_func', { search_query: val }).catch(err => {
+                console.error('Property search error:', err);
+                return [];
+              })
+            ]);
 
-            if (Array.isArray(matches) && matches.length > 0) {
-              matches.forEach(match => {
+            console.log('📍 Location results:', locationMatches?.length || 0);
+            console.log('🏢 Property results:', propertyMatches?.length || 0);
+
+            searchResults.innerHTML = "";
+            let hasResults = false;
+
+            // Show location results
+            if (Array.isArray(locationMatches) && locationMatches.length > 0) {
+              hasResults = true;
+
+              for (const match of locationMatches) {
                 const div = document.createElement("div");
                 div.className = "search-result-item";
-                div.textContent = match.location_name;
-                if (match.location_name.toLowerCase() === val.toLowerCase()) {
-                  div.style.background = "rgba(59, 130, 246, 0.2)";
-                }
+                div.innerHTML = `
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>📍</span>
+                    <span>${match.location_name}</span>
+                  </div>
+                `;
                 div.onclick = () => {
                   searchInput.value = match.location_name;
                   searchResults.style.display = "none";
-                  // Try to match in insights data for full location details
                   const insightMatch = Array.isArray(data)
                     ? data.find(d => d.location.toLowerCase() === match.location_name.toLowerCase())
                     : null;
@@ -869,20 +1134,215 @@ map.on("load", async () => {
                   }
                 };
                 searchResults.appendChild(div);
+              }
+            }
+
+            // Show property results
+            if (Array.isArray(propertyMatches) && propertyMatches.length > 0) {
+              hasResults = true;
+
+              // Group by project
+              const projectGroups = {};
+              propertyMatches.forEach(prop => {
+                const key = `${prop.projectname}_${prop.buildername}_${prop.city}`;
+                if (!projectGroups[key]) {
+                  // Extract coordinates from google_place_location if available
+                  let lat = null, lng = null;
+                  if (prop.google_place_location) {
+                    try {
+                      const locData = JSON.parse(prop.google_place_location);
+                      lat = locData.lat || locData.latitude;
+                      lng = locData.lng || locData.longitude;
+                    } catch (e) {
+                      // If parsing fails, ignore
+                    }
+                  }
+                  
+                  projectGroups[key] = {
+                    projectname: prop.projectname,
+                    buildername: prop.buildername,
+                    areaname: prop.areaname,
+                    city: prop.city,
+                    latitude: lat,
+                    longitude: lng,
+                    properties: []
+                  };
+                }
+                projectGroups[key].properties.push(prop);
               });
+
+              Object.values(projectGroups).slice(0, 5).forEach(project => {
+                const div = document.createElement("div");
+                div.className = "search-result-item";
+                div.innerHTML = `
+                  <div style="display: flex; align-items: start; gap: 8px;">
+                    <span style="margin-top: 2px;">🏢</span>
+                    <div style="flex: 1;">
+                      <div style="font-weight: 500; color: var(--t1);">${project.projectname}</div>
+                      <div style="font-size: 11px; color: var(--t3); margin-top: 2px;">
+                        ${project.buildername} • ${project.areaname}, ${project.city} • ${project.properties.length} config${project.properties.length > 1 ? 's' : ''}
+                      </div>
+                    </div>
+                  </div>
+                `;
+                div.onclick = async () => {
+                  searchInput.value = project.projectname;
+                  searchResults.style.display = "none";
+                  
+                  // Switch to the property's city if needed
+                  const propCity = project.city.toLowerCase();
+                  if (currentCity !== propCity && window.switchCity) {
+                    window.switchCity(propCity);
+                  }
+                  
+                  // Try to find and load location insights for the area
+                  const areaName = project.areaname;
+                  const insightMatch = Array.isArray(data)
+                    ? data.find(d => d.location.toLowerCase() === areaName.toLowerCase())
+                    : null;
+                  
+                  if (insightMatch) {
+                    // Load location insights in the sidebar
+                    handleLocationSelect(insightMatch);
+                  }
+                  
+                  // Load properties for that area
+                  await loadPropertiesForLocation(project.areaname);
+                  
+                  // Wait for properties to load, then find and open THIS specific project
+                  setTimeout(() => {
+                    // Find the matching project in the loaded properties
+                    const allProps = window.allLocationProperties || [];
+                    const matchingProps = allProps.filter(p => 
+                      p.projectname.toLowerCase() === project.projectname.toLowerCase() &&
+                      p.buildername.toLowerCase() === project.buildername.toLowerCase()
+                    );
+                    
+                    if (matchingProps.length > 0) {
+                      // Create project data with the matching properties
+                      const projectData = {
+                        projectname: project.projectname,
+                        buildername: project.buildername,
+                        areaname: project.areaname,
+                        properties: matchingProps
+                      };
+                      
+                      // Open property details
+                      if (typeof showProjectConfigurations === 'function') {
+                        showProjectConfigurations(projectData);
+                      }
+                    }
+                  }, 700);
+                  
+                  // Zoom to property location
+                  if (project.latitude && project.longitude) {
+                    map.flyTo({
+                      center: [project.longitude, project.latitude],
+                      zoom: 14,
+                      duration: 1500
+                    });
+                  }
+                };
+                searchResults.appendChild(div);
+              });
+            }
+
+            // Show nearby locations at the end (after locations and properties)
+            if (Array.isArray(locationMatches) && locationMatches.length > 0) {
+              const firstMatch = locationMatches[0];
+              const insightMatch = Array.isArray(data)
+                ? data.find(d => d.location.toLowerCase() === firstMatch.location_name.toLowerCase())
+                : null;
+              
+              console.log('🔍 Looking for nearby locations of:', firstMatch.location_name);
+              console.log('📊 Insight match:', insightMatch);
+              
+              if (insightMatch && insightMatch.latitude && insightMatch.longitude) {
+                console.log('📍 Coordinates:', insightMatch.latitude, insightMatch.longitude);
+                
+                try {
+                  const nearbyLocs = await callSupabaseRPC('search_nearby_locations_func', {
+                    search_lat: insightMatch.latitude,
+                    search_lng: insightMatch.longitude,
+                    radius_km: 3.0
+                  });
+                  
+                  console.log('🗺️ Nearby locations response:', nearbyLocs);
+                  
+                  if (Array.isArray(nearbyLocs) && nearbyLocs.length > 1) {
+                    const otherNearby = nearbyLocs.filter(loc => 
+                      loc.location_name.toLowerCase() !== firstMatch.location_name.toLowerCase()
+                    );
+                    
+                    console.log('✅ Other nearby locations:', otherNearby.length);
+                    
+                    if (otherNearby.length > 0) {
+                      const divider = document.createElement("div");
+                      divider.style.cssText = "padding: 6px 14px; font-size: 10px; color: var(--t3); text-transform: uppercase; letter-spacing: 0.5px; background: rgba(166, 138, 61, 0.03); border-top: 1px solid rgba(166, 138, 61, 0.1);";
+                      divider.textContent = `Nearby (within 3km)`;
+                      searchResults.appendChild(divider);
+                      
+                      otherNearby.slice(0, 3).forEach(nearbyLoc => {
+                        const nearbyDiv = document.createElement("div");
+                        nearbyDiv.className = "search-result-item";
+                        nearbyDiv.innerHTML = `
+                          <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="opacity: 0.5;">📍</span>
+                            <span>${nearbyLoc.location_name}</span>
+                            <span style="margin-left: auto; font-size: 10px; color: var(--t3);">${nearbyLoc.distance_km.toFixed(1)}km</span>
+                          </div>
+                        `;
+                        nearbyDiv.onclick = () => {
+                          searchInput.value = nearbyLoc.location_name;
+                          searchResults.style.display = "none";
+                          const nearbyInsight = Array.isArray(data)
+                            ? data.find(d => d.location.toLowerCase() === nearbyLoc.location_name.toLowerCase())
+                            : null;
+                          if (nearbyInsight) {
+                            handleLocationSelect(nearbyInsight);
+                            loadPropertiesForLocation(nearbyInsight.location);
+                          } else {
+                            loadPropertiesForLocation(nearbyLoc.location_name);
+                          }
+                        };
+                        searchResults.appendChild(nearbyDiv);
+                      });
+                    }
+                  } else {
+                    console.log('⚠️ Not enough nearby locations found');
+                  }
+                } catch (err) {
+                  console.error('❌ Nearby locations error:', err);
+                }
+              } else {
+                console.log('⚠️ No coordinates found for location');
+              }
+            }
+
+            if (hasResults) {
               searchResults.style.display = "block";
+              console.log('✅ Showing search results');
             } else {
               const div = document.createElement("div");
               div.className = "search-result-item";
               div.style.cursor = "default";
               div.style.fontStyle = "italic";
               div.style.color = "#94a3b8";
-              div.textContent = "No result found";
+              div.textContent = "No results found";
               searchResults.appendChild(div);
               searchResults.style.display = "block";
+              console.log('⚠️ No results found');
             }
           } catch (err) {
             console.error("Search error:", err);
+            searchResults.innerHTML = "";
+            const div = document.createElement("div");
+            div.className = "search-result-item";
+            div.style.cursor = "default";
+            div.style.color = "#ef4444";
+            div.textContent = "Search error - check console";
+            searchResults.appendChild(div);
+            searchResults.style.display = "block";
           }
         }, 250);
       });
@@ -994,78 +1454,110 @@ map.on("load", async () => {
     "rrr-layer": 0.8,
     "schools-layer": 0.9,
     "hmda-layer": 0.6,
-    "hmda-masterplan-layer": 0.85
+    "hmda-masterplan-layer": 0.85,
+    // Bangalore layers
+    "blr-highways-layer": 0.8,
+    "blr-metro-layer": 0.9,
+    "blr-metro-stations-layer": 0.9,
+    "blr-metro-stations-labels": 0.9,
+    "blr-orr-layer": 0.8,
+    "blr-lakes-layer": 0.7,
+    "blr-prr-layer": 0.8,
+    "blr-bbmp-layer": 0.6,
+    "blr-floods-layer": 0.85,  // Increased for better visibility
+    "blr-floods-outline": 0.7  // Outline layer for definition
   };
 
-  document.querySelectorAll(".layer-toggle input").forEach(cb => {
-    cb.onchange = e => {
-      const id = e.target.dataset.layer;
-      const targetOpacity = e.target.checked ? (opacities[id] || 1) : 0;
+  // Function to attach layer toggle event listeners
+  // Function to attach layer toggle event listeners
+  function attachLayerToggles() {
+    document.querySelectorAll(".layer-toggle input").forEach(cb => {
+      cb.onchange = e => {
+        const id = e.target.dataset.layer;
+        const targetOpacity = e.target.checked ? (opacities[id] || 1) : 0;
 
-      console.log(`🔄 Layer toggle: ${id}, checked: ${e.target.checked}, opacity: ${targetOpacity}`);
+        console.log(`🔄 Layer toggle: ${id}, checked: ${e.target.checked}, opacity: ${targetOpacity}`);
 
-      if (map.getLayer(id)) {
-        const type = map.getLayer(id).type;
-        console.log(`✅ Layer found: ${id}, type: ${type}`);
-        if (type === "fill") map.setPaintProperty(id, "fill-opacity", targetOpacity);
-        if (type === "line") map.setPaintProperty(id, "line-opacity", targetOpacity);
-        if (type === "symbol") map.setPaintProperty(id, "icon-opacity", targetOpacity);
-        if (type === "circle") {
-          map.setPaintProperty(id, "circle-opacity", targetOpacity);
-          map.setPaintProperty(id, "circle-stroke-opacity", targetOpacity);
-        }
-        if (type === "raster") map.setPaintProperty(id, "raster-opacity", targetOpacity);
-        if (type === "heatmap") map.setPaintProperty(id, "heatmap-opacity", targetOpacity);
-      } else {
-        console.error(`❌ Layer not found: ${id}`);
-      }
-
-      // Special handling for Metro (multi-layer)
-      if (id === "metro-layer") {
-        const stid = "metro-stations-layer";
-        if (map.getLayer(stid)) {
-          map.setPaintProperty(stid, "circle-opacity", targetOpacity);
-          map.setPaintProperty(stid, "circle-stroke-opacity", targetOpacity);
-        }
-      }
-
-      // Special handling for multi-layer sources (like Flood/Rainfall)
-      if (id === "flood-risk-layer") {
-        const subLayers = ["flood-points-layer", "rainfall-layer", "rainfall-labels", "flood-risk-layer"];
-
-        // Toggle Location Markers Visibility to clean up the map
-        if (map.getLayer("location-core")) {
-          map.setPaintProperty("location-core", "circle-opacity", e.target.checked ? 1 : 1);
-          map.setPaintProperty("location-core", "circle-stroke-opacity", e.target.checked ? 1 : 1);
-        }
-
-        subLayers.forEach(lyr => {
-          if (map.getLayer(lyr)) {
-            const type = map.getLayer(lyr).type;
-            if (type === "circle") {
-              map.setPaintProperty(lyr, "circle-opacity", targetOpacity * 0.9);
-              map.setPaintProperty(lyr, "circle-stroke-opacity", targetOpacity * 0.9);
-            }
-            if (type === "line") map.setPaintProperty(lyr, "line-opacity", targetOpacity * 0.8);
-            if (type === "fill") map.setPaintProperty(lyr, "fill-opacity", targetOpacity * 0.6); // Dark layer
-            if (type === "symbol") map.setPaintProperty(lyr, "text-opacity", targetOpacity);
+        if (map.getLayer(id)) {
+          const type = map.getLayer(id).type;
+          console.log(`✅ Layer found: ${id}, type: ${type}`);
+          if (type === "fill") map.setPaintProperty(id, "fill-opacity", targetOpacity);
+          if (type === "line") map.setPaintProperty(id, "line-opacity", targetOpacity);
+          if (type === "symbol") map.setPaintProperty(id, "icon-opacity", targetOpacity);
+          if (type === "circle") {
+            map.setPaintProperty(id, "circle-opacity", targetOpacity);
+            map.setPaintProperty(id, "circle-stroke-opacity", targetOpacity);
           }
-        });
+          if (type === "raster") map.setPaintProperty(id, "raster-opacity", targetOpacity);
+          if (type === "heatmap") map.setPaintProperty(id, "heatmap-opacity", targetOpacity);
+        } else {
+          console.error(`❌ Layer not found: ${id}`);
+        }
 
-        // Show Flood Dashboard on Left if checked
-        const card = document.getElementById("intel-card");
-        if (e.target.checked) {
-          // Move Flood Layers to Top 
-          const topLayers = ["flood-risk-layer", "flood-points-layer", "rainfall-layer", "rainfall-labels"];
-          topLayers.forEach(lyr => { if (map.getLayer(lyr)) map.moveLayer(lyr); });
+        // Special handling for Metro (multi-layer) - works for both cities
+        if (id === "metro-layer" || id === "blr-metro-layer") {
+          const stid = id === "metro-layer" ? "metro-stations-layer" : "blr-metro-stations-layer";
+          const lblid = id === "blr-metro-layer" ? "blr-metro-stations-labels" : null;
+          
+          if (map.getLayer(stid)) {
+            // Both cities use circles for metro stations
+            map.setPaintProperty(stid, "circle-opacity", targetOpacity);
+            map.setPaintProperty(stid, "circle-stroke-opacity", targetOpacity);
+          }
+          
+          // Toggle labels for Bangalore metro
+          if (lblid && map.getLayer(lblid)) {
+            map.setPaintProperty(lblid, "text-opacity", targetOpacity);
+          }
+        }
+
+        // Special handling for multi-layer sources (like Flood/Rainfall)
+        if (id === "flood-risk-layer" || id === "blr-floods-layer") {
+          const subLayers = id === "flood-risk-layer" 
+            ? ["flood-points-layer", "rainfall-layer", "rainfall-labels", "flood-risk-layer"]
+            : ["blr-floods-layer"];
+
+          // Toggle Location Markers Visibility to clean up the map
+          if (map.getLayer("location-core")) {
+            map.setPaintProperty("location-core", "circle-opacity", e.target.checked ? 1 : 1);
+            map.setPaintProperty("location-core", "circle-stroke-opacity", e.target.checked ? 1 : 1);
+          }
+
+          subLayers.forEach(lyr => {
+            if (map.getLayer(lyr)) {
+              const type = map.getLayer(lyr).type;
+              if (type === "circle") {
+                map.setPaintProperty(lyr, "circle-opacity", targetOpacity * 0.9);
+                map.setPaintProperty(lyr, "circle-stroke-opacity", targetOpacity * 0.9);
+              }
+              if (type === "line") map.setPaintProperty(lyr, "line-opacity", targetOpacity * 0.8);
+              if (type === "fill") map.setPaintProperty(lyr, "fill-opacity", targetOpacity * 0.6); // Dark layer
+              if (type === "symbol") map.setPaintProperty(lyr, "text-opacity", targetOpacity);
+            }
+          });
+
+          // Show Flood Dashboard on Left if checked
+          const card = document.getElementById("intel-card");
+          if (e.target.checked) {
+            // Move Flood Layers to Top 
+            const topLayers = id === "flood-risk-layer"
+              ? ["flood-risk-layer", "flood-points-layer", "rainfall-layer", "rainfall-labels"]
+              : ["blr-floods-layer"];
+            topLayers.forEach(lyr => { if (map.getLayer(lyr)) map.moveLayer(lyr); });
 
           card.style.display = "flex";
+          
+          // City-specific flood intelligence content
+          const isHyderabad = id === "flood-risk-layer";
+          const cityName = isHyderabad ? "Hyderabad" : "Bangalore";
+          
           card.innerHTML = `
             <div style="padding: 18px;">
               <div style="margin-bottom: 18px;">
-                <h2 class="serif" style="margin: 0; font-size: 1.4rem; color: var(--text-100);">Flood Intelligence</h2>
+                <h2 class="serif" style="margin: 0; font-size: 1.4rem; color: var(--text-100);">${cityName} Flood Intelligence</h2>
               </div>
               
+              ${isHyderabad ? `
               <div style="display: grid; gap: 10px; margin-bottom: 20px;">
                 <div style="background: rgba(15, 118, 110, 0.07); border: 1px solid rgba(15, 118, 110, 0.18); padding: 14px; border-radius: 14px;">
                   <div style="font-size: 9px; color: #14B8A6; text-transform: uppercase; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 5px;">Active Alerts</div>
@@ -1091,24 +1583,273 @@ map.on("load", async () => {
                     <span style="font-size:12px; font-weight:500; color:var(--text-200);">${r.label}</span>
                   </div>`).join('')}
               </div>
-
-              <div style="font-size: 9px; color: var(--text-400); text-transform: uppercase; font-weight: 700; letter-spacing: 2px; margin: 18px 0 10px 0;">Infrastructure</div>
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 12px; height: 12px; border-radius: 50%; background: #f0abfc; border: 2px solid #c026d3; flex-shrink:0;"></div>
-                <span style="font-size: 12px; font-weight: 500; color: var(--text-200);">Water Stagnation (GHMC)</span>
+              ` : `
+              <div style="font-size: 9px; color: var(--text-400); text-transform: uppercase; font-weight: 700; letter-spacing: 2px; margin-bottom: 12px;">Water Accumulation Legend</div>
+              <div style="display: flex; flex-direction: column; gap: 9px;">
+                ${[
+              { color: '#3db39e', label: 'High Accumulation' },
+              { color: '#6dd5c3', label: 'Medium Accumulation' },
+              { color: '#b8e6e3', label: 'Low Accumulation' }
+            ].map(r => `
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:12px; height:12px; border-radius:50%; background:${r.color}; flex-shrink:0;"></div>
+                    <span style="font-size:12px; font-weight:500; color:var(--text-200);">${r.label}</span>
+                  </div>`).join('')}
               </div>
+              <div style="margin-top: 16px; padding: 12px; background: rgba(59, 179, 158, 0.05); border-radius: 10px; font-size: 11px; color: var(--text-300); line-height: 1.5;">
+                <strong>Data Source:</strong> Based on 30m digital elevation model from Copernicus, showing natural water flow patterns and accumulation zones.
+              </div>
+              `}
 
-              <p style="margin-top: 20px; font-size: 11px; color: var(--text-400); line-height: 1.6; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px;">
-                Click any bubble or hydrological line for specific locality insights.
-              </p>
             </div>
           `;
         } else {
+          // Hide intel card when floods layer is turned off
           card.style.display = "none";
+          card.innerHTML = ""; // Clear content
         }
       }
-    };
+      };
+    });
+  }
+
+  // Make function available globally for city-layers.js
+  window.attachLayerToggles = attachLayerToggles;
+
+  // Initial attachment of layer toggles
+  attachLayerToggles();
+
+  /* =====================================================
+     CITY SELECTOR LOGIC
+  ===================================================== */
+  let currentCity = 'hyderabad';
+  
+  // City configurations
+  const cityConfig = {
+    hyderabad: {
+      name: 'Hyderabad',
+      icon: '🏙️',
+      center: [78.4744, 17.4065],
+      zoom: 11,
+      subtitle: 'Hyderabad Elite',
+      layers: ['highways-layer', 'metro-layer', 'metro-stations-layer', 'orr-layer', 'lakes-layer', 'rrr-layer', 'hmda-layer', 'hmda-masterplan-layer', 'flood-risk-layer', 'flood-points-layer', 'rainfall-layer', 'rainfall-labels']
+    },
+    bangalore: {
+      name: 'Bangalore',
+      icon: '🌆',
+      center: [77.5946, 12.9716],
+      zoom: 11,
+      subtitle: 'Bangalore Elite',
+      layers: ['blr-highways-layer', 'blr-metro-layer', 'blr-metro-stations-layer', 'blr-metro-stations-labels', 'blr-orr-layer', 'blr-lakes-layer', 'blr-prr-layer', 'blr-bbmp-layer', 'blr-floods-layer', 'blr-floods-outline']
+    }
+  };
+
+  // Function to switch cities
+  function switchCity(cityName) {
+    if (currentCity === cityName) return;
+    
+    const config = cityConfig[cityName];
+    if (!config) return;
+    
+    // Set manual selection flag to prevent auto-detection
+    window.manualCitySelection = true;
+    
+    // Close intel card when switching cities
+    const intelCard = document.getElementById('intel-card');
+    const emptyState = document.getElementById('empty-state');
+    if (intelCard) {
+      // Clear the intel card content
+      intelCard.innerHTML = '';
+      // Re-add the empty state
+      if (emptyState) {
+        intelCard.appendChild(emptyState);
+        emptyState.style.display = 'flex';
+      }
+      console.log('🔒 Closed intel card when switching cities');
+    }
+    
+    // Close properties panel when switching cities
+    const propertiesPanel = document.getElementById('properties-panel');
+    const detailDrawer = document.getElementById('property-detail-drawer');
+    if (propertiesPanel) {
+      propertiesPanel.classList.remove('open', 'detail-open');
+      console.log('🔒 Closed properties panel when switching cities');
+    }
+    if (detailDrawer) {
+      detailDrawer.classList.remove('open');
+    }
+    
+    // Clear property list
+    const propList = document.getElementById('prop-list');
+    if (propList) {
+      propList.innerHTML = '';
+    }
+    
+    // Reset location state
+    if (typeof currentLocationId !== 'undefined') {
+      currentLocationId = null;
+    }
+    
+    // Clear any active popups
+    if (typeof currentPopup !== 'undefined' && currentPopup) {
+      currentPopup.remove();
+      currentPopup = null;
+    }
+    
+    // Clear amenities and routes
+    if (typeof clearAmenities === 'function') {
+      clearAmenities();
+    }
+    if (typeof clearRoutes === 'function') {
+      clearRoutes();
+    }
+    
+    // Remove property pins from the map
+    if (map.getLayer('property-pins-layer')) {
+      map.removeLayer('property-pins-layer');
+    }
+    if (map.getLayer('property-pins-labels')) {
+      map.removeLayer('property-pins-labels');
+    }
+    if (map.getSource('property-pins')) {
+      map.removeSource('property-pins');
+    }
+    
+    // Clear property pins data
+    if (typeof window._propertyPinProjects !== 'undefined') {
+      window._propertyPinProjects = null;
+    }
+    
+    // Clear any filters on location layers
+    if (map.getLayer('location-core')) {
+      map.setFilter('location-core', null);
+    }
+    if (map.getLayer('location-glow')) {
+      map.setFilter('location-glow', null);
+    }
+    
+    // Hide all layers from both cities
+    Object.values(cityConfig).forEach(cfg => {
+      cfg.layers.forEach(layerId => {
+        if (map.getLayer(layerId)) {
+          map.setPaintProperty(layerId, map.getLayer(layerId).type === 'line' ? 'line-opacity' : 
+                                        map.getLayer(layerId).type === 'fill' ? 'fill-opacity' :
+                                        map.getLayer(layerId).type === 'circle' ? 'circle-opacity' :
+                                        map.getLayer(layerId).type === 'symbol' ? 'text-opacity' :
+                                        map.getLayer(layerId).type === 'raster' ? 'raster-opacity' : 'line-opacity', 0);
+          
+          // Also hide stroke for circles and fills
+          if (map.getLayer(layerId).type === 'circle') {
+            map.setPaintProperty(layerId, 'circle-stroke-opacity', 0);
+          }
+        }
+      });
+    });
+    
+    // Uncheck all layer toggles
+    document.querySelectorAll('.layer-toggle input').forEach(cb => {
+      cb.checked = false;
+    });
+    
+    // Update current city
+    currentCity = cityName;
+    window.currentCity = cityName; // Also update global
+    
+    // Fly to new city with smoother transition that stays closer to ground
+    map.flyTo({
+      center: config.center,
+      zoom: config.zoom,
+      pitch: 0,  // Reset pitch to flat view
+      bearing: 0,  // Reset bearing to north
+      duration: 2500,
+      essential: true,
+      curve: 0.8,  // Much lower curve = stays closer to ground, less zoom out
+      speed: 0.8,  // Slower speed for smoother transition
+      screenSpeed: 0.8  // Screen speed for smoother animation
+    });
+    
+    // Update city indicator
+    const cityDisplayName = cityName === 'hyderabad' ? 'Hyderabad' : 'Bangalore';
+    const cityIndicator = document.getElementById('city-indicator-text');
+    if (cityIndicator) {
+      cityIndicator.textContent = cityDisplayName;
+    }
+    
+    // Update subtitle
+    const subtitle = document.getElementById('city-subtitle');
+    if (subtitle) {
+      subtitle.textContent = config.subtitle;
+    }
+    
+    // Update toggle buttons
+    document.querySelectorAll('.city-toggle-option').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.city === cityName);
+    });
+    
+    // Update sliding pill position
+    const cityToggle = document.querySelector('.city-toggle');
+    if (cityToggle) {
+      if (cityName === 'bangalore') {
+        cityToggle.classList.add('second-active');
+      } else {
+        cityToggle.classList.remove('second-active');
+      }
+    }
+    
+    // Update layer controls based on city
+    if (window.updateLayerControls) {
+      window.updateLayerControls(cityName);
+      
+      // Re-attach layer toggle event listeners after updating controls
+      setTimeout(() => {
+        if (window.attachLayerToggles) {
+          window.attachLayerToggles();
+        }
+      }, 100);
+    }
+    
+    console.log(`✅ Switched to ${cityName}`);
+  }
+  
+  // Attach city toggle event listeners
+  document.querySelectorAll('.city-toggle-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      switchCity(btn.dataset.city);
+    });
   });
+  
+  // Make switchCity available globally
+  window.switchCity = switchCity;
+  window.currentCity = () => currentCity;
+
+  // Initialize city-based layer system after map loads
+  if (window.initCityLayers) {
+    window.initCityLayers(map);
+    
+    // Sync the toggle with the detected city
+    const detectedCity = window.detectCity ? window.detectCity(map) : 'hyderabad';
+    currentCity = detectedCity;
+    
+    document.querySelectorAll('.city-toggle-option').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.city === detectedCity);
+    });
+    
+    // Update sliding pill position
+    const cityToggle = document.querySelector('.city-toggle');
+    if (cityToggle) {
+      if (detectedCity === 'bangalore') {
+        cityToggle.classList.add('second-active');
+      } else {
+        cityToggle.classList.remove('second-active');
+      }
+    }
+    
+    // Update subtitle
+    const subtitle = document.getElementById('city-subtitle');
+    if (subtitle) {
+      subtitle.textContent = cityConfig[detectedCity].subtitle;
+    }
+  }
 
 
 
@@ -1222,6 +1963,15 @@ map.on("load", async () => {
     // START CLEANUP: Remove previous amenities, routes, and markers
     clearAmenities();
     clearRoutes();
+
+    // AUTO-SWITCH CITY: Detect city from location coordinates and switch toggle
+    const locationCity = detectCity(map);
+    const targetCity = p.longitude > 78 ? 'hyderabad' : 'bangalore'; // Simple longitude-based detection
+    
+    if (targetCity !== window.currentCity) {
+      console.log(`🌆 Auto-switching city from ${window.currentCity} to ${targetCity} based on location`);
+      switchCity(targetCity);
+    }
 
     // RESET PROPERTIES PANEL: close drawer and clear stale content from previous location
     const propertiesPanel = document.getElementById('properties-panel');
@@ -1698,17 +2448,19 @@ map.on("load", async () => {
             data: { type: 'FeatureCollection', features: pinFeatures }
           });
 
-          // Royal Indigo circle for property pins - sleek & premium
+          // Property pins with R_with_Home icon
           map.addLayer({
             id: 'property-pins-layer',
-            type: 'circle',
+            type: 'symbol',
             source: 'property-pins',
+            layout: {
+              'icon-image': 'icon-property',
+              'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.03, 15, 0.06],
+              'icon-allow-overlap': true,
+              'icon-ignore-placement': false
+            },
             paint: {
-              'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 4, 15, 10],
-              'circle-color': '#f40000ff', // Royal Indigo
-              'circle-stroke-color': '#FFFFFF',
-              'circle-stroke-width': 2,
-              'circle-opacity': 0.95
+              'icon-opacity': 0.95
             }
           });
 
@@ -1728,9 +2480,9 @@ map.on("load", async () => {
             },
             paint: {
               'text-color': '#FFFFFF',
-              'text-halo-color': '#f40000ff',
-              'text-halo-width': 2,
-              'text-halo-blur': 1
+              'text-halo-color': '#3350C0',
+              'text-halo-width': 3,
+              'text-halo-blur': 2
             }
           });
 
@@ -1926,7 +2678,7 @@ map.on("load", async () => {
           <h2 class="detail-proj-name">${proj.projectname || 'Unnamed Project'}</h2>
           <p class="detail-builder">${proj.buildername || 'Builder not specified'}</p>
           ${proj.latitude && proj.longitude ? `
-          <button class="calculate-commute-btn" onclick='openCommuteCalculator(${proj.latitude}, ${proj.longitude}, "${(proj.projectname || '').replace(/"/g, '&quot;')}")'>
+          <button class="calculate-commute-btn" data-lat="${proj.latitude}" data-lng="${proj.longitude}" data-name="${(proj.projectname || '').replace(/"/g, '&quot;')}">
             🚗 Calculate Commute
           </button>
           ` : ''}
@@ -2013,6 +2765,17 @@ map.on("load", async () => {
         drawer.querySelector(`.config-content[data-config-idx="${idx}"]`).classList.add('active');
       };
     });
+
+    // Add calculate commute button handler
+    const commuteBtn = drawer.querySelector('.calculate-commute-btn');
+    if (commuteBtn) {
+      commuteBtn.onclick = () => {
+        const lat = parseFloat(commuteBtn.dataset.lat);
+        const lng = parseFloat(commuteBtn.dataset.lng);
+        const name = commuteBtn.dataset.name;
+        openCommuteCalculator(lat, lng, name);
+      };
+    }
   }
 
   function openPropertyDetail(propertyId) {
@@ -2113,6 +2876,11 @@ map.on("load", async () => {
           <div class="detail-badges">${badgesHTML}</div>
           <h2 class="detail-proj-name">${prop.projectname || 'Unnamed Project'}</h2>
           <p class="detail-builder">${prop.buildername || 'Builder not specified'}</p>
+          ${prop.latitude && prop.longitude ? `
+          <button class="calculate-commute-btn" data-lat="${prop.latitude}" data-lng="${prop.longitude}" data-name="${(prop.projectname || '').replace(/"/g, '&quot;')}">
+            🚗 Calculate Commute
+          </button>
+          ` : ''}
           <div class="detail-key-stats">${keyStats}</div>
         </div>
         
@@ -2220,6 +2988,17 @@ map.on("load", async () => {
         </div>
       </div>
     `;
+
+    // Add calculate commute button handler
+    const commuteBtn = drawer.querySelector('.calculate-commute-btn');
+    if (commuteBtn) {
+      commuteBtn.onclick = () => {
+        const lat = parseFloat(commuteBtn.dataset.lat);
+        const lng = parseFloat(commuteBtn.dataset.lng);
+        const name = commuteBtn.dataset.name;
+        openCommuteCalculator(lat, lng, name);
+      };
+    }
   }
 
   function buildDetailSection(title, fields) {
@@ -2295,6 +3074,27 @@ map.on("load", async () => {
   });
   map.on('mouseenter', 'metro-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'metro-layer', () => { map.getCanvas().style.cursor = ''; });
+
+  // BANGALORE METRO STATIONS CLICK HANDLER
+  map.on("click", "blr-metro-stations-layer", e => {
+    if (currentPopup) currentPopup.remove();
+    const coordinates = e.features[0].geometry.coordinates.slice();
+    const stationName = e.features[0].properties.Name;
+    const description = e.features[0].properties.description;
+    
+    currentPopup = new maplibregl.Popup({ closeButton: true, closeOnClick: true })
+      .setLngLat(coordinates)
+      .setHTML(`
+        <div style="padding:4px 2px;">
+          <div style="font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);margin-bottom:5px;">🚇 Namma Metro</div>
+          <div style="font-size:0.95rem;font-weight:600;color:var(--text-100);">${stationName}</div>
+          ${description ? `<div style="font-size:0.72rem;color:var(--text-300);margin-top:4px;">${description}</div>` : ''}
+        </div>
+      `)
+      .addTo(map);
+  });
+  map.on('mouseenter', 'blr-metro-stations-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', 'blr-metro-stations-layer', () => { map.getCanvas().style.cursor = ''; });
 
   // ORR LAYER CLICK HANDLER
   map.on("click", "orr-layer", e => {
@@ -3203,17 +4003,20 @@ map.on("load", async () => {
     notification.id = 'notification-toast';
     notification.style.cssText = `
       position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 12px 16px;
-      border-radius: 8px;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      border-radius: 6px;
       color: white;
       font-family: 'Inter', sans-serif;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 500;
       z-index: 10000;
-      max-width: 300px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      max-width: 280px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
       transition: all 0.3s ease;
+      text-align: center;
     `;
 
     // Set color based on type
@@ -3228,14 +4031,14 @@ map.on("load", async () => {
 
     document.body.appendChild(notification);
 
-    // Auto remove after 3 seconds
+    // Auto remove after 2 seconds (shorter duration)
     setTimeout(() => {
       if (notification.parentNode) {
         notification.style.opacity = '0';
-        notification.style.transform = 'translateX(100%)';
+        notification.style.transform = 'translateX(-50%) translateY(-10px)';
         setTimeout(() => notification.remove(), 300);
       }
-    }, 3000);
+    }, 2000);
   }
 
   function displayAmenitiesOnMap(locationId, amenityType) {
@@ -3286,6 +4089,13 @@ map.on("load", async () => {
     };
     const dataCol = dbColumnMap[amenityType];
     const countCol = dbCountMap[amenityType];
+    
+    // Cache keyed by location+type — instant on repeat clicks
+    if (!window._amenityCache) window._amenityCache = {};
+    const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)},${amenityType}`;
+    if (window._amenityCache[cacheKey]) {
+      console.log(`⚡ Cache hit for ${amenityType}`);
+    }
 
     // ─── Helper: read cached amenity data from Supabase locations table ──────
     async function fetchFromDB() {
@@ -3341,79 +4151,7 @@ map.on("load", async () => {
       }
     }
 
-    // ─── Overpass fetch (parallel mirror race + in-memory cache) ─────────────
-    const overpassTagMap = {
-      hospitals: '[amenity=hospital]',
-      schools: '[amenity=school]',
-      malls: '[shop=mall]',
-      restaurants: '[amenity=restaurant]',
-      banks: '[amenity=bank]',
-      parks: '[leisure=park]',
-      metro: '[railway=station]'
-    };
-    const colorMap = {
-      hospitals: '#ef4444', schools: '#3b82f6', malls: '#a855f7',
-      restaurants: '#f97316', banks: '#22c55e', parks: '#14b8a6', metro: '#eab308'
-    };
-    const tag = overpassTagMap[amenityType] || `[amenity=${amenityType}]`;
-    const radius = 4000; // 4 km radius
-    const overpassQuery = `[out:json][timeout:10][maxsize:500000];(node${tag}(around:${radius},${lat},${lng});way${tag}(around:${radius},${lat},${lng}););out center 8;`;
-    const encodedQuery = encodeURIComponent(overpassQuery);
-
-    // Cache keyed by location+type — instant on repeat clicks
-    if (!window._amenityCache) window._amenityCache = {};
-    const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)},${amenityType}`;
-    if (window._amenityCache[cacheKey]) {
-      console.log(`⚡ Cache hit for ${amenityType}`);
-    }
-
-    // Haversine distance in km
-    function haversine(lat1, lng1, lat2, lng2) {
-      const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLng = (lng2 - lng1) * Math.PI / 180;
-      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
-
-    // Fetch from one mirror with a per-mirror timeout
-    function fetchMirror(url, timeoutMs) {
-      return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('timeout')), timeoutMs);
-        fetch(url)
-          .then(res => {
-            clearTimeout(timer);
-            if (!res.ok) throw new Error(`${res.status}`);
-            return res.text();
-          })
-          .then(text => {
-            if (text.startsWith('<')) throw new Error('HTML error');
-            resolve(JSON.parse(text));
-          })
-          .catch(err => { clearTimeout(timer); reject(err); });
-      });
-    }
-
-    // Race all mirrors in parallel — return the first to succeed
-    function fetchRace(encodedQ) {
-      const mirrors = [
-        `https://overpass.kumi.systems/api/interpreter?data=${encodedQ}`,
-        `https://overpass-api.de/api/interpreter?data=${encodedQ}`,
-        `https://overpass.openstreetmap.ru/api/interpreter?data=${encodedQ}`
-      ];
-      let resolved = false;
-      return new Promise((resolve, reject) => {
-        let failures = 0;
-        mirrors.forEach(url => {
-          fetchMirror(url, 8000).then(data => {
-            if (!resolved) { resolved = true; resolve(data); }
-          }).catch(() => {
-            failures++;
-            if (failures === mirrors.length) reject(new Error('All mirrors failed'));
-          });
-        });
-      });
-    }
-
-    // ─── Main flow: DB → in-memory cache → Overpass API ─────────────────────
+    // ─── Main flow: localStorage → in-memory → DB → Google Places API ─────────
     async function resolveAmenities() {
       // 1. In-memory cache (instant, same session)
       if (window._amenityCache[cacheKey]) {
@@ -3421,41 +4159,68 @@ map.on("load", async () => {
         return { amenities: window._amenityCache[cacheKey], fromCache: true };
       }
 
-      // 2. Supabase DB cache (persisted, first hit per location)
+      // 2. LocalStorage cache (persistent across sessions)
+      if (window.cacheManager) {
+        const localStorageCache = window.cacheManager.getAmenityCache(cacheKey);
+        if (localStorageCache) {
+          console.log(`💾 LocalStorage cache hit — ${localStorageCache.length} ${amenityType}`);
+          window._amenityCache[cacheKey] = localStorageCache; // promote to in-memory
+          return { amenities: localStorageCache, fromCache: true };
+        }
+      }
+
+      // 3. Supabase DB cache (persisted, first hit per location)
       console.log(`🗄️ Checking DB cache for ${amenityType} at location ${locationId}…`);
       const dbAmenities = await fetchFromDB();
       if (dbAmenities) {
         console.log(`✅ DB cache hit — ${dbAmenities.length} ${amenityType} loaded from DB`);
         window._amenityCache[cacheKey] = dbAmenities; // promote to in-memory
+        // Also save to localStorage for next session
+        if (window.cacheManager) {
+          window.cacheManager.setAmenityCache(cacheKey, dbAmenities);
+        }
         return { amenities: dbAmenities, fromCache: true };
       }
 
-      // 3. Overpass API (first ever fetch for this location+type)
-      console.log(`🌐 No cache — fetching ${amenityType} from Overpass API…`);
-      const osm = await fetchRace(encodedQuery);
-      const amenities = (osm.elements || [])
-        .map(el => {
-          const elLat = el.lat ?? el.center?.lat;
-          const elLng = el.lon ?? el.center?.lon;
-          if (!elLat || !elLng) return null;
-          return {
-            name: el.tags?.name || el.tags?.amenity || amenityType,
-            latitude: elLat,
-            longitude: elLng,
-            distance_km: parseFloat(haversine(lat, lng, elLat, elLng).toFixed(2)),
-            address: el.tags?.['addr:street'] || '',
-            rating: null,
-            color: colorMap[amenityType] || '#6366f1'
-          };
-        })
-        .filter(Boolean)
-        .sort((a, b) => a.distance_km - b.distance_km)
-        .slice(0, 8);
+      // 4. Google Places API via backend (first ever fetch for this location+type)
+      console.log(`🌐 No cache — fetching ${amenityType} from Google Places API via backend…`);
+      
+      try {
+        const apiUrl = `${window.API_BASE_URL || 'https://relai-backend.onrender.com'}/api/v1/amenities/${amenityType}?lat=${lat}&lng=${lng}&limit=10`;
+        console.log(`📡 Fetching from: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log(`✅ API Response:`, data);
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        const amenities = (data.amenities || []).slice(0, 8);
+        
+        if (amenities.length === 0) {
+          console.log(`⚠️ No ${amenityType} found in this area`);
+          return { amenities: [], fromCache: false };
+        }
 
-      // Save to DB and in-memory cache for future hits
-      window._amenityCache[cacheKey] = amenities;
-      saveToDB(amenities); // fire-and-forget
-      return { amenities, fromCache: false };
+        // Save to DB, localStorage, and in-memory cache for future hits
+        window._amenityCache[cacheKey] = amenities;
+        if (window.cacheManager) {
+          window.cacheManager.setAmenityCache(cacheKey, amenities);
+        }
+        saveToDB(amenities); // fire-and-forget
+        
+        console.log(`✅ Successfully fetched ${amenities.length} ${amenityType} from Google Places API`);
+        return { amenities, fromCache: false };
+      } catch (error) {
+        console.error(`❌ Failed to fetch ${amenityType}:`, error);
+        throw error; // Re-throw to be caught by outer catch block
+      }
     }
 
     resolveAmenities()
@@ -3470,7 +4235,7 @@ map.on("load", async () => {
 
         console.log(`✅ ${fromCache ? '(cached)' : '(live)'} ${data.amenities.length} ${amenityType}`);
 
-        // Show amenities panel on the right side
+        // Show amenities panel on the right side (old style)
         showAmenitiesPanel(data.amenities, amenityType);
 
         // Hide layers card if open
@@ -3484,19 +4249,38 @@ map.on("load", async () => {
         // Create GeoJSON from amenities
         const geojson = {
           type: 'FeatureCollection',
-          features: data.amenities.map(amenity => ({
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [amenity.longitude, amenity.latitude]
-            },
-            properties: {
-              name: amenity.name,
-              distance: amenity.distance_km,
-              color: amenity.color
-            }
-          }))
+          features: data.amenities
+            .filter(amenity => {
+              // Only include amenities with valid coordinates
+              const hasValidCoords = amenity.longitude && amenity.latitude && 
+                                    !isNaN(amenity.longitude) && !isNaN(amenity.latitude);
+              if (!hasValidCoords) {
+                console.warn(`⚠️ Skipping amenity with invalid coordinates:`, amenity);
+              }
+              return hasValidCoords;
+            })
+            .map(amenity => ({
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [amenity.longitude, amenity.latitude]
+              },
+              properties: {
+                name: amenity.name,
+                distance: amenity.distance_km,
+                color: amenity.color
+              }
+            }))
         };
+
+        console.log(`📍 Created GeoJSON with ${geojson.features.length} valid features`);
+
+        // Only proceed if we have valid features
+        if (geojson.features.length === 0) {
+          console.log('⚠️ No valid amenity coordinates found');
+          resetAmenityButtons(amenityType);
+          return;
+        }
 
         // Add source WITHOUT clustering - show all amenities individually
         map.addSource('amenity-data', {
@@ -3562,15 +4346,25 @@ map.on("load", async () => {
         });
 
         // Update button to show count
-        resetAmenityButtons(amenityType, data.total_count);
+        resetAmenityButtons(amenityType, data.amenities.length);
 
         // Fit map to show all amenities
         const bounds = new maplibregl.LngLatBounds();
         data.amenities.forEach(amenity => {
-          bounds.extend([amenity.longitude, amenity.latitude]);
+          if (amenity.longitude && amenity.latitude && 
+              !isNaN(amenity.longitude) && !isNaN(amenity.latitude)) {
+            bounds.extend([amenity.longitude, amenity.latitude]);
+          }
         });
-        bounds.extend([data.location_lng, data.location_lat]);
-        map.fitBounds(bounds, { padding: 50, maxZoom: 13 });
+        // Also include the location center
+        if (lng && lat && !isNaN(lng) && !isNaN(lat)) {
+          bounds.extend([lng, lat]);
+        }
+        
+        // Only fit bounds if we have valid coordinates
+        if (!bounds.isEmpty()) {
+          map.fitBounds(bounds, { padding: 50, maxZoom: 13 });
+        }
 
         // Store for PDF report
         currentAmenityList = data.amenities;
@@ -3580,86 +4374,36 @@ map.on("load", async () => {
         const clearBtn = document.getElementById('clear-amenities-btn');
         if (clearBtn) clearBtn.style.display = 'block';
 
-        /* ===============================
-           POPULATE AMENITY LIST CARD
-        =============================== */
+      })
+      .catch(err => {
+        console.error('❌ Amenities fetch error:', err);
+        console.log('ℹ️ Amenities temporarily unavailable for this location');
+        
+        // Always reset the button state
+        resetAmenityButtons(amenityType);
+        
+        // Show user-friendly error message
         const listCard = document.getElementById('amenities-list-card');
         const listContent = document.getElementById('amenities-list-content');
         const listTitle = document.getElementById('amenity-title');
-
-        console.log('🔍 Amenity list elements:', { listCard: !!listCard, listContent: !!listContent, listTitle: !!listTitle });
-
+        
         if (listCard && listContent && listTitle) {
-          // Update Title - Simple text only
           const typeName = amenityType.charAt(0).toUpperCase() + amenityType.slice(1);
-          listTitle.textContent = `${typeName} nearby`;
-
-          // Clear previous list
-          listContent.innerHTML = '';
-
-          // Sort by distance (just in case)
-          const sortedAmenities = data.amenities.sort((a, b) => a.distance_km - b.distance_km);
-
-          sortedAmenities.forEach(amenity => {
-            const item = document.createElement('div');
-            item.className = 'amenity-item';
-
-            // Color tag based on distance
-            let colorHex = '#ef4444'; // red
-            let colorLabel = '3.5-5km';
-            if (amenity.color === 'green') { colorHex = '#4ade80'; colorLabel = '0-2km'; }
-            if (amenity.color === 'orange') { colorHex = '#fb923c'; colorLabel = '2-3.5km'; }
-
-            item.innerHTML = `
-              <div class="amenity-info">
-                <div class="amenity-name">${amenity.name}</div>
-                <div class="amenity-badges">
-                  <span class="amenity-badge amenity-badge-distance">${amenity.distance_km} km</span>
-                  <span class="amenity-badge amenity-badge-range">${colorLabel}</span>
-                </div>
-              </div>
-            `;
-
-            // Click to Fly - Enhanced with debugging and better event handling
-            item.style.cursor = 'pointer';
-            item.addEventListener('click', function (e) {
-              e.preventDefault();
-              e.stopPropagation();
-
-              console.log('🔍 Amenity clicked:', amenity.name);
-              console.log('🔍 Coordinates:', amenity.longitude, amenity.latitude);
-
-              if (!amenity.longitude || !amenity.latitude) {
-                console.error('❌ Missing coordinates for:', amenity.name);
-                return;
-              }
-
-              console.log('🚀 Flying to amenity location...');
-
-              // Use the navigateToAmenity function which is proven to work
-              navigateToAmenity(amenity.longitude, amenity.latitude, amenity.name);
-
-              console.log('✅ Navigation should be complete');
-            });
-
-            listContent.appendChild(item);
-          });
-
-          // Show Card
+          listTitle.textContent = `${typeName} - Error`;
+          listContent.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: var(--t3);">
+              <div style="font-size: 32px; margin-bottom: 12px;">⚠️</div>
+              <p>Unable to load ${amenityType} at this time.</p>
+              <p style="font-size: 12px; margin-top: 8px;">Please try again later.</p>
+            </div>
+          `;
           listCard.style.display = 'flex';
-          console.log('✅ Amenities list card should now be visible');
-        } else {
-          console.error('❌ Amenities list elements not found:', {
-            listCard: !!listCard,
-            listContent: !!listContent,
-            listTitle: !!listTitle
-          });
+          
+          // Auto-hide after 3 seconds
+          setTimeout(() => {
+            listCard.style.display = 'none';
+          }, 3000);
         }
-
-      })
-      .catch(err => {
-        console.log('ℹ️ Amenities temporarily unavailable for this location');
-        resetAmenityButtons(amenityType);
       });
   }
 
@@ -3670,19 +4414,21 @@ map.on("load", async () => {
       propertiesPanel.style.display = 'flex';
     }
 
-    // Hide amenities panel
+    // Remove amenities panel completely (old style)
     const amenitiesPanel = document.getElementById('amenities-panel');
     if (amenitiesPanel) {
-      amenitiesPanel.style.display = 'none';
+      amenitiesPanel.classList.remove('panel-visible');
+      // Wait for animation to complete before removing
+      setTimeout(() => {
+        amenitiesPanel.remove();
+      }, 300);
     }
 
-    // Hide the clear button
-    const clearBtn = document.getElementById('clear-amenities-btn');
-    if (clearBtn) clearBtn.style.display = 'none';
-
-    // Hide the list card
+    // Hide the HTML-based list card (not used anymore)
     const listCard = document.getElementById('amenities-list-card');
-    if (listCard) listCard.style.display = 'none';
+    if (listCard) {
+      listCard.style.display = 'none';
+    }
 
     // Remove any open popup
     if (currentPopup) {
@@ -3703,6 +4449,9 @@ map.on("load", async () => {
         btn.style.opacity = '0.7';
         btn.style.transform = 'scale(1)';
         btn.disabled = false;
+        btn.style.background = 'rgba(255, 255, 255, 0.03)';
+        btn.style.borderColor = 'var(--border-subtle)';
+        btn.style.color = 'var(--text-200)';
         const type = btn.dataset.amenity;
         const icons = { hospitals: '🏥', schools: '🏫', malls: '🏪', restaurants: '🍽️', banks: '🏦', parks: '🏞️', metro: '🚇' };
         const labels = { hospitals: 'Hospitals', schools: 'Schools', malls: 'Malls', restaurants: 'Food', banks: 'Banks', parks: 'Parks', metro: 'Metro' };
@@ -4175,7 +4924,7 @@ function createProjectGroupCard(project) {
           </div>
           <div class="prop-detail-row">
             <span class="prop-detail-label">Sizes:</span>
-            <span class="prop-detail-value">${project.properties.length} projects</span>
+            <span class="prop-detail-value">${project.properties.length} variant${project.properties.length !== 1 ? 's' : ''}</span>
           </div>
           <div class="prop-detail-row">
             <span class="prop-detail-label">₹/sqft:</span>
@@ -4408,8 +5157,8 @@ function showPropertyDetails(property) {
           <p style="color:var(--t2);margin:0 0 12px 0;">by ${details.buildername || 'Builder not specified'}</p>
           
           <!-- Inline Commute Calculator -->
-          <div class="commute-inline-section" style="background:rgba(166,138,61,0.08);border:1px solid rgba(166,138,61,0.2);border-radius:10px;padding:16px;margin-bottom:16px;">
-            <h3 style="margin:0 0 12px 0;font-size:14px;color:var(--gold-mid);display:flex;align-items:center;gap:8px;">
+          <div class="commute-inline-section" style="background:#E8EDFF;border:1px solid #3350C0;border-radius:10px;padding:16px;margin-bottom:16px;">
+            <h3 style="margin:0 0 12px 0;font-size:14px;color:#3350C0;display:flex;align-items:center;gap:8px;">
               🚗 Calculate Commute
             </h3>
             <input 
@@ -4425,11 +5174,11 @@ function showPropertyDetails(property) {
           </div>
 
           <!-- Connectivity Button -->
-          <div class="connectivity-section" style="background:rgba(65,105,225,0.08);border:1px solid rgba(65,105,225,0.2);border-radius:10px;padding:16px;margin-bottom:16px;">
+          <div class="connectivity-section" style="background:rgba(51,80,192,0.08);border:1px solid rgba(51,80,192,0.2);border-radius:10px;padding:16px;margin-bottom:16px;">
             <button 
               id="connectivity-btn-${propertyId}"
               onclick="window.showConnectivityForProperty('${propertyId}')"
-              style="width:100%;padding:12px;background:linear-gradient(135deg,#4169E1,#1E90FF);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"
+              style="width:100%;padding:12px;background:linear-gradient(135deg,#3350C0,#1E3A8A);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"
             >
               🚉 Show Connectivity
             </button>
@@ -6210,3 +6959,97 @@ window.selectOfficeDetail = async function(propId, placeId, description, element
     routeCardsEl.innerHTML = '<div class="error-routes">Error calculating routes</div>';
   }
 };
+
+// ===============================
+// PROPERTY SEARCH FUNCTIONALITY
+// ===============================
+
+let allPropertiesForSearch = [];
+
+// Property search event listener
+document.getElementById('property-search-input').addEventListener('input', function(e) {
+  const query = e.target.value.trim().toLowerCase();
+  const clearBtn = document.getElementById('clear-property-search');
+  
+  // Show/hide clear button
+  if (query) {
+    clearBtn.style.display = 'flex';
+  } else {
+    clearBtn.style.display = 'none';
+  }
+  
+  // If no query, show all properties
+  if (!query) {
+    renderFilteredProperties(window.allLocationProperties || []);
+    return;
+  }
+  
+  // Filter properties
+  const filtered = (window.allLocationProperties || []).filter(prop => {
+    const projectName = (prop.projectname || '').toLowerCase();
+    const builderName = (prop.buildername || '').toLowerCase();
+    const areaName = (prop.areaname || '').toLowerCase();
+    const bhk = (prop.bhk || '').toLowerCase();
+    
+    return projectName.includes(query) || 
+           builderName.includes(query) || 
+           areaName.includes(query) ||
+           bhk.includes(query);
+  });
+  
+  renderFilteredProperties(filtered);
+});
+
+// Clear search button
+document.getElementById('clear-property-search').addEventListener('click', function() {
+  document.getElementById('property-search-input').value = '';
+  this.style.display = 'none';
+  renderFilteredProperties(window.allLocationProperties || []);
+});
+
+// Render filtered properties
+function renderFilteredProperties(properties) {
+  const listContainer = document.getElementById('prop-list');
+  const countEl = document.getElementById('prop-panel-count');
+  
+  if (!properties || properties.length === 0) {
+    listContainer.innerHTML = `
+      <div class="prop-empty">
+        <div class="prop-empty-icon">🔍</div>
+        <p>No properties match your search</p>
+      </div>
+    `;
+    countEl.textContent = '0 properties';
+    return;
+  }
+  
+  // Group by project name AND builder
+  const projectGroups = {};
+  properties.forEach(property => {
+    const projectKey = `${property.projectname || 'Unnamed Project'}_${property.buildername || 'Unknown Builder'}`;
+    if (!projectGroups[projectKey]) {
+      projectGroups[projectKey] = {
+        projectname: property.projectname || 'Unnamed Project',
+        buildername: property.buildername,
+        project_type: property.project_type,
+        construction_status: property.construction_status,
+        areaname: property.areaname,
+        images: property.images,
+        properties: []
+      };
+    }
+    projectGroups[projectKey].properties.push(property);
+  });
+  
+  const projects = Object.values(projectGroups)
+    .sort((a, b) => b.properties.length - a.properties.length);
+  
+  countEl.textContent = `${projects.length} project${projects.length !== 1 ? 's' : ''}`;
+  
+  // Clear and render
+  listContainer.innerHTML = '';
+  projects.forEach(project => {
+    const card = createProjectGroupCard(project);
+    listContainer.appendChild(card);
+  });
+}
