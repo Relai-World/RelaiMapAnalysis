@@ -14,33 +14,22 @@ const map = new maplibregl.Map({
   maxZoom: 18
 });
 
-// Load amenity icons when map is ready
-map.on('load', () => {
-  // Map of amenity types to icon files
-  const amenityIcons = {
-    'hospitals': 'images/hospital.png',
-    'schools': 'images/schools.png',
-    'parks': 'images/tree.png',
-    'malls': 'images/mall.png',
-    'restaurants': 'images/dinner.png',
-    'banks': 'images/bank.png',
-    'metro': 'images/metro.png',
-    'train': 'assets/train.png',
-    'property': 'assets/R_with_Home.png'
-  };
+// Add map loading indicator
+map.on('dataloading', () => {
+  console.log('🔄 Map loading...');
+});
 
-  // Load each icon
-  Object.entries(amenityIcons).forEach(([type, path]) => {
-    map.loadImage(path, (error, image) => {
-      if (error) {
-        console.error(`Failed to load ${type} icon:`, error);
-        return;
-      }
-      if (!map.hasImage(`icon-${type}`)) {
-        map.addImage(`icon-${type}`, image);
-      }
-    });
-  });
+map.on('idle', () => {
+  console.log('✅ Map fully loaded and idle');
+  // Hide loading indicator when map is fully loaded
+  const loadingIndicator = document.getElementById('map-loading-indicator');
+  if (loadingIndicator) {
+    loadingIndicator.style.opacity = '0';
+    loadingIndicator.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => {
+      loadingIndicator.style.display = 'none';
+    }, 300);
+  }
 });
 
 // 🚀 SUPABASE CONNECTION - Load from config.js (which reads from .env via backend)
@@ -486,22 +475,71 @@ function generateReport(p) {
    MAP LOAD
 =============================== */
 map.on("load", async () => {
+  console.log('🗺️ Map load event triggered');
+
+  /* =====================================================
+     🎨 LOAD AMENITY ICONS FIRST
+  ===================================================== */
+  const amenityIcons = {
+    'hospitals': 'images/hospital.png',
+    'schools': 'images/schools.png',
+    'parks': 'images/tree.png',
+    'malls': 'images/mall.png',
+    'restaurants': 'images/dinner.png',
+    'banks': 'images/bank.png',
+    'metro': 'images/metro.png',
+    'train': 'assets/train.png',
+    'property': 'assets/R_with_Home.png'
+  };
+
+  // Load all icons in parallel
+  const iconPromises = Object.entries(amenityIcons).map(([type, path]) => {
+    return new Promise((resolve) => {
+      map.loadImage(path, (error, image) => {
+        if (error) {
+          console.error(`Failed to load ${type} icon:`, error);
+          resolve();
+          return;
+        }
+        if (!map.hasImage(`icon-${type}`)) {
+          map.addImage(`icon-${type}`, image);
+        }
+        resolve();
+      });
+    });
+  });
+
+  await Promise.all(iconPromises);
+  console.log('✅ All icons loaded');
 
   /* =====================================================
      📍 BASE TILE URL LOGIC & PRE-FETCHING
   ===================================================== */
   const BASE_TILES_URL = "maptiles";
 
-  // SNAPPY LOADING: Pre-fetch headers for all PMTiles files
+  // SNAPPY LOADING: Pre-fetch headers for all PMTiles files in parallel
   const pmtilesLayers = [
-    "highways", "metro", "orr", "lakes", "bangalore_water_accumulation",
+    "highways", "metro", "orr", "lakes",
     "bangalore_highways", "bangalore_lakes", "bangalore_prr", "bangalore_bbmp"
   ];
-  pmtilesLayers.forEach(name => {
+  
+  const warmupPromises = pmtilesLayers.map(name => {
     const p = new pmtiles.PMTiles(`${BASE_TILES_URL}/${name}.pmtiles`);
-    p.getHeader().then(() => console.log(`✓ Warm-up: ${name} data ready`))
+    return p.getHeader()
+      .then(() => console.log(`✓ Warm-up: ${name} data ready`))
       .catch(e => console.warn(`Warm-up failed for ${name}`, e));
   });
+
+  // Warm-up Supabase-hosted PMTiles
+  const supabasePMTiles = new pmtiles.PMTiles('https://ihraowxbduhlichzszgk.supabase.co/storage/v1/object/public/map-assets/bangalore_water_accumulation.pmtiles');
+  warmupPromises.push(
+    supabasePMTiles.getHeader()
+      .then(() => console.log('✓ Warm-up: bangalore_water_accumulation (Supabase) data ready'))
+      .catch(e => console.warn('Warm-up failed for bangalore_water_accumulation (Supabase)', e))
+  );
+
+  // Don't wait for warm-up to complete - let it happen in background
+  Promise.all(warmupPromises).then(() => console.log('✅ All PMTiles warmed up'));
 
   /* =====================================================
      🏗️ ADD SOURCES & LAYERS (GHOST LOADING MODE)
@@ -625,7 +663,7 @@ map.on("load", async () => {
   // 6.5. HMDA Master Plan 2031 Image Overlay
   map.addSource('hmda-masterplan-2031', {
     type: 'image',
-    url: 'data/hmda_test_300dpi.png',
+    url: 'https://ihraowxbduhlichzszgk.supabase.co/storage/v1/object/public/map-assets/hmda_test_300dpi.png',
     coordinates: [
       [78.00, 17.90],     // top-left [lng, lat]
       [79.05, 17.90],     // top-right
@@ -979,7 +1017,7 @@ map.on("load", async () => {
   // Layer shows stream influence and water accumulation patterns
   map.addSource("blr-floods-source", {
     type: "vector",
-    url: `pmtiles://${BASE_TILES_URL}/bangalore_water_accumulation.pmtiles`,
+    url: 'pmtiles://https://ihraowxbduhlichzszgk.supabase.co/storage/v1/object/public/map-assets/bangalore_water_accumulation.pmtiles',
     minzoom: 0,
     maxzoom: 14
   });

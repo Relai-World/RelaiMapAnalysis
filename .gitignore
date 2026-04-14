@@ -51,6 +51,18 @@ chart_test.html
 *.json.backup
 *.mbtiles
 
+# Large files now hosted on Supabase Storage
+frontend/data/hmda_test_300dpi.png
+frontend/data/hmda_masterplan_450dpi.png
+frontend/maptiles/bangalore_water_accumulation.pmtiles
+
+# Large Bangalore GeoJSON files (converted to PMTiles)
+frontend/data/bangalore_floods.geojson
+frontend/data/bangalore_bbmp.geojson
+frontend/data/Bangalore_bbmp1.geojson
+frontend/data/bangalore_lakes.geojson
+frontend/data/banglore_highways.geojson
+
 # Backup files
 *.backup
 *.bak

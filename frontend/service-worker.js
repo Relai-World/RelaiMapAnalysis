@@ -5,7 +5,7 @@
 
 const CACHE_NAME = 'relai-map-cache-v1';
 const STATIC_ASSETS = [
-  'data/hmda_test_300dpi.png',
+  'https://ihraowxbduhlichzszgk.supabase.co/storage/v1/object/public/map-assets/hmda_test_300dpi.png',
   'data/hmda_masterplan.png',
   // Add other static assets as needed
 ];
