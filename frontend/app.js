@@ -517,6 +517,8 @@ map.on("load", async () => {
   ===================================================== */
   const BASE_TILES_URL = "maptiles";
 
+  console.log('🚀 Starting PMTiles warm-up...');
+
   // SNAPPY LOADING: Pre-fetch headers for all PMTiles files in parallel
   const pmtilesLayers = [
     "highways", "metro", "orr", "lakes",
@@ -527,19 +529,30 @@ map.on("load", async () => {
     const p = new pmtiles.PMTiles(`${BASE_TILES_URL}/${name}.pmtiles`);
     return p.getHeader()
       .then(() => console.log(`✓ Warm-up: ${name} data ready`))
-      .catch(e => console.warn(`Warm-up failed for ${name}`, e));
+      .catch(e => {
+        console.warn(`⚠️ Warm-up failed for ${name}`, e);
+        return Promise.resolve(); // Don't block on failures
+      });
   });
 
-  // Warm-up Supabase-hosted PMTiles
-  const supabasePMTiles = new pmtiles.PMTiles('https://ihraowxbduhlichzszgk.supabase.co/storage/v1/object/public/map-assets/bangalore_water_accumulation.pmtiles');
+  // Warm-up Supabase-hosted PMTiles (with cache bypass for reliability)
+  const supabasePMTiles = new pmtiles.PMTiles('https://ihraowxbduhlichzszgk.supabase.co/storage/v1/object/public/map-assets/bangalore_water_accumulation.pmtiles', {
+    // Disable cache to avoid ERR_CACHE_OPERATION_NOT_SUPPORTED in some browsers
+    cache: false
+  });
   warmupPromises.push(
     supabasePMTiles.getHeader()
       .then(() => console.log('✓ Warm-up: bangalore_water_accumulation (Supabase) data ready'))
-      .catch(e => console.warn('Warm-up failed for bangalore_water_accumulation (Supabase)', e))
+      .catch(e => {
+        console.warn('⚠️ Warm-up failed for bangalore_water_accumulation (Supabase)', e);
+        return Promise.resolve(); // Don't block on failures
+      })
   );
 
   // Don't wait for warm-up to complete - let it happen in background
-  Promise.all(warmupPromises).then(() => console.log('✅ All PMTiles warmed up'));
+  Promise.all(warmupPromises)
+    .then(() => console.log('✅ All PMTiles warmed up'))
+    .catch(e => console.warn('⚠️ Some PMTiles failed to warm up', e));
 
   /* =====================================================
      🏗️ ADD SOURCES & LAYERS (GHOST LOADING MODE)
@@ -914,7 +927,7 @@ map.on("load", async () => {
     layout: {
       visibility: "visible",
       "text-field": ["get", "Name"],
-      "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+      "text-font": ["Noto Sans Bold"], // Use font available in Liberty style
       "text-size": ["interpolate", ["linear"], ["zoom"], 10, 8, 14, 11, 18, 14],
       "text-offset": [0, 1.5],
       "text-anchor": "top"
