@@ -89,65 +89,11 @@ async function callSupabaseRPC(functionName, params = {}) {
   }
 }
 
-// 🚀 BROWSER CACHE: Check localStorage first for instant load
-const CACHE_KEY = 'hyderabad_locations_cache';
-const CACHE_VERSION = 2; // Increment this to invalidate old caches
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-
-function getCachedLocations() {
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (!cached) return null;
-    
-    const { data, timestamp, version } = JSON.parse(cached);
-    
-    // Check version first - invalidate if outdated
-    if (version !== CACHE_VERSION) {
-      console.log('🗑️ Cache version mismatch, clearing old cache');
-      localStorage.removeItem(CACHE_KEY);
-      return null;
-    }
-    
-    const age = Date.now() - timestamp;
-    
-    if (age > CACHE_DURATION) {
-      console.log('🗑️ Cache expired, will fetch fresh data');
-      localStorage.removeItem(CACHE_KEY);
-      return null;
-    }
-    
-    console.log(`✅ Cache hit! Data age: ${Math.round(age / 1000 / 60)} minutes`);
-    return data;
-  } catch (e) {
-    console.error('❌ Cache read error:', e);
-    return null;
-  }
-}
-
-function setCachedLocations(data) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({
-      data: data,
-      timestamp: Date.now(),
-      version: CACHE_VERSION
-    }));
-    console.log('💾 Locations cached for 24 hours');
-  } catch (e) {
-    console.error('❌ Cache write error:', e);
-  }
-}
-
 // 🚀 EARLY FETCH: Start getting data immediately while map initializes
-// Wait for Supabase config first, then check cache or fetch
+// Always fetch fresh data - no caching for dynamic location data
 const insightsPromise = waitForSupabaseConfig().then(() => {
-  const cachedData = getCachedLocations();
-  if (cachedData) {
-    console.log('⚡ Using cached data');
-    return cachedData;
-  }
   console.log('🌐 Fetching fresh data from Supabase');
   return callSupabaseRPC('get_all_insights').then(data => {
-    setCachedLocations(data);
     return data;
   });
 });
