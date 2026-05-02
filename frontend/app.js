@@ -4968,7 +4968,12 @@ function createProjectGroupCard(project) {
         <!-- Compare Button -->
         <div class="prop-card-actions">
           <button class="prop-compare-btn" data-property-id="${project.properties[0].id}">
-            <span class="compare-icon">⊕</span>
+            <svg class="compare-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 3 21 3 21 8"></polyline>
+              <line x1="4" y1="20" x2="21" y2="3"></line>
+              <polyline points="8 21 3 21 3 16"></polyline>
+              <line x1="20" y1="4" x2="3" y2="21"></line>
+            </svg>
             <span class="compare-text">Compare</span>
           </button>
         </div>
