@@ -339,7 +339,23 @@
     <div class="detail-sections" id="detail-sections"></div>
   </div>
 
+  <!-- ═══════════════════════════════════════════
+       FLOATING COMPARE BUTTON
+  ═══════════════════════════════════════════ -->
+  <button id="floating-compare-btn" class="floating-compare-btn" style="display: none;">
+    <span class="floating-compare-icon">⚖️</span>
+    <span class="floating-compare-text">Compare <span id="floating-compare-count">0</span> Properties</span>
+    <span class="floating-compare-arrow">→</span>
+  </button>
+
   <script src="app.js?v=6.2"></script>
+  
+  <!-- Comparison Manager (must load after app.js for callSupabaseRPC) -->
+  <script src="comparison-manager.js?v=2.1"></script>
+  
+  <!-- Comparison UI (must load after comparison-manager.js) -->
+  <script src="comparison-ui.js?v=3.1"></script>
+  
   <script src="mobile-enhancements.js?v=1.0"></script>
   
   <!-- Service Worker Registration -->

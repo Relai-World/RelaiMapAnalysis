@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comparison Feature Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .test-section h3 {
+      margin-top: 0;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      background: #3350C0;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    button:hover {
+      background: #2A42A0;
+    }
+    .log {
+      background: #f5f5f5;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .success { color: green; }
+    .error { color: red; }
+    .warning { color: orange; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Comparison Feature Test Page</h1>
+  
+  <div class="test-section">
+    <h3>1. Check Dependencies</h3>
+    <button onclick="checkDependencies()">Run Check</button>
+    <div id="dependencies-log" class="log"></div>
+  </div>
+  
+  <div class="test-section">
+    <h3>2. Test Property Fetch</h3>
+    <input type="number" id="property-id" placeholder="Enter Property ID" value="53384">
+    <button onclick="testPropertyFetch()">Fetch Property</button>
+    <div id="property-log" class="log"></div>
+  </div>
+  
+  <div class="test-section">
+    <h3>3. Test Location Insights</h3>
+    <button onclick="testLocationInsights()">Fetch Insights</button>
+    <div id="insights-log" class="log"></div>
+  </div>
+  
+  <div class="test-section">
+    <h3>4. Test Comparison Manager</h3>
+    <button onclick="testAddProperty()">Add Property to Comparison</button>
+    <button onclick="testRemoveProperty()">Remove Property</button>
+    <button onclick="testFetchComparison()">Fetch Comparison Data</button>
+    <div id="comparison-log" class="log"></div>
+  </div>
+  
+  <div class="test-section">
+    <h3>5. Open Comparison Modal</h3>
+    <button onclick="openComparisonModal()">Open Modal</button>
+    <div id="modal-log" class="log"></div>
+  </div>
+
+  <!-- Load scripts in correct order -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="frontend/app.js?v=6.2"></script>
+  <script src="frontend/comparison-manager.js?v=2.0"></script>
+  <script src="frontend/comparison-ui.js?v=2.0"></script>
+  
+  <script>
+    function log(elementId, message, type = 'info') {
+      const el = document.getElementById(elementId);
+      const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+      el.innerHTML += `<div class="${className}">${message}</div>`;
+      el.scrollTop = el.scrollHeight;
+    }
+    
+    function clearLog(elementId) {
+      document.getElementById(elementId).innerHTML = '';
+    }
+    
+    function checkDependencies() {
+      clearLog('dependencies-log');
+      log('dependencies-log', '🔍 Checking dependencies...');
+      
+      // Check Supabase
+      if (typeof window.supabase !== 'undefined') {
+        log('dependencies-log', '✅ Supabase client loaded', 'success');
+      } else {
+        log('dependencies-log', '❌ Supabase client NOT loaded', 'error');
+      }
+      
+      // Check callSupabaseRPC
+      if (typeof callSupabaseRPC === 'function') {
+        log('dependencies-log', '✅ callSupabaseRPC function exists', 'success');
+      } else {
+        log('dependencies-log', '❌ callSupabaseRPC function NOT found', 'error');
+      }
+      
+      // Check ComparisonManager
+      if (typeof window.comparisonManager !== 'undefined') {
+        log('dependencies-log', '✅ ComparisonManager initialized', 'success');
+        log('dependencies-log', `   Properties in comparison: ${window.comparisonManager.getPropertyCount()}`);
+      } else {
+        log('dependencies-log', '❌ ComparisonManager NOT initialized', 'error');
+      }
+      
+      // Check ComparisonUI
+      if (typeof window.comparisonUI !== 'undefined') {
+        log('dependencies-log', '✅ ComparisonUI initialized', 'success');
+      } else {
+        log('dependencies-log', '❌ ComparisonUI NOT initialized', 'error');
+      }
+      
+      log('dependencies-log', '\n✅ Dependency check complete');
+    }
+    
+    async function testPropertyFetch() {
+      clearLog('property-log');
+      const propertyId = parseInt(document.getElementById('property-id').value);
+      
+      if (!propertyId) {
+        log('property-log', '❌ Please enter a property ID', 'error');
+        return;
+      }
+      
+      log('property-log', `🔍 Fetching property ${propertyId}...`);
+      
+      try {
+        const data = await callSupabaseRPC('get_property_by_id_func', { prop_id: propertyId });
+        log('property-log', '✅ Property fetch successful!', 'success');
+        log('property-log', `Data type: ${Array.isArray(data) ? 'Array' : 'Object'}`);
+        
+        if (Array.isArray(data)) {
+          log('property-log', `Array length: ${data.length}`);
+          if (data.length > 0) {
+            log('property-log', `Project: ${data[0].projectname || 'N/A'}`);
+            log('property-log', `Builder: ${data[0].buildername || 'N/A'}`);
+            log('property-log', JSON.stringify(data[0], null, 2));
+          }
+        } else {
+          log('property-log', `Project: ${data.projectname || 'N/A'}`);
+          log('property-log', JSON.stringify(data, null, 2));
+        }
+      } catch (error) {
+        log('property-log', `❌ Error: ${error.message}`, 'error');
+        log('property-log', error.stack, 'error');
+      }
+    }
+    
+    async function testLocationInsights() {
+      clearLog('insights-log');
+      log('insights-log', '🔍 Fetching location insights...');
+      
+      try {
+        const data = await callSupabaseRPC('get_all_insights');
+        log('insights-log', '✅ Location insights fetch successful!', 'success');
+        log('insights-log', `Total insights: ${data.length}`);
+        
+        if (data.length > 0) {
+          log('insights-log', `Sample location: ${data[0].location || 'N/A'}`);
+          log('insights-log', JSON.stringify(data[0], null, 2));
+        }
+      } catch (error) {
+        log('insights-log', `❌ Error: ${error.message}`, 'error');
+        log('insights-log', error.stack, 'error');
+      }
+    }
+    
+    function testAddProperty() {
+      clearLog('comparison-log');
+      const propertyId = parseInt(document.getElementById('property-id').value);
+      
+      if (!propertyId) {
+        log('comparison-log', '❌ Please enter a property ID', 'error');
+        return;
+      }
+      
+      log('comparison-log', `➕ Adding property ${propertyId} to comparison...`);
+      
+      try {
+        const success = window.comparisonManager.addProperty(propertyId);
+        if (success) {
+          log('comparison-log', '✅ Property added successfully!', 'success');
+          log('comparison-log', `Total properties: ${window.comparisonManager.getPropertyCount()}`);
+          log('comparison-log', `Property IDs: ${JSON.stringify(window.comparisonManager.getPropertyIds())}`);
+        } else {
+          log('comparison-log', '⚠️ Property not added (already in comparison or limit reached)', 'warning');
+        }
+      } catch (error) {
+        log('comparison-log', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+    
+    function testRemoveProperty() {
+      clearLog('comparison-log');
+      const propertyId = parseInt(document.getElementById('property-id').value);
+      
+      if (!propertyId) {
+        log('comparison-log', '❌ Please enter a property ID', 'error');
+        return;
+      }
+      
+      log('comparison-log', `➖ Removing property ${propertyId} from comparison...`);
+      
+      try {
+        const success = window.comparisonManager.removeProperty(propertyId);
+        if (success) {
+          log('comparison-log', '✅ Property removed successfully!', 'success');
+          log('comparison-log', `Total properties: ${window.comparisonManager.getPropertyCount()}`);
+        } else {
+          log('comparison-log', '⚠️ Property not in comparison', 'warning');
+        }
+      } catch (error) {
+        log('comparison-log', `❌ Error: ${error.message}`, 'error');
+      }
+    }
+    
+    async function testFetchComparison() {
+      clearLog('comparison-log');
+      log('comparison-log', '🔍 Fetching comparison data...');
+      
+      try {
+        const data = await window.comparisonManager.fetchAllComparisonData();
+        log('comparison-log', '✅ Comparison data fetch successful!', 'success');
+        log('comparison-log', `Properties: ${data.properties.length}`);
+        log('comparison-log', `Location insights: ${data.locationInsights.size}`);
+        
+        data.properties.forEach((prop, i) => {
+          log('comparison-log', `\nProperty ${i + 1}:`);
+          log('comparison-log', `  ID: ${prop.id}`);
+          log('comparison-log', `  Name: ${prop.projectname || 'N/A'}`);
+          log('comparison-log', `  Builder: ${prop.buildername || 'N/A'}`);
+          log('comparison-log', `  Area: ${prop.areaname || 'N/A'}`);
+        });
+      } catch (error) {
+        log('comparison-log', `❌ Error: ${error.message}`, 'error');
+        log('comparison-log', error.stack, 'error');
+      }
+    }
+    
+    function openComparisonModal() {
+      clearLog('modal-log');
+      log('modal-log', '🚀 Opening comparison modal...');
+      
+      const count = window.comparisonManager.getPropertyCount();
+      log('modal-log', `Properties in comparison: ${count}`);
+      
+      if (count < 2) {
+        log('modal-log', '⚠️ Need at least 2 properties to compare', 'warning');
+        log('modal-log', 'Add more properties first using the "Add Property" button above');
+        return;
+      }
+      
+      try {
+        window.comparisonUI.open();
+        log('modal-log', '✅ Modal opened successfully!', 'success');
+      } catch (error) {
+        log('modal-log', `❌ Error: ${error.message}`, 'error');
+        log('modal-log', error.stack, 'error');
+      }
+    }
+    
+    // Auto-run dependency check on load
+    window.addEventListener('load', () => {
+      setTimeout(checkDependencies, 500);
+    });
+  </script>
+</body>
+</html>

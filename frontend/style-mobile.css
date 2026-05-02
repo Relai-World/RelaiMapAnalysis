@@ -759,3 +759,155 @@
     height: 400px !important;
   }
 }
+
+
+/* ===============================
+   MOBILE COMPARISON CARDS
+=============================== */
+@media (max-width: 768px) {
+  .comparison-cards-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .comparison-cards-wrapper {
+    display: flex;
+    transition: transform 0.3s ease;
+    cursor: grab;
+    user-select: none;
+  }
+  
+  .comparison-card {
+    min-width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  .comparison-card-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  
+  .comparison-card-title {
+    margin: 16px 0 8px 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1E293B;
+  }
+  
+  .comparison-card-builder {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    color: #64748B;
+  }
+  
+  .comparison-card-remove-btn {
+    width: 100%;
+    padding: 12px;
+    background: #FEE2E2;
+    color: #DC2626;
+    border: 2px solid #DC2626;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .comparison-card-remove-btn:active {
+    background: #DC2626;
+    color: white;
+  }
+  
+  .comparison-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .comparison-mobile-section {
+    background: #F9FAFB;
+    border-radius: 12px;
+    padding: 16px;
+  }
+  
+  .comparison-mobile-section-title {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-blue, #3350C0);
+  }
+  
+  .comparison-mobile-section-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .comparison-mobile-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #E5E7EB;
+  }
+  
+  .comparison-mobile-row:last-child {
+    border-bottom: none;
+  }
+  
+  .comparison-mobile-label {
+    font-size: 14px;
+    color: #64748B;
+    font-weight: 500;
+  }
+  
+  .comparison-mobile-value {
+    font-size: 14px;
+    color: #1E293B;
+    font-weight: 600;
+    text-align: right;
+  }
+  
+  .comparison-cards-navigation {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .comparison-cards-dots {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .comparison-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #CBD5E1;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+  }
+  
+  .comparison-dot.active {
+    background: var(--primary-blue, #3350C0);
+    width: 24px;
+    border-radius: 5px;
+  }
+  
+  .comparison-cards-counter {
+    font-size: 14px;
+    color: #64748B;
+    font-weight: 600;
+  }
+  
+  #current-card-number {
+    color: var(--primary-blue, #3350C0);
+    font-weight: 700;
+  }
+}

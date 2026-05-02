@@ -95,13 +95,13 @@ Go to Render Dashboard → Your Service → Environment
 
 **Add/Update these variables:**
 ```
-SUPABASE_URL=https://ihraowxbduhlichzszgk.supabase.co
-SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlocmFvd3hiZHVobGljaHpzemdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5MDU5OTEsImV4cCI6MjA2NTQ4MTk5MX0.9SGeXWpk4_OI2qMPyfCfVtUqar6q62-ZFifaA3lc3BE
-GOOGLE_PLACES_API_KEY=AIzaSyDnREtiEfU6adEdXJvTbLtLcHe26kWvz-g
-GOOGLE_MAPS_API_KEY=AIzaSyDnREtiEfU6adEdXJvTbLtLcHe26kWvz-g
-FRONTEND_ORIGIN=https://relai-map-analysis.onrender.com
+SUPABASE_URL=your_supabase_url_here
+SUPABASE_KEY=your_supabase_anon_key_here
+GOOGLE_PLACES_API_KEY=your_google_places_api_key_here
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+FRONTEND_ORIGIN=https://your-app.onrender.com
 ENVIRONMENT=production
-BACKEND_API_KEY=relai-map-analysis-secure-key-2026
+BACKEND_API_KEY=your_secure_backend_key_here
 ```
 
 **Important Notes:**

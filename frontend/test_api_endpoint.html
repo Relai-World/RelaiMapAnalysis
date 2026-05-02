@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Amenities API</title>
+</head>
+<body>
+    <h1>Test Amenities API Endpoint</h1>
+    
+    <h2>Test 1: GET Request (should work)</h2>
+    <button onclick="testGet()">Test GET /api/nearby-amenities-test</button>
+    <pre id="get-result"></pre>
+    
+    <h2>Test 2: POST Request (the actual endpoint)</h2>
+    <button onclick="testPost()">Test POST /api/nearby-amenities</button>
+    <pre id="post-result"></pre>
+    
+    <script>
+        async function testGet() {
+            const resultEl = document.getElementById('get-result');
+            resultEl.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch('/api/nearby-amenities-test');
+                const data = await response.json();
+                resultEl.textContent = `✅ Success!\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultEl.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+        
+        async function testPost() {
+            const resultEl = document.getElementById('post-result');
+            resultEl.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch('/api/nearby-amenities', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        area_name: 'Hitec City',
+                        radius: 1000,
+                        property_id: 123
+                    })
+                });
+                
+                const data = await response.json();
+                resultEl.textContent = `✅ Success!\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultEl.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

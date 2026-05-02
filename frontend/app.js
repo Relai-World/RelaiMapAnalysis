@@ -1042,14 +1042,9 @@ map.on("load", async () => {
     if (Array.isArray(data) && data.length > 0) {
       console.log("🔍 DEBUG: First location:", data[0]);
       console.log("🔍 DEBUG: Coordinates:", data[0].longitude, data[0].latitude);
-      
-      // Show cache status to user
-      const isCached = getCachedLocations() !== null;
-      if (isCached) {
-        console.log('⚡ Loaded from cache - instant!');
-      } else {
-        console.log('🌐 Loaded from server - cached for next time');
-      }
+      console.log('🌐 Loaded fresh data from Supabase');
+    } else {
+      console.error("❌ Data is not an array or is empty:", data);
     }
 
     const searchInput = document.getElementById("location-search");
@@ -1147,11 +1142,19 @@ map.on("load", async () => {
                   let lat = null, lng = null;
                   if (prop.google_place_location) {
                     try {
+                      // Try parsing as JSON first
                       const locData = JSON.parse(prop.google_place_location);
                       lat = locData.lat || locData.latitude;
                       lng = locData.lng || locData.longitude;
                     } catch (e) {
-                      // If parsing fails, ignore
+                      // If JSON parsing fails, try comma-separated format: "lat,lng"
+                      if (typeof prop.google_place_location === 'string' && prop.google_place_location.includes(',')) {
+                        const parts = prop.google_place_location.split(',');
+                        if (parts.length === 2) {
+                          lat = parseFloat(parts[0].trim());
+                          lng = parseFloat(parts[1].trim());
+                        }
+                      }
                     }
                   }
                   
@@ -1164,6 +1167,13 @@ map.on("load", async () => {
                     longitude: lng,
                     properties: []
                   };
+                  
+                  // Debug: Log coordinate extraction
+                  console.log(`📍 Extracted coords for ${prop.projectname}:`, {
+                    raw: prop.google_place_location,
+                    lat: lat,
+                    lng: lng
+                  });
                 }
                 projectGroups[key].properties.push(prop);
               });
@@ -1233,11 +1243,18 @@ map.on("load", async () => {
                   
                   // Zoom to property location
                   if (project.latitude && project.longitude) {
+                    console.log(`🗺️ Zooming to property:`, {
+                      name: project.projectname,
+                      lat: project.latitude,
+                      lng: project.longitude
+                    });
                     map.flyTo({
                       center: [project.longitude, project.latitude],
                       zoom: 14,
                       duration: 1500
                     });
+                  } else {
+                    console.log(`⚠️ No coordinates for property:`, project.projectname);
                   }
                 };
                 searchResults.appendChild(div);
@@ -1410,7 +1427,7 @@ map.on("load", async () => {
       source: "locations",
       paint: {
         "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 8, 15, 12],
-        "circle-color": "#A68A3D", // Bronze
+        "circle-color": "#3350C0", // Blue
         "circle-opacity": 0.1,
         "circle-stroke-width": 0,
         "circle-blur": 2
@@ -1942,7 +1959,7 @@ map.on("load", async () => {
         type: 'line',
         source: 'location-boundary',
         paint: {
-          'line-color': '#A68A3D',
+          'line-color': '#3350C0',
           'line-width': 1.5,
           'line-opacity': 0.4
         }
@@ -2241,7 +2258,7 @@ map.on("load", async () => {
     if (activeMarker) activeMarker.remove();
     const markerEl = document.createElement('div');
     markerEl.className = 'active-location-marker';
-    // Anchor at the center so the pin sits in the middle of the gold circle
+    // Anchor at the center so the pin sits in the middle of the blue circle
     activeMarker = new maplibregl.Marker({ element: markerEl, anchor: 'center' })
       .setLngLat([p.longitude, p.latitude])
       .addTo(map);
@@ -2704,7 +2721,12 @@ map.on("load", async () => {
       { label: 'Google Name', value: proj.google_place_name },
       { label: 'Full Address', value: proj.google_place_address, span: true },
       { label: 'Maps Link', value: proj.google_maps_location, link: true },
-      { label: 'Open in Maps', value: proj.mobile_google_map_url, link: true }
+      { label: 'Open in Maps', value: proj.mobile_google_map_url, link: true },
+      ...((!proj.latitude || !proj.longitude) ? [{ 
+        label: '⚠️ Note', 
+        value: 'Precise coordinates not yet available for this property', 
+        span: true 
+      }] : [])
     ])}
           
           ${buildDetailSection('🏗️ Project Details', [
@@ -3148,7 +3170,7 @@ map.on("load", async () => {
       const ctx = chart.ctx;
       ctx.save();
       // Drop shadow configuration
-      ctx.shadowColor = 'rgba(255, 215, 0, 0.6)'; // Gold glow
+      ctx.shadowColor = 'rgba(51, 80, 192, 0.6)'; // Blue glow
       ctx.shadowBlur = 12;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 4;
@@ -3198,7 +3220,7 @@ map.on("load", async () => {
         // Update CAGR stat with enhanced styling
         const statElement = document.getElementById('price-chart-stat');
         if (cagr !== 0) {
-          const cagrColor = cagr > 10 ? '#4CAF50' : cagr > 5 ? '#FFA726' : '#A68A3D';
+          const cagrColor = cagr > 10 ? '#4CAF50' : cagr > 5 ? '#FFA726' : '#3350C0';
           const trendIcon = cagr > 0 ? '↗' : '↘';
           statElement.innerHTML = `${trendIcon} <span style="color:${cagrColor}; font-weight:800;">${cagr.toFixed(1)}%</span> CAGR`;
           statElement.style.display = 'block';
@@ -4942,8 +4964,56 @@ function createProjectGroupCard(project) {
             </span>
           </div>
         </div>
+        
+        <!-- Compare Button -->
+        <div class="prop-card-actions">
+          <button class="prop-compare-btn" data-property-id="${project.properties[0].id}">
+            <span class="compare-icon">⊕</span>
+            <span class="compare-text">Compare</span>
+          </button>
+        </div>
       </div>
     `;
+
+  // Add compare button click handler (prevent card click propagation)
+  const compareBtn = card.querySelector('.prop-compare-btn');
+  if (compareBtn && window.comparisonManager) {
+    const propertyId = parseInt(compareBtn.dataset.propertyId);
+    
+    // Update button state based on comparison state
+    const updateCompareButton = () => {
+      if (window.comparisonManager.hasProperty(propertyId)) {
+        compareBtn.classList.add('active');
+        compareBtn.innerHTML = `
+          <span class="compare-icon">✓</span>
+          <span class="compare-text">In Compare</span>
+        `;
+      } else {
+        compareBtn.classList.remove('active');
+        compareBtn.innerHTML = `
+          <span class="compare-icon">⊕</span>
+          <span class="compare-text">Compare</span>
+        `;
+      }
+    };
+    
+    // Initial state
+    updateCompareButton();
+    
+    // Subscribe to comparison state changes
+    window.comparisonManager.subscribe(updateCompareButton);
+    
+    // Click handler
+    compareBtn.onclick = (e) => {
+      e.stopPropagation(); // Prevent card click
+      
+      if (window.comparisonManager.hasProperty(propertyId)) {
+        window.comparisonManager.removeProperty(propertyId);
+      } else {
+        window.comparisonManager.addProperty(propertyId);
+      }
+    };
+  }
 
   // Click handler to show all configurations and navigate to property on map with 3D view
   card.onclick = () => {
@@ -7050,3 +7120,49 @@ function renderFilteredProperties(properties) {
     listContainer.appendChild(card);
   });
 }
+
+
+/* ===============================
+   FLOATING COMPARE BUTTON LOGIC
+=============================== */
+// Note: This will be initialized after ComparisonManager loads
+// See initialization at bottom of comparison-manager.js
+window.initFloatingCompareButton = function() {
+  const floatingBtn = document.getElementById('floating-compare-btn');
+  const countSpan = document.getElementById('floating-compare-count');
+  
+  if (!floatingBtn || !countSpan || !window.comparisonManager) {
+    console.warn('⚠️ Floating compare button elements or ComparisonManager not found');
+    return;
+  }
+  
+  // Update button visibility and count
+  function updateFloatingButton(state) {
+    const count = state.propertyIds.length;
+    
+    if (count >= 2) {
+      floatingBtn.style.display = 'flex';
+      countSpan.textContent = count;
+    } else {
+      floatingBtn.style.display = 'none';
+    }
+  }
+  
+  // Subscribe to comparison state changes
+  window.comparisonManager.subscribe(updateFloatingButton);
+  
+  // Initial state
+  updateFloatingButton(window.comparisonManager.state);
+  
+  // Click handler - opens comparison modal
+  floatingBtn.onclick = () => {
+    if (window.comparisonUI) {
+      window.comparisonUI.open();
+    } else {
+      console.warn('⚠️ ComparisonUI not initialized yet');
+      window.comparisonManager.showNotification('Comparison UI is loading...', 'info');
+    }
+  };
+  
+  console.log('✅ Floating compare button initialized');
+};
