@@ -308,33 +308,22 @@ class ComparisonManager {
   
   /**
    * Load state from localStorage
+   * DISABLED: Always start with fresh comparison on page load
    */
   loadState() {
+    // Always start fresh - don't load from localStorage
+    this.state = {
+      propertyIds: [],
+      timestamp: Date.now(),
+      version: "1.0"
+    };
+    
+    // Clear any old saved state
     try {
-      const saved = localStorage.getItem(this.STORAGE_KEY);
-      
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        
-        // Validate structure
-        if (parsed.propertyIds && Array.isArray(parsed.propertyIds)) {
-          this.state = {
-            propertyIds: parsed.propertyIds,
-            timestamp: parsed.timestamp || Date.now(),
-            version: parsed.version || "1.0"
-          };
-          
-          console.log(`✅ Loaded comparison state: ${this.state.propertyIds.length} properties`);
-        }
-      }
+      localStorage.removeItem(this.STORAGE_KEY);
+      console.log('✅ Starting with fresh comparison (localStorage cleared)');
     } catch (error) {
-      console.error('❌ Failed to load comparison state:', error);
-      // Reset to default state
-      this.state = {
-        propertyIds: [],
-        timestamp: Date.now(),
-        version: "1.0"
-      };
+      console.warn('⚠️ Could not clear localStorage:', error);
     }
   }
   
