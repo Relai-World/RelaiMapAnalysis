@@ -765,11 +765,11 @@ async def get_nearby_amenities(request: AmenitiesRequest = None):
         
         # Define amenity types to search for
         amenity_types = {
-            'hospitals_count': ['hospital', 'doctor'],
+            'hospitals_count': ['hospital'],
             'shopping_malls_count': ['shopping_mall'],
             'schools_count': ['school'],
-            'restaurants_count': ['restaurant', 'cafe'],
-            'metro_stations_count': ['subway_station', 'transit_station']
+            'restaurants_count': ['restaurant'],
+            'metro_stations_count': ['subway_station']  # Only subway/metro, not all transit
         }
         
         counts = {}
@@ -790,6 +790,8 @@ async def get_nearby_amenities(request: AmenitiesRequest = None):
                         'key': google_api_key
                     }
                     
+                    print(f"🔍 Searching for {place_type} near {area_name} (radius: {radius}m)")
+                    
                     response = requests.get(url, params=params, timeout=10)
                     response.raise_for_status()
                     
@@ -797,11 +799,15 @@ async def get_nearby_amenities(request: AmenitiesRequest = None):
                     
                     if places_data.get('status') == 'OK':
                         results = places_data.get('results', [])
-                        count = max(count, len(results))  # Take max to avoid double counting
+                        result_count = len(results)
+                        count = max(count, result_count)  # Take max to avoid double counting
+                        print(f"  ✅ Found {result_count} {place_type}(s)")
                     elif places_data.get('status') == 'ZERO_RESULTS':
-                        pass  # No results, keep count as is
+                        print(f"  ℹ️ No {place_type} found")
                     else:
-                        print(f"⚠️ Google API status for {place_type}: {places_data.get('status')}")
+                        print(f"  ⚠️ Google API status for {place_type}: {places_data.get('status')}")
+                        if places_data.get('error_message'):
+                            print(f"  ⚠️ Error message: {places_data.get('error_message')}")
                     
                 except Exception as e:
                     print(f"❌ Error fetching {place_type}: {str(e)}")
@@ -809,6 +815,7 @@ async def get_nearby_amenities(request: AmenitiesRequest = None):
             
             counts[column_name] = count
             total_count += count
+            print(f"📊 {column_name}: {count}")
         
         print(f"✅ Fetched amenities for {area_name}: H:{counts.get('hospitals_count')} S:{counts.get('schools_count')} M:{counts.get('shopping_malls_count')} R:{counts.get('restaurants_count')} Metro:{counts.get('metro_stations_count')}")
         
@@ -856,8 +863,212 @@ def test_amenities():
     """Test endpoint to verify API routing works"""
     return {"message": "API routing works!", "status": "ok"}
 
+# =====================================================
+# PROPERTY REVIEW ENDPOINT - AI-Generated Reviews
+# =====================================================
+
+class PropertyReviewRequest(BaseModel):
+    property_id: int
+    project_name: str = ""
+    builder_name: str = ""
+    area_name: str = ""
+
+@app.post("/api/property-review")
+@app.options("/api/property-review")
+async def get_property_review(request: PropertyReviewRequest = None):
+    """
+    Get or generate AI review for a property using Perplexity API
+    
+    Flow:
+    1. Check if Property_Review exists in database
+    2. If exists: return from database
+    3. If not: call Perplexity API to generate review
+    4. Save review to database
+    5. Return review
+    """
+    # Handle OPTIONS request for CORS
+    if request is None:
+        return {"status": "ok"}
+    
+    property_id = request.property_id
+    project_name = request.project_name
+    builder_name = request.builder_name
+    area_name = request.area_name
+    
+    if not property_id:
+        return {"error": "property_id is required"}
+    
+    print(f"\n📝 Fetching review for property {property_id}: {project_name}")
+    
+    try:
+        supabase = get_supabase()
+        
+        # Check if review already exists in database
+        result = supabase.table('unified_data_DataType_Raghu').select('Property_Review').eq('id', property_id).execute()
+        
+        if result.data and len(result.data) > 0:
+            existing_review = result.data[0].get('Property_Review')
+            
+            if existing_review and existing_review.strip():
+                print(f"✅ Found existing review in database")
+                return {
+                    "success": True,
+                    "review": existing_review,
+                    "source": "database",
+                    "property_id": property_id
+                }
+        
+        # No review exists - generate using Perplexity API
+        print(f"🤖 Generating new review using Perplexity AI...")
+        
+        perplexity_api_key = os.getenv("PERPLEXITY_API_KEY")
+        
+        if not perplexity_api_key:
+            return {"error": "Perplexity API key not configured", "success": False}
+        
+        # Construct search query for Perplexity
+        search_query = f"""You are reviewing {project_name} by {builder_name} in {area_name}, India.
+
+Answer ONLY these 3 questions in 2-3 sentences each:
+
+1. Builder Quality: What is {builder_name}'s reputation? Any delivery delays or quality issues reported?
+
+2. Location Issues: What are the main problems in {area_name}? (traffic, water, noise, safety)
+
+3. Investment Value: Is {area_name} good for appreciation? Who should buy here?
+
+Keep each answer under 40 words. Be helpful even if specific data is limited - use general knowledge about the area/builder type. NEVER say "no data available" or "search results don't contain"."""
+        
+        # Call Perplexity API
+        perplexity_url = "https://api.perplexity.ai/v1/sonar"
+        headers = {
+            "Authorization": f"Bearer {perplexity_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": "sonar",  # Sonar search model for web-grounded responses
+            "messages": [
+                {
+                    "role": "system",
+                    "content": """You are a real estate expert answering specific questions about properties.
+
+Answer the 3 questions provided. Each answer should be 2-3 sentences and under 40 words.
+
+IMPORTANT: 
+- If you don't find specific information, provide general knowledge about similar areas/builders
+- NEVER say "search results don't contain" or "no data available"
+- Be helpful and informative even with limited data
+- Do NOT mention prices, dates, BHK types, or amenities
+
+Format your response as:
+
+1. [Answer to question 1]
+
+2. [Answer to question 2]
+
+3. [Answer to question 3]"""
+                },
+                {
+                    "role": "user",
+                    "content": search_query
+                }
+            ],
+            "max_tokens": 250,
+            "temperature": 0.4
+        }
+        
+        response = requests.post(perplexity_url, json=payload, headers=headers, timeout=30)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if 'choices' in data and len(data['choices']) > 0:
+            review_text = data['choices'][0]['message']['content']
+            
+            # Clean up the review text
+            import re
+            
+            # Remove citation numbers like [1], [2], [1][2], etc.
+            review_text = re.sub(r'\[\d+\]', '', review_text)
+            
+            # Remove multiple spaces
+            review_text = re.sub(r'\s+', ' ', review_text)
+            
+            # Remove ** markdown bold
+            review_text = review_text.replace('**', '')
+            
+            # Remove numbered list markers (1., 2., 3.) for cleaner display
+            review_text = re.sub(r'^\d+\.\s*', '', review_text, flags=re.MULTILINE)
+            
+            # Remove unhelpful phrases
+            unhelpful_phrases = [
+                r'Search results? (don\'t|do not|lack) contain',
+                r'(no|limited) (specific )?information (is )?available',
+                r'cannot be determined from available information',
+                r'depends on individual (financial capacity|risk tolerance)',
+                r'which cannot be determined',
+                r'General .+ report',
+            ]
+            
+            for phrase in unhelpful_phrases:
+                review_text = re.sub(phrase, '', review_text, flags=re.IGNORECASE)
+            
+            # Split by double newlines or numbered sections
+            sections = [s.strip() for s in re.split(r'\n\n+|\d+\.\s+', review_text) if s.strip()]
+            
+            # Take only complete sentences (end with punctuation)
+            clean_sections = []
+            for section in sections:
+                # Find last sentence-ending punctuation
+                last_punct = max(section.rfind('.'), section.rfind('!'), section.rfind('?'))
+                if last_punct > 0:
+                    # Keep only up to last complete sentence
+                    clean_section = section[:last_punct + 1].strip()
+                    if len(clean_section) > 20:  # Minimum length check
+                        clean_sections.append(clean_section)
+            
+            # Join sections with double newline
+            review_text = '\n\n'.join(clean_sections[:3])  # Max 3 sections
+            
+            # Final cleanup
+            review_text = review_text.strip()
+            
+            # If review is too short or empty after filtering, provide a fallback
+            if len(review_text) < 50:
+                review_text = f"⚠️ Limited information available for {project_name}.\n\nThis property is by {builder_name} in {area_name}. We recommend verifying builder credentials, checking RERA registration, visiting the site, and speaking with current residents before making a decision."
+            
+            print(f"✅ Generated review: {review_text[:100]}...")
+            
+            # Save review to database
+            update_result = supabase.table('unified_data_DataType_Raghu').update({
+                'Property_Review': review_text
+            }).eq('id', property_id).execute()
+            
+            print(f"💾 Saved review to database")
+            
+            return {
+                "success": True,
+                "review": review_text,
+                "source": "perplexity_api",
+                "property_id": property_id
+            }
+        else:
+            return {"error": "No response from Perplexity API", "success": False}
+            
+    except requests.exceptions.Timeout:
+        print(f"⏱️ Perplexity API timeout")
+        return {"error": "AI service timeout - please try again", "success": False}
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Perplexity API error: {e}")
+        return {"error": f"AI service error: {str(e)}", "success": False}
+    except Exception as e:
+        print(f"❌ Error generating review: {e}")
+        return {"error": str(e), "success": False}
+
 # Mount static files to serve the frontend (must be last)
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+
 
 if __name__ == "__main__":
     import uvicorn

@@ -280,141 +280,197 @@ function generateComparisonBar(localityScore, cityAvg, percentile) {
    PDF REPORT GENERATOR
 =============================== */
 function generateReport(p) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  let y = 20;
-
-  // TITLE
+  try {
+    // Check if jsPDF is loaded
+    if (typeof window.jspdf === 'undefined') {
+      alert('PDF library not loaded. Please refresh the page.');
+      return;
+    }
+    
+    console.log('📄 Starting Intel Report generation for:', p);
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let y = 20;
+  
+  // Helper function to add text with word wrap
+  const addText = (text, x, yPos, maxWidth = 180) => {
+    const lines = doc.splitTextToSize(text, maxWidth);
+    doc.text(lines, x, yPos);
+    return yPos + (lines.length * 7);
+  };
+  
+  // HEADER
+  doc.setFillColor(51, 80, 192); // #3350C0
+  doc.rect(0, 0, 210, 40, 'F');
+  
+  doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.setTextColor(37, 99, 235); // Blue
-  doc.text("HYDERABAD INTELLIGENCE", 14, y);
-  y += 10;
-
-  doc.setFontSize(14);
-  doc.setTextColor(60);
-  doc.text(`Location Analysis: ${p.location}`, 14, y);
-  y += 10;
-
+  doc.setFontSize(24);
+  doc.text("Location Intelligence Report", 14, 20);
+  
+  doc.setFontSize(16);
+  doc.text(p.location || 'Location Analysis', 14, 30);
+  
   doc.setFontSize(10);
-  doc.setTextColor(150);
-  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, y);
-  y += 10;
-
-  doc.setDrawColor(200);
-  doc.line(14, y, 196, y);
-  y += 15;
-
-  // 1. KEY METRICS
-  doc.setFontSize(14);
-  doc.setTextColor(0);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 36);
+  
+  y = 50;
+  doc.setTextColor(0, 0, 0);
+  
+  // KEY METRICS
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(51, 80, 192);
   doc.text("Key Metrics & Scores", 14, y);
   y += 10;
-
-  doc.setFontSize(11);
+  
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(40);
-
-  const metrics = [
-    { label: "Market Sentiment", val: sentimentText(p.avg_sentiment), score: p.avg_sentiment.toFixed(2) },
-    { label: "Growth Potential", val: growthText(p.growth_score), score: p.growth_score.toFixed(1) },
-    { label: "Investment Rating", val: investmentText(p.investment_score), score: p.investment_score.toFixed(1) }
-  ];
-
-  metrics.forEach(m => {
-    doc.text(`• ${m.label}: ${m.val} (Score: ${m.score})`, 20, y);
+  doc.setFontSize(11);
+  doc.setTextColor(40, 40, 40);
+  
+  if (p.avg_sentiment !== undefined) {
+    doc.text(`• Market Sentiment: ${sentimentText(p.avg_sentiment)} (${p.avg_sentiment.toFixed(2)})`, 20, y);
     y += 7;
-  });
-  y += 8;
-
-  // 2. DETAILED INSIGHTS
+  }
+  
+  if (p.growth_score !== undefined) {
+    doc.text(`• Growth Potential: ${growthText(p.growth_score)} (${p.growth_score.toFixed(1)})`, 20, y);
+    y += 7;
+  }
+  
+  if (p.investment_score !== undefined) {
+    doc.text(`• Investment Rating: ${investmentText(p.investment_score)} (${p.investment_score.toFixed(1)})`, 20, y);
+    y += 7;
+  }
+  
+  if (p.connectivity_score !== undefined) {
+    doc.text(`• Connectivity Score: ${p.connectivity_score.toFixed(1)}/10`, 20, y);
+    y += 7;
+  }
+  
+  if (p.amenities_score !== undefined) {
+    doc.text(`• Amenities Score: ${p.amenities_score.toFixed(1)}/10`, 20, y);
+    y += 7;
+  }
+  
+  y += 5;
+  
+  // STRATEGIC INSIGHTS
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.setTextColor(0);
+  doc.setFontSize(16);
+  doc.setTextColor(51, 80, 192);
   doc.text("Strategic Insights", 14, y);
   y += 10;
-
+  
   doc.setFont("helvetica", "normal");
   doc.setFontSize(11);
-  doc.setTextColor(50);
-
-  const insights = [
-    { title: "Sentiment", text: getSentimentFact(p).replace(/<[^>]*>?/gm, '') },
-    { title: "Growth Drivers", text: getGrowthFact(p).replace(/<[^>]*>?/gm, '') },
-    { title: "Investment View", text: getInvestFact(p).replace(/<[^>]*>?/gm, '') }
-  ];
-
-  insights.forEach(i => {
-    doc.setFont("helvetica", "bold");
-    doc.text(i.title + ":", 20, y);
-    doc.setFont("helvetica", "normal");
-
-    // Simple word wrap logic for long text
-    const splitText = doc.splitTextToSize(i.text, 140);
-    doc.text(splitText, 55, y);
-    y += (splitText.length * 5) + 6;
-  });
-
+  doc.setTextColor(50, 50, 50);
+  
+  // Sentiment Analysis
+  doc.setFont("helvetica", "bold");
+  doc.text("Market Sentiment:", 20, y);
+  doc.setFont("helvetica", "normal");
+  y += 6;
+  const sentimentFactText = getSentimentFact(p).replace(/<[^>]*>?/gm, '');
+  y = addText(sentimentFactText, 20, y, 170);
   y += 5;
-
-  // 3. PROPERTY COSTS (If Available)
-  if (currentCostData) {
+  
+  // Growth Drivers
+  doc.setFont("helvetica", "bold");
+  doc.text("Growth Drivers:", 20, y);
+  doc.setFont("helvetica", "normal");
+  y += 6;
+  const growthFactText = getGrowthFact(p).replace(/<[^>]*>?/gm, '');
+  y = addText(growthFactText, 20, y, 170);
+  y += 5;
+  
+  // Investment View
+  doc.setFont("helvetica", "bold");
+  doc.text("Investment View:", 20, y);
+  doc.setFont("helvetica", "normal");
+  y += 6;
+  const investFactText = getInvestFact(p).replace(/<[^>]*>?/gm, '');
+  y = addText(investFactText, 20, y, 170);
+  y += 8;
+  
+  // PROPERTY MARKET DATA
+  if (currentCostData && y < 250) {
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.setTextColor(0);
+    doc.setFontSize(16);
+    doc.setTextColor(51, 80, 192);
     doc.text("Property Market Data (2025)", 14, y);
     y += 10;
-
+    
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
-    doc.setTextColor(50);
-
-    doc.text(`• Average Price/SqFt:  Rs ${currentCostData.avgSqft.toLocaleString()}`, 20, y);
+    doc.setTextColor(50, 50, 50);
+    
+    doc.text(`• Average Price/SqFt: ₹${currentCostData.avgSqft.toLocaleString()}`, 20, y);
     y += 7;
-    doc.text(`• Price Range (SqFt):  Rs ${currentCostData.minSqft.toLocaleString()} - ${currentCostData.maxSqft.toLocaleString()}`, 20, y);
+    doc.text(`• Price Range: ₹${currentCostData.minSqft.toLocaleString()} - ₹${currentCostData.maxSqft.toLocaleString()}/sqft`, 20, y);
     y += 7;
-    doc.text(`• Average Base Price:  Rs ${currentCostData.avgBase} Cr`, 20, y);
+    doc.text(`• Average Base Price: ₹${currentCostData.avgBase} Cr`, 20, y);
     y += 7;
-    doc.text(`• Base Price Range:    Rs ${currentCostData.minBase} - ${currentCostData.maxBase} Cr`, 20, y);
+    doc.text(`• Base Price Range: ₹${currentCostData.minBase} - ₹${currentCostData.maxBase} Cr`, 20, y);
     y += 7;
     doc.text(`• Properties Analyzed: ${currentCostData.count}`, 20, y);
-    y += 12;
+    y += 10;
   }
-
-  // 4. NEARBY AMENITIES (If Available)
+  
+  // Add new page if needed
+  if (y > 250) {
+    doc.addPage();
+    y = 20;
+  }
+  
+  // NEARBY AMENITIES
   if (currentAmenityList && currentAmenityList.length > 0) {
-    if (y > 250) { doc.addPage(); y = 20; }
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.setTextColor(0);
+    doc.setFontSize(16);
+    doc.setTextColor(51, 80, 192);
     doc.text(`Nearby ${currentAmenityType} (${currentAmenityList.length})`, 14, y);
     y += 10;
-
+    
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.setTextColor(50);
-
-    currentAmenityList.slice(0, 10).forEach(a => {
+    doc.setTextColor(50, 50, 50);
+    
+    currentAmenityList.slice(0, 15).forEach(a => {
+      if (y > 275) {
+        doc.addPage();
+        y = 20;
+      }
       doc.text(`• ${a.name} (${a.distance_km} km)`, 20, y);
       y += 6;
-      if (y > 275) { doc.addPage(); y = 20; }
     });
-
-    if (currentAmenityList.length > 10) {
+    
+    if (currentAmenityList.length > 15) {
       doc.setFont("helvetica", "italic");
-      doc.text(`... and ${currentAmenityList.length - 10} more.`, 20, y);
-      y += 8;
+      doc.text(`... and ${currentAmenityList.length - 15} more.`, 20, y);
     }
   }
-
+  
   // FOOTER
   doc.setFontSize(9);
-  doc.setTextColor(180);
-  doc.text("Source: Hyderabad Real Estate Intelligence Platform", 14, 285);
+  doc.setTextColor(150, 150, 150);
+  doc.text("Source: Relai Analytics - Real Estate Intelligence Platform", 14, 285);
   doc.text("Disclaimer: Data is for informational purposes only.", 14, 290);
-
-  doc.save(`${p.location}_Detailed_Report.pdf`);
+  
+  // Save PDF
+  const filename = `${(p.location || 'location').replace(/\s+/g, '_')}_Intel_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+  doc.save(filename);
+  
+  console.log('✅ Intel Report PDF generated successfully');
+  if (typeof showNotification === 'function') {
+    showNotification('Intel Report downloaded successfully!', 'success');
+  }
+  
+  } catch (error) {
+    console.error('❌ Error generating Intel Report:', error);
+    alert('Failed to generate Intel Report: ' + error.message);
+  }
 }
 
 /* ===============================

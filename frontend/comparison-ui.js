@@ -118,7 +118,7 @@ class ComparisonUI {
     // Export button
     const exportBtn = document.getElementById('comparison-export-btn');
     if (exportBtn) {
-      exportBtn.onclick = () => this.showExportMenu();
+      exportBtn.onclick = () => this.exportToPDF();
     }
     
     // Click outside to close
@@ -224,11 +224,8 @@ class ComparisonUI {
     // Clear all properties
     this.manager.clearAll();
     
-    // Close modal
+    // Close modal (handleStateChange will show notification)
     this.close();
-    
-    // Show success notification
-    this.manager.showNotification('All properties cleared from comparison', 'success');
     
     console.log('✅ Cleared all properties from comparison');
   }
@@ -284,7 +281,7 @@ class ComparisonUI {
         <table class="comparison-table">
           <thead>
             <tr class="comparison-header-row">
-              <th class="comparison-attribute-header">Attribute</th>
+              <th class="comparison-attribute-header">Property Name</th>
               ${properties.map(prop => `
                 <th class="comparison-property-header">
                   <div class="comparison-property-header-content">
@@ -305,6 +302,7 @@ class ComparisonUI {
             ${this.renderSpecsSection(properties)}
             ${this.renderLocationSection(properties, locationInsights)}
             ${this.renderAmenitiesSection(properties)}
+            ${this.renderAIReviewSection(properties)}
           </tbody>
         </table>
       </div>
@@ -345,6 +343,9 @@ class ComparisonUI {
     
     // Fetch amenities from Google Places API for properties without stored amenities
     this.fetchAmenitiesFromGoogle(properties);
+    
+    // Fetch AI reviews for properties
+    this.fetchAIReviews(properties);
   }
   
   /**
@@ -600,6 +601,22 @@ class ComparisonUI {
   }
   
   /**
+   * Render AI Review section
+   */
+  renderAIReviewSection(properties) {
+    return `
+      <tr class="comparison-section-header-row">
+        <td colspan="${properties.length + 1}" class="comparison-section-header">
+          📋 Property Reviews
+        </td>
+      </tr>
+      ${this.renderAttributeRow('Property Review', properties.map((p, index) => {
+        return '<div class="ai-review-loading" data-property-index="' + index + '">Fetching property review...</div>';
+      }), null, false, true)}
+    `;
+  }
+  
+  /**
    * Fetch amenities count from Google Places API and store in database
    * Uses area name to get coordinates from locations table
    * Fetches 5 categories: hospitals, shopping malls, schools, restaurants, metro stations
@@ -641,7 +658,7 @@ class ComparisonUI {
             },
             body: JSON.stringify({ 
               area_name: areaName.trim(),
-              radius: 1000,
+              radius: 3000,  // 3km radius for nearby amenities
               property_id: property.id
             })
           });
@@ -656,12 +673,15 @@ class ComparisonUI {
             Object.values(spans).forEach(span => span.innerHTML = '<em>Unable to fetch</em>');
             console.error('Amenities API error:', data.error);
           } else {
-            // Display individual counts
-            if (spans.hospitals) spans.hospitals.innerHTML = `<strong>${data.hospitals_count || 0}</strong>`;
-            if (spans.schools) spans.schools.innerHTML = `<strong>${data.schools_count || 0}</strong>`;
-            if (spans.malls) spans.malls.innerHTML = `<strong>${data.shopping_malls_count || 0}</strong>`;
-            if (spans.restaurants) spans.restaurants.innerHTML = `<strong>${data.restaurants_count || 0}</strong>`;
-            if (spans.metro) spans.metro.innerHTML = `<strong>${data.metro_stations_count || 0}</strong>`;
+            // Log the full response for debugging
+            console.log('📊 Amenities API response:', data);
+            
+            // Display individual counts (show 20+ if count is exactly 20, indicating there might be more)
+            if (spans.hospitals) spans.hospitals.innerHTML = `<strong>${data.hospitals_count === 20 ? '20+' : data.hospitals_count || 0}</strong>`;
+            if (spans.schools) spans.schools.innerHTML = `<strong>${data.schools_count === 20 ? '20+' : data.schools_count || 0}</strong>`;
+            if (spans.malls) spans.malls.innerHTML = `<strong>${data.shopping_malls_count === 20 ? '20+' : data.shopping_malls_count || 0}</strong>`;
+            if (spans.restaurants) spans.restaurants.innerHTML = `<strong>${data.restaurants_count === 20 ? '20+' : data.restaurants_count || 0}</strong>`;
+            if (spans.metro) spans.metro.innerHTML = `<strong>${data.metro_stations_count === 20 ? '20+' : data.metro_stations_count || 0}</strong>`;
             
             console.log(`✅ Fetched amenities for property ${property.id} (${areaName}): H:${data.hospitals_count} S:${data.schools_count} M:${data.shopping_malls_count} R:${data.restaurants_count} Metro:${data.metro_stations_count}`);
           }
@@ -674,6 +694,58 @@ class ComparisonUI {
       } else {
         Object.values(spans).forEach(span => span.innerHTML = '<em>Area unavailable</em>');
         console.warn('Property missing area name:', property.id);
+      }
+    }
+  }
+  
+  /**
+   * Fetch AI reviews for properties using Perplexity API
+   */
+  async fetchAIReviews(properties) {
+    const reviewDivs = document.querySelectorAll('.ai-review-loading');
+    
+    for (const div of reviewDivs) {
+      const index = parseInt(div.dataset.propertyIndex);
+      const property = properties[index];
+      
+      if (!property) continue;
+      
+      const projectName = property.projectname || property.full_details?.projectname || 'Unknown Project';
+      const builderName = property.buildername || property.full_details?.buildername || 'Unknown Builder';
+      const areaName = property.areaname || property.full_details?.areaname || 'Unknown Area';
+      
+      try {
+        div.textContent = 'Fetching property review...';
+        
+        const response = await fetch('http://localhost:8000/api/property-review', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            property_id: property.id,
+            project_name: projectName,
+            builder_name: builderName,
+            area_name: areaName
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success && data.review) {
+          div.innerHTML = `<div class="ai-review-text">${data.review}</div>`;
+          console.log(`✅ Fetched AI review for property ${property.id} (source: ${data.source})`);
+        } else {
+          div.innerHTML = '<em>No review available</em>';
+        }
+        
+      } catch (error) {
+        console.error(`Failed to fetch AI review for property ${property.id}:`, error);
+        div.innerHTML = '<em>Unable to generate review</em>';
       }
     }
   }
@@ -1027,438 +1099,93 @@ class ComparisonUI {
   =============================== */
   
   /**
-   * Show export menu
+   * Export to PDF using html2pdf (captures actual UI)
    */
-  showExportMenu() {
+  exportToPDF() {
+    // Validate data first
     if (!this.currentData || !this.currentData.properties || this.currentData.properties.length === 0) {
       this.manager.showNotification('No data to export', 'warning');
       return;
     }
+
+    // Check if html2pdf is loaded
+    if (typeof html2pdf === 'undefined') {
+      this.manager.showNotification('PDF library not loaded', 'error');
+      return;
+    }
     
-    // Create export menu
-    const menu = document.createElement('div');
-    menu.className = 'export-menu';
-    menu.innerHTML = `
-      <div class="export-menu-content">
-        <h4>Export Comparison</h4>
-        <button class="export-option-btn" data-format="pdf">
-          <span class="export-icon">📄</span>
-          <div class="export-option-text">
-            <strong>Export as PDF</strong>
-            <small>Formatted document for printing</small>
-          </div>
-        </button>
-        <button class="export-option-btn" data-format="csv">
-          <span class="export-icon">📊</span>
-          <div class="export-option-text">
-            <strong>Export as CSV</strong>
-            <small>Spreadsheet for analysis</small>
-          </div>
-        </button>
-        <button class="export-close-btn">Cancel</button>
-      </div>
-    `;
+    // Get the comparison table element
+    const comparisonTable = document.querySelector('.comparison-table-container');
     
-    document.body.appendChild(menu);
+    if (!comparisonTable) {
+      this.manager.showNotification('No comparison table found', 'error');
+      return;
+    }
     
-    // Add event listeners
-    menu.querySelectorAll('.export-option-btn').forEach(btn => {
-      btn.onclick = () => {
-        const format = btn.dataset.format;
-        menu.remove();
-        
-        if (format === 'pdf') {
-          this.exportToPDF();
-        } else if (format === 'csv') {
-          this.exportToCSV();
-        }
-      };
-    });
-    
-    menu.querySelector('.export-close-btn').onclick = () => {
-      menu.remove();
-    };
-    
-    // Click outside to close
-    menu.onclick = (e) => {
-      if (e.target === menu) {
-        menu.remove();
-      }
-    };
-  }
-  
-  /**
-   * Export to PDF
-   */
-  exportToPDF() {
     try {
-      const { jsPDF } = window.jspdf;
-      if (!jsPDF) {
-        this.manager.showNotification('PDF library not loaded', 'error');
-        return;
-      }
+      // Clone the table to modify for PDF
+      const clone = comparisonTable.cloneNode(true);
       
-      const { properties, locationInsights } = this.currentData;
-      const doc = new jsPDF('landscape', 'mm', 'a4');
+      // Remove the close buttons from the clone
+      const closeButtons = clone.querySelectorAll('.remove-property-btn');
+      closeButtons.forEach(btn => btn.remove());
       
-      // Get location insights for each property
-      const insights = properties.map(prop => 
-        prop.areaname ? locationInsights.get(prop.areaname.toLowerCase()) : null
-      );
+      // Remove export buttons from the clone
+      const exportButtons = clone.querySelectorAll('.export-btn');
+      exportButtons.forEach(btn => btn.remove());
       
-      let y = 15;
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 15;
-      const contentWidth = pageWidth - (margin * 2);
+      // Configure html2pdf options
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `property-comparison-${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          logging: false,
+          scrollY: 0,
+          scrollX: 0,
+          windowWidth: clone.scrollWidth,
+          windowHeight: clone.scrollHeight
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a3', 
+          orientation: 'landscape'
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
       
-      // Title
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor(51, 80, 192); // Primary blue
-      doc.text("Property Comparison Report", margin, y);
-      y += 8;
+      // Show loading notification
+      this.manager.showNotification('Generating PDF...', 'info');
       
-      // Subtitle
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()} | ${properties.length} properties compared`, margin, y);
-      y += 10;
+      console.log('📄 Starting PDF generation...');
       
-      // Separator line
-      doc.setDrawColor(229, 231, 235);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 8;
-      
-      // Property names header
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.setTextColor(0);
-      
-      const colWidth = contentWidth / properties.length;
-      properties.forEach((prop, i) => {
-        const x = margin + (i * colWidth);
-        const text = doc.splitTextToSize(prop.projectname || 'Unnamed', colWidth - 5);
-        doc.text(text, x + 2, y);
-      });
-      y += 12;
-      
-      // Helper function to add a section
-      const addSection = (title, rows) => {
-        // Check if we need a new page
-        if (y > pageHeight - 40) {
-          doc.addPage();
-          y = 15;
-        }
-        
-        // Section header
-        doc.setFillColor(232, 237, 255); // Pale blue
-        doc.rect(margin, y - 5, contentWidth, 8, 'F');
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor(51, 80, 192);
-        doc.text(title, margin + 2, y);
-        y += 10;
-        
-        // Rows
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(0);
-        
-        rows.forEach(row => {
-          if (y > pageHeight - 20) {
-            doc.addPage();
-            y = 15;
+      // Generate PDF (async operation, errors handled in catch)
+      html2pdf()
+        .set(opt)
+        .from(clone)
+        .save()
+        .then(() => {
+          console.log('✅ PDF generated successfully');
+          this.manager.showNotification('PDF exported successfully!', 'success');
+          if (this.manager.trackEvent) {
+            this.manager.trackEvent('comparison_exported', { 
+              format: 'pdf', 
+              propertyCount: this.currentData.properties.length 
+            });
           }
-          
-          // Label
-          doc.setFont("helvetica", "bold");
-          doc.text(row.label + ':', margin + 2, y);
-          
-          // Values
-          doc.setFont("helvetica", "normal");
-          row.values.forEach((value, i) => {
-            const x = margin + (i * colWidth);
-            const text = doc.splitTextToSize(String(value), colWidth - 5);
-            doc.text(text, x + 2, y);
-          });
-          
-          y += 6;
+        })
+        .catch(error => {
+          console.error('❌ PDF export error in promise:', error);
+          this.manager.showNotification('Failed to export PDF', 'error');
         });
         
-        y += 3;
-      };
-      
-      // Pricing section
-      addSection('💰 Pricing', [
-        { label: 'Price/sqft', values: properties.map(p => {
-          const price = p.price_per_sft || p.full_details?.price_per_sft;
-          return price ? `₹${Math.round(price).toLocaleString()}` : 'N/A';
-        })},
-        { label: 'Base Price', values: properties.map(p => {
-          const price = p.baseprojectprice || p.full_details?.baseprojectprice;
-          return price ? `₹${(price / 10000000).toFixed(2)} Cr` : 'N/A';
-        })}
-      ]);
-      
-      // Project Information section
-      addSection('🏗️ Project Information', [
-        { label: 'Project Name', values: properties.map(p => {
-          const name = p.projectname || p.full_details?.projectname;
-          return name || 'N/A';
-        })},
-        { label: 'Builder Name', values: properties.map(p => {
-          const builder = p.buildername || p.full_details?.buildername;
-          return builder || 'N/A';
-        })},
-        { label: 'RERA Number', values: properties.map(p => {
-          const rera = p.rera_number || p.full_details?.rera_number;
-          return rera || 'N/A';
-        })},
-        { label: 'Project Type', values: properties.map(p => {
-          const type = p.project_type || p.full_details?.project_type;
-          return type || 'N/A';
-        })},
-        { label: 'Community Type', values: properties.map(p => {
-          const community = p.communitytype || p.full_details?.communitytype;
-          return community || 'N/A';
-        })},
-        { label: 'Construction Status', values: properties.map(p => {
-          const status = p.construction_status || p.full_details?.construction_status;
-          return status || 'N/A';
-        })},
-        { label: 'Launch Date', values: properties.map(p => {
-          const date = p.project_launch_date || p.full_details?.project_launch_date;
-          return date || 'N/A';
-        })},
-        { label: 'Possession Date', values: properties.map(p => {
-          const date = p.possession_date || p.full_details?.possession_date;
-          return date || 'N/A';
-        })},
-        { label: 'Total Land Area', values: properties.map(p => {
-          const area = p.total_land_area || p.full_details?.total_land_area;
-          return (area && area > 0) ? `${area} sqft` : 'N/A';
-        })}
-      ]);
-      
-      // Unit Specifications section
-      addSection('📐 Unit Specifications', [
-        { label: 'Area (sqft)', values: properties.map(p => {
-          const sqft = p.sqfeet || p.full_details?.sqfeet;
-          return sqft ? parseFloat(sqft).toLocaleString() : 'N/A';
-        })},
-        { label: 'Power Backup', values: properties.map(p => {
-          const power = p.powerbackup || p.full_details?.powerbackup;
-          return power || 'N/A';
-        })},
-        { label: 'Visitor Parking', values: properties.map(p => {
-          const parking = p.visitor_parking || p.full_details?.visitor_parking;
-          return parking || 'N/A';
-        })}
-      ]);
-      
-      // Location & Ratings section
-      addSection('📍 Location & Ratings', [
-        { label: 'Area Name', values: properties.map(p => {
-          const area = p.areaname || p.full_details?.areaname;
-          return area || 'N/A';
-        })},
-        { label: 'Google Rating', values: properties.map(p => {
-          const rating = p.google_place_rating || p.full_details?.google_place_rating;
-          return rating ? `${rating} ⭐` : 'N/A';
-        })},
-        { label: 'Grid Score', values: insights.map((ins, i) => {
-          if (!ins) return 'N/A';
-          const avgScore = ((ins.connectivity_score || 0) + (ins.amenities_score || 0) + 
-                           ((ins.growth_score || 0) * 10) + ((ins.investment_score || 0) * 10)) / 4;
-          return avgScore > 0 ? avgScore.toFixed(1) : 'N/A';
-        })}
-      ]);
-      
-      // Amenities section
-      addSection('🏊 Amenities', [
-        { label: 'Nearby Amenities', values: properties.map(p => {
-          const amenities = p.external_amenities || p.full_details?.external_amenities;
-          if (amenities && amenities.trim()) {
-            const amenitiesList = amenities.split(',').map(a => a.trim()).filter(Boolean);
-            return amenitiesList.length > 0 ? amenitiesList.slice(0, 3).join(', ') : 'N/A';
-          }
-          return 'N/A';
-        })}
-      ]);
-      
-      // Footer
-      doc.setFontSize(8);
-      doc.setTextColor(150);
-      doc.text('Generated by Relai Analytics - Real Estate Intelligence Platform', margin, pageHeight - 10);
-      
-      // Save
-      const filename = `property-comparison-${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(filename);
-      
-      this.manager.showNotification('PDF exported successfully!', 'success');
-      this.manager.trackEvent('comparison_exported', { format: 'pdf', propertyCount: properties.length });
-      
     } catch (error) {
-      console.error('❌ PDF export failed:', error);
-      this.manager.showNotification('Failed to export PDF', 'error');
-    }
-  }
-  
-  /**
-   * Export to CSV
-   */
-  exportToCSV() {
-    try {
-      const { properties, locationInsights } = this.currentData;
-      
-      // Get location insights for each property
-      const insights = properties.map(prop => 
-        prop.areaname ? locationInsights.get(prop.areaname.toLowerCase()) : null
-      );
-      
-      // Build CSV content
-      let csv = '';
-      
-      // Header row - property names
-      csv += 'Attribute,' + properties.map(p => {
-        const name = p.projectname || p.full_details?.projectname || 'Unnamed';
-        return `"${name.replace(/"/g, '""')}"`;
-      }).join(',') + '\n';
-      csv += 'Builder,' + properties.map(p => {
-        const builder = p.buildername || p.full_details?.buildername || 'Unknown';
-        return `"${builder.replace(/"/g, '""')}"`;
-      }).join(',') + '\n';
-      csv += '\n';
-      
-      // Pricing section
-      csv += '"💰 PRICING"\n';
-      csv += 'Price/sqft,' + properties.map(p => {
-        const price = p.price_per_sft || p.full_details?.price_per_sft;
-        return price ? Math.round(price) : 'N/A';
-      }).join(',') + '\n';
-      csv += 'Base Price (Cr),' + properties.map(p => {
-        const price = p.baseprojectprice || p.full_details?.baseprojectprice;
-        return price ? (price / 10000000).toFixed(2) : 'N/A';
-      }).join(',') + '\n';
-      csv += '\n';
-      
-      // Project Information section
-      csv += '"🏗️ PROJECT INFORMATION"\n';
-      csv += 'Project Name,' + properties.map(p => {
-        const name = p.projectname || p.full_details?.projectname || 'N/A';
-        return `"${name.replace(/"/g, '""')}"`;
-      }).join(',') + '\n';
-      csv += 'Builder Name,' + properties.map(p => {
-        const builder = p.buildername || p.full_details?.buildername || 'N/A';
-        return `"${builder.replace(/"/g, '""')}"`;
-      }).join(',') + '\n';
-      csv += 'RERA Number,' + properties.map(p => {
-        const rera = p.rera_number || p.full_details?.rera_number || 'N/A';
-        return `"${rera.replace(/"/g, '""')}"`;
-      }).join(',') + '\n';
-      csv += 'Project Type,' + properties.map(p => {
-        const type = p.project_type || p.full_details?.project_type || 'N/A';
-        return `"${type.replace(/"/g, '""')}"`;
-      }).join(',') + '\n';
-      csv += 'Community Type,' + properties.map(p => {
-        const community = p.communitytype || p.full_details?.communitytype || 'N/A';
-        return `"${community.replace(/"/g, '""')}"`;
-      }).join(',') + '\n';
-      csv += 'Construction Status,' + properties.map(p => {
-        const status = p.construction_status || p.full_details?.construction_status || 'N/A';
-        return `"${status.replace(/"/g, '""')}"`;
-      }).join(',') + '\n';
-      csv += 'Launch Date,' + properties.map(p => {
-        const date = p.project_launch_date || p.full_details?.project_launch_date || 'N/A';
-        return date;
-      }).join(',') + '\n';
-      csv += 'Possession Date,' + properties.map(p => {
-        const date = p.possession_date || p.full_details?.possession_date || 'N/A';
-        return date;
-      }).join(',') + '\n';
-      csv += 'Total Land Area (sqft),' + properties.map(p => {
-        const area = p.total_land_area || p.full_details?.total_land_area;
-        return (area && area > 0) ? area : 'N/A';
-      }).join(',') + '\n';
-      csv += '\n';
-      
-      // Unit Specifications section
-      csv += '"� UNIT SPECIFICATIONS"\n';
-      csv += 'Area (sqft),' + properties.map(p => {
-        const sqft = p.sqfeet || p.full_details?.sqfeet;
-        return sqft || 'N/A';
-      }).join(',') + '\n';
-      csv += 'Power Backup,' + properties.map(p => {
-        const power = p.powerbackup || p.full_details?.powerbackup || 'N/A';
-        return `"${power.replace(/"/g, '""')}"`;
-      }).join(',') + '\n';
-      csv += 'Visitor Parking,' + properties.map(p => {
-        const parking = p.visitor_parking || p.full_details?.visitor_parking || 'N/A';
-        return parking;
-      }).join(',') + '\n';
-      csv += '\n';
-      
-      // Location & Ratings section
-      csv += '"📍 LOCATION & RATINGS"\n';
-      csv += 'Area Name,' + properties.map(p => {
-        const area = p.areaname || p.full_details?.areaname || 'N/A';
-        return `"${area.replace(/"/g, '""')}"`;
-      }).join(',') + '\n';
-      csv += 'Google Rating,' + properties.map(p => {
-        const rating = p.google_place_rating || p.full_details?.google_place_rating;
-        return rating || 'N/A';
-      }).join(',') + '\n';
-      
-      // Location & Ratings section
-      csv += '"📍 LOCATION & RATINGS"\n';
-      csv += 'Area Name,' + properties.map(p => {
-        const area = p.areaname || p.full_details?.areaname || 'N/A';
-        return `"${area.replace(/"/g, '""')}"`;
-      }).join(',') + '\n';
-      csv += 'Google Rating,' + properties.map(p => {
-        const rating = p.google_place_rating || p.full_details?.google_place_rating;
-        return rating || 'N/A';
-      }).join(',') + '\n';
-      csv += 'Grid Score,' + insights.map((ins, i) => {
-        if (!ins) return 'N/A';
-        const avgScore = ((ins.connectivity_score || 0) + (ins.amenities_score || 0) + 
-                         ((ins.growth_score || 0) * 10) + ((ins.investment_score || 0) * 10)) / 4;
-        return avgScore > 0 ? avgScore.toFixed(1) : 'N/A';
-      }).join(',') + '\n';
-      csv += '\n';
-      
-      // Amenities section
-      csv += '"🏊 AMENITIES"\n';
-      csv += 'Nearby Amenities,' + properties.map(p => {
-        const amenities = p.external_amenities || p.full_details?.external_amenities;
-        if (amenities && amenities.trim()) {
-          const amenitiesList = amenities.split(',').map(a => a.trim()).filter(Boolean);
-          const amenitiesStr = amenitiesList.length > 0 ? amenitiesList.slice(0, 5).join('; ') : 'N/A';
-          return `"${amenitiesStr.replace(/"/g, '""')}"`;
-        }
-        return 'N/A';
-      }).join(',') + '\n';
-      
-      // Create blob and download
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      
-      link.setAttribute('href', url);
-      link.setAttribute('download', `property-comparison-${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      this.manager.showNotification('CSV exported successfully!', 'success');
-      this.manager.trackEvent('comparison_exported', { format: 'csv', propertyCount: properties.length });
-      
-    } catch (error) {
-      console.error('❌ CSV export failed:', error);
-      this.manager.showNotification('Failed to export CSV', 'error');
+      // This catch is for synchronous errors only (before the promise)
+      console.error('❌ PDF setup error:', error);
+      this.manager.showNotification('Failed to setup PDF export', 'error');
     }
   }
 }

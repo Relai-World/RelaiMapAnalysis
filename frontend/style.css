@@ -6044,6 +6044,57 @@ body:has(#sidebar.hidden) #map {
   line-height: 1.4;
 }
 
+/* Amenities count styling */
+.amenities-loading,
+.hospitals-count,
+.schools-count,
+.malls-count,
+.restaurants-count,
+.metro-count {
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+}
+
+.amenities-loading strong,
+.hospitals-count strong,
+.schools-count strong,
+.malls-count strong,
+.restaurants-count strong,
+.metro-count strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+/* AI Review Styles */
+.ai-review-loading {
+  font-style: italic;
+  color: #64748B;
+  font-size: 12px;
+}
+
+.ai-review-text {
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #1e293b;
+  padding: 14px;
+  background: #fefefe;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #3b82f6;
+  max-height: 280px;
+  overflow-y: auto;
+  font-style: normal;
+  white-space: pre-line;
+}
+
+.ai-review-text strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
 /* ===============================
    HIGHLIGHTING
 =============================== */
@@ -6237,99 +6288,3 @@ body:has(#sidebar.hidden) #map {
   }
 }
 
-
-/* ===============================
-   EXPORT MENU
-=============================== */
-.export-menu {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10001;
-  animation: fadeIn 0.2s ease;
-}
-
-.export-menu-content {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  width: 90%;
-  max-width: 400px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease;
-}
-
-.export-menu-content h4 {
-  margin: 0 0 20px 0;
-  font-size: 20px;
-  color: #1E293B;
-  font-weight: 700;
-}
-
-.export-option-btn {
-  width: 100%;
-  padding: 16px;
-  background: white;
-  border: 2px solid #E5E7EB;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.export-option-btn:hover {
-  border-color: var(--primary-blue, #3350C0);
-  background: var(--pale-blue, #E8EDFF);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(51, 80, 192, 0.15);
-}
-
-.export-icon {
-  font-size: 32px;
-  line-height: 1;
-}
-
-.export-option-text {
-  text-align: left;
-  flex: 1;
-}
-
-.export-option-text strong {
-  display: block;
-  font-size: 16px;
-  color: #1E293B;
-  margin-bottom: 4px;
-}
-
-.export-option-text small {
-  display: block;
-  font-size: 13px;
-  color: #64748B;
-}
-
-.export-close-btn {
-  width: 100%;
-  padding: 12px;
-  background: #F1F5F9;
-  color: #64748B;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-top: 8px;
-}
-
-.export-close-btn:hover {
-  background: #E2E8F0;
-}
