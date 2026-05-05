@@ -708,16 +708,18 @@ class AmenitiesRequest(BaseModel):
     radius: int = 1000
     property_id: int
 
-@app.post("/api/nearby-amenities")
+# OPTIONS handler for CORS preflight
 @app.options("/api/nearby-amenities")
-async def get_nearby_amenities(request: AmenitiesRequest = None):
+async def nearby_amenities_options():
+    """Handle CORS preflight for nearby amenities endpoint"""
+    return {"status": "ok"}
+
+@app.post("/api/nearby-amenities")
+async def get_nearby_amenities(request: AmenitiesRequest):
     """
     Fetch nearby amenities count using Google Places API and store in database
     Uses area name to lookup coordinates from locations table
     """
-    # Handle OPTIONS request for CORS
-    if request is None:
-        return {"status": "ok"}
     
     try:
         supabase = get_supabase()
@@ -873,9 +875,14 @@ class PropertyReviewRequest(BaseModel):
     builder_name: str = ""
     area_name: str = ""
 
-@app.post("/api/property-review")
+# OPTIONS handler for CORS preflight
 @app.options("/api/property-review")
-async def get_property_review(request: PropertyReviewRequest = None):
+async def property_review_options():
+    """Handle CORS preflight for property review endpoint"""
+    return {"status": "ok"}
+
+@app.post("/api/property-review")
+async def get_property_review(request: PropertyReviewRequest):
     """
     Get or generate AI review for a property using Perplexity API
     
@@ -886,9 +893,6 @@ async def get_property_review(request: PropertyReviewRequest = None):
     4. Save review to database
     5. Return review
     """
-    # Handle OPTIONS request for CORS
-    if request is None:
-        return {"status": "ok"}
     
     property_id = request.property_id
     project_name = request.project_name

@@ -3,7 +3,7 @@
  * Caches static assets including Plan 2031 image
  */
 
-const CACHE_NAME = 'relai-map-cache-v1';
+const CACHE_NAME = 'relai-map-cache-v2';
 const STATIC_ASSETS = [
   'https://ihraowxbduhlichzszgk.supabase.co/storage/v1/object/public/map-assets/hmda_test_300dpi.png',
   'data/hmda_masterplan.png',
