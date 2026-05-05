@@ -651,7 +651,7 @@ class ComparisonUI {
         Object.values(spans).forEach(span => span.textContent = 'Counting...');
         
         try {
-          const response = await fetch('http://localhost:8000/api/nearby-amenities', {
+          const response = await fetch(`${window.API_BASE_URL}/api/nearby-amenities`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -717,7 +717,7 @@ class ComparisonUI {
       try {
         div.textContent = 'Fetching property review...';
         
-        const response = await fetch('http://localhost:8000/api/property-review', {
+        const response = await fetch(`${window.API_BASE_URL}/api/property-review`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
